@@ -19,7 +19,7 @@ export async function acceptQuoteAction(
   const { data: quote } = await supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, required_date, install_requested, magic_token, magic_expires_at, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country",
+      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, required_date, install_requested, magic_token, magic_expires_at, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, currency, fx_rate_used",
     )
     .eq("ref", quoteRef)
     .single();
@@ -145,6 +145,8 @@ export async function acceptQuoteAction(
       site_address_city: quote.site_address_city,
       site_address_postcode: quote.site_address_postcode,
       site_country: quote.site_country,
+      currency: quote.currency,
+      fx_rate_used: quote.fx_rate_used,
     },
     (items ?? []).map((i) => ({
       sku: i.sku,

@@ -142,6 +142,8 @@ export async function POST(request: Request) {
       contact_email: body.details.contactEmail.trim(),
       contact_company: body.details.contactCompany?.trim() || null,
       subtotal_gbp_pence: subtotalPence,
+      currency: body.currency ?? "GBP",
+      fx_rate_used: body.fxRateUsed,
     },
     itemsToInsert.map((i) => ({
       sku: i.sku,
