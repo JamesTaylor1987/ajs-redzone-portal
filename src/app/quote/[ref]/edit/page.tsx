@@ -185,7 +185,7 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
                 </div>
               )}
 
-              {quote.status === "quote_submitted" && (
+              {quote.status === "quote_submitted" && !justAccepted && (
                 <>
                   <p className="text-xs text-ajs-muted">
                     To amend your quote contact{" "}

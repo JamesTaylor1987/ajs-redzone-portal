@@ -177,6 +177,11 @@ interface OrderQuoteRow extends EmailQuoteRow {
   contact_phone: string | null;
   required_date: string | null;
   install_requested: boolean;
+  site_address_line1: string | null;
+  site_address_line2: string | null;
+  site_address_city: string | null;
+  site_address_postcode: string | null;
+  site_country: string | null;
 }
 
 function orderConfirmationHtml(quote: OrderQuoteRow, items: EmailItemRow[]): string {
@@ -187,7 +192,7 @@ function orderConfirmationHtml(quote: OrderQuoteRow, items: EmailItemRow[]): str
 <div style="max-width:600px;margin:0 auto;padding:24px 16px">
 
   <div style="background:linear-gradient(135deg,#05618e,#1886a1);border-radius:12px 12px 0 0;padding:24px 32px">
-    <div style="color:rgba(255,255,255,0.7);font-size:11px;text-transform:uppercase;letter-spacing:2px">Order Confirmed</div>
+    <div style="color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:2px">Order Confirmed</div>
     <div style="color:#fff;font-size:26px;font-weight:900;margin-top:4px">${quote.ref}</div>
   </div>
 
@@ -233,30 +238,77 @@ function orderConfirmationHtml(quote: OrderQuoteRow, items: EmailItemRow[]): str
 function workOrderHtml(quote: OrderQuoteRow, items: EmailItemRow[]): string {
   const requiredDate = quote.required_date
     ? new Date(quote.required_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
-    : "Not specified";
+    : "NOT SPECIFIED";
+
+  const addressParts = [
+    quote.site_address_line1,
+    quote.site_address_line2,
+    quote.site_address_city,
+    quote.site_address_postcode,
+    quote.site_country,
+  ].filter(Boolean);
+  const deliveryAddress = addressParts.length ? addressParts.join(", ") : "Not specified";
+
+  const partRows = items
+    .map(
+      (i) => `
+      <tr style="border-bottom:1px solid #e2e8f0">
+        <td style="padding:10px 8px;font-family:monospace;font-size:14px;font-weight:bold;color:#1e293b;white-space:nowrap">${i.sku}</td>
+        <td style="padding:10px 8px;font-size:14px;color:#1e293b">${i.name}</td>
+        <td style="padding:10px 8px;font-size:18px;font-weight:900;color:#05618e;text-align:center;white-space:nowrap">${i.qty}</td>
+      </tr>`
+    )
+    .join("");
+
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
-<body style="font-family:Arial,sans-serif;color:#1e293b;max-width:600px;margin:0 auto;padding:24px">
-  <h1 style="color:#05618e;font-size:20px;margin:0 0 4px">Work order: ${quote.ref}</h1>
-  <p style="color:#64748b;font-size:13px;margin:0 0 20px">Order confirmed — please begin production.</p>
+<body style="font-family:Arial,sans-serif;color:#1e293b;max-width:640px;margin:0 auto;padding:0">
 
-  <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
-    <tr><td style="padding:6px 0;font-size:13px;width:160px;color:#64748b">Customer</td>
-        <td style="padding:6px 0;font-size:13px;font-weight:bold">${quote.contact_name}</td></tr>
-    <tr><td style="padding:6px 0;font-size:13px;color:#64748b">Company</td>
-        <td style="padding:6px 0;font-size:13px">${quote.contact_company ?? "&mdash;"}</td></tr>
-    <tr><td style="padding:6px 0;font-size:13px;color:#64748b">Required by</td>
-        <td style="padding:6px 0;font-size:13px;font-weight:bold">${requiredDate}</td></tr>
-    <tr><td style="padding:6px 0;font-size:13px;color:#64748b">Total (ex-VAT)</td>
-        <td style="padding:6px 0;font-size:14px;font-weight:bold;color:#1886a1">${gbp(quote.subtotal_gbp_pence)}</td></tr>
-    ${quote.install_requested ? `<tr><td style="padding:6px 0;font-size:13px;color:#64748b">Installation</td><td style="padding:6px 0;font-size:13px;color:#b45309;font-weight:bold">Requested &mdash; see portal for details</td></tr>` : ""}
-  </table>
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,#05618e,#1886a1);padding:20px 28px">
+    <div style="color:rgba(255,255,255,0.7);font-size:11px;text-transform:uppercase;letter-spacing:2px">AJS Redzone — Work Order</div>
+    <div style="color:#fff;font-size:28px;font-weight:900;margin-top:4px">${quote.ref}</div>
+  </div>
 
-  <h2 style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin:0 0 8px">Items</h2>
-  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:16px">
-    ${itemRows(items)}
-  </table>
-  <p style="font-size:12px;color:#94a3b8;margin:0">Submitted via AJS Redzone Portal.</p>
+  <!-- Required date — most important field -->
+  <div style="background:#fef9c3;border-bottom:3px solid #eab308;padding:16px 28px">
+    <div style="font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#854d0e;margin-bottom:4px">Required delivery date</div>
+    <div style="font-size:22px;font-weight:900;color:#1e293b">${requiredDate}</div>
+  </div>
+
+  <div style="padding:24px 28px">
+
+    <!-- Customer & delivery -->
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
+      <tr><td style="padding:5px 0;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#64748b;width:160px">Customer</td>
+          <td style="padding:5px 0;font-size:14px;font-weight:bold">${quote.contact_name}${quote.contact_company ? ` &mdash; ${quote.contact_company}` : ""}</td></tr>
+      <tr><td style="padding:5px 0;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#64748b">Phone</td>
+          <td style="padding:5px 0;font-size:14px">${quote.contact_phone ?? "&mdash;"}</td></tr>
+      <tr><td style="padding:5px 0;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#64748b;vertical-align:top">Delivery address</td>
+          <td style="padding:5px 0;font-size:14px;font-weight:bold">${deliveryAddress}</td></tr>
+    </table>
+
+    <!-- Parts list -->
+    <div style="font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:8px">Parts to build / ship</div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:24px">
+      <thead>
+        <tr style="background:#f8fafc">
+          <th style="padding:8px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b;text-align:left;border-bottom:1px solid #e2e8f0">Part code</th>
+          <th style="padding:8px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b;text-align:left;border-bottom:1px solid #e2e8f0">Description</th>
+          <th style="padding:8px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#64748b;text-align:center;border-bottom:1px solid #e2e8f0">Qty</th>
+        </tr>
+      </thead>
+      <tbody>${partRows}</tbody>
+    </table>
+
+    ${quote.install_requested
+      ? `<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;padding:12px 16px;margin-bottom:20px">
+           <p style="color:#9a3412;font-size:13px;font-weight:bold;margin:0">Installation requested — separate installation quote in progress. See portal for questionnaire details.</p>
+         </div>`
+      : ""}
+
+    <p style="font-size:12px;color:#94a3b8;margin:0">Generated by AJS Redzone Portal &nbsp;&middot;&nbsp; ${quote.ref}</p>
+  </div>
 </body></html>`;
 }
 
