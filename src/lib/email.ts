@@ -60,7 +60,7 @@ function customerHtml(quote: EmailQuoteRow, items: EmailItemRow[], magicUrl: str
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
 <div style="max-width:600px;margin:0 auto;padding:24px 16px">
 
-  <div style="background:linear-gradient(135deg,#05618e,#1886a1);border-radius:12px 12px 0 0;padding:24px 32px">
+  <div style="background:#05618e;border-radius:12px 12px 0 0;padding:24px 32px">
     <div style="color:rgba(255,255,255,0.7);font-size:11px;text-transform:uppercase;letter-spacing:2px">AJS Redzone</div>
     <div style="color:#fff;font-size:26px;font-weight:900;margin-top:4px">${quote.ref}</div>
   </div>
@@ -191,7 +191,7 @@ function orderConfirmationHtml(quote: OrderQuoteRow, items: EmailItemRow[]): str
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
 <div style="max-width:600px;margin:0 auto;padding:24px 16px">
 
-  <div style="background:linear-gradient(135deg,#05618e,#1886a1);border-radius:12px 12px 0 0;padding:24px 32px">
+  <div style="background:#05618e;border-radius:12px 12px 0 0;padding:24px 32px">
     <div style="color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:2px">Order Confirmed</div>
     <div style="color:#fff;font-size:26px;font-weight:900;margin-top:4px">${quote.ref}</div>
   </div>
@@ -265,7 +265,7 @@ function workOrderHtml(quote: OrderQuoteRow, items: EmailItemRow[]): string {
 <body style="font-family:Arial,sans-serif;color:#1e293b;max-width:640px;margin:0 auto;padding:0">
 
   <!-- Header -->
-  <div style="background:linear-gradient(135deg,#05618e,#1886a1);padding:20px 28px">
+  <div style="background:#05618e;padding:20px 28px">
     <div style="color:rgba(255,255,255,0.7);font-size:11px;text-transform:uppercase;letter-spacing:2px">AJS Redzone — Work Order</div>
     <div style="color:#fff;font-size:28px;font-weight:900;margin-top:4px">${quote.ref}</div>
   </div>
