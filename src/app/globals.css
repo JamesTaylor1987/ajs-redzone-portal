@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ajs-primary: #1886a1;
+  --ajs-dark: #05618e;
+  --ajs-darker: #03415f;
+  --ajs-light: #e6ebed;
+  --ajs-text: #0f1f2e;
+  --ajs-muted: #5a7080;
+}
+
+html, body {
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--ajs-text);
+  background: #f7f9fa;
+}
+
+/* Prevent iOS auto-zoom on form inputs */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+.brand-gradient {
+  background: linear-gradient(135deg, var(--ajs-darker) 0%, var(--ajs-dark) 55%, var(--ajs-primary) 100%);
+}
