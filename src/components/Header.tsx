@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Currency } from "@/lib/types";
 
 interface HeaderProps {
@@ -10,17 +12,34 @@ interface HeaderProps {
 }
 
 export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: HeaderProps) {
+  const router = useRouter();
+  const [clicks, setClicks] = useState(0);
+
+  const handleLogoClick = () => {
+    const next = clicks + 1;
+    if (next >= 5) {
+      setClicks(0);
+      router.push("/admin/login");
+    } else {
+      setClicks(next);
+    }
+  };
+
   return (
     <header className="brand-gradient sticky top-0 z-30 shadow-md">
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 text-white">
+        <button
+          onClick={handleLogoClick}
+          className="flex items-center gap-3 text-white cursor-default select-none"
+          aria-label="AJS Redzone Hardware Portal"
+        >
           <div className="text-xl sm:text-2xl font-extrabold tracking-tight">AJS</div>
           <div className="hidden sm:block w-px h-8 bg-white/30" />
           <div className="text-sm sm:text-base text-white/85">
             <span className="font-bold text-[#FB0436]">Redzone</span>{" "}
             <span className="text-white/60">Hardware Portal</span>
           </div>
-        </div>
+        </button>
 
         <div className="flex items-center gap-2">
           <div className="hidden sm:flex bg-white/10 rounded-lg overflow-hidden border border-white/20 text-xs font-semibold">
