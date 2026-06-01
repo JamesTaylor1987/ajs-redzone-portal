@@ -60,9 +60,9 @@ function customerHtml(quote: EmailQuoteRow, items: EmailItemRow[], magicUrl: str
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
 <div style="max-width:600px;margin:0 auto;padding:24px 16px">
 
-  <div style="background:#05618e;border-radius:12px 12px 0 0;padding:24px 32px">
-    <div style="color:rgba(255,255,255,0.7);font-size:11px;text-transform:uppercase;letter-spacing:2px">AJS Redzone</div>
-    <div style="color:#fff;font-size:26px;font-weight:900;margin-top:4px">${quote.ref}</div>
+  <div style="background:#fff;border-radius:12px 12px 0 0;padding:24px 32px;border:1px solid #e6ebed;border-bottom:3px solid #1886a1">
+    <div style="color:#1886a1;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:2px">AJS Redzone</div>
+    <div style="color:#05618e;font-size:26px;font-weight:900;margin-top:4px">${quote.ref}</div>
   </div>
 
   <div style="background:#fff;border-radius:0 0 12px 12px;padding:32px;border:1px solid #e6ebed;border-top:none">
@@ -191,9 +191,9 @@ function orderConfirmationHtml(quote: OrderQuoteRow, items: EmailItemRow[]): str
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
 <div style="max-width:600px;margin:0 auto;padding:24px 16px">
 
-  <div style="background:#05618e;border-radius:12px 12px 0 0;padding:24px 32px">
-    <div style="color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:2px">Order Confirmed</div>
-    <div style="color:#fff;font-size:26px;font-weight:900;margin-top:4px">${quote.ref}</div>
+  <div style="background:#fff;border-radius:12px 12px 0 0;padding:24px 32px;border:1px solid #e6ebed;border-bottom:3px solid #1886a1">
+    <div style="color:#1886a1;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:2px">Order Confirmed</div>
+    <div style="color:#05618e;font-size:26px;font-weight:900;margin-top:4px">${quote.ref}</div>
   </div>
 
   <div style="background:#fff;border-radius:0 0 12px 12px;padding:32px;border:1px solid #e6ebed;border-top:none">
