@@ -106,7 +106,6 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
         <h2 className="font-bold text-lg mb-3 text-ajs-dark">Project details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Required delivery date" type="date" value={details.requiredDate} onChange={set("requiredDate")} />
-          <Field label="" value="" onChange={() => {}} className="hidden sm:block" />
           <div className="sm:col-span-2">
             <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
               Project / order description
