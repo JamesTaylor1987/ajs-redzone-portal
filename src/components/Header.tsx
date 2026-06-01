@@ -30,14 +30,24 @@ export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: H
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
         <button
           onClick={handleLogoClick}
-          className="flex items-center gap-3 text-white cursor-default select-none"
+          className="flex items-center gap-3 cursor-default select-none"
           aria-label="AJS Redzone Hardware Portal"
         >
-          <div className="text-xl sm:text-2xl font-extrabold tracking-tight">AJS</div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://ajsspalding.co.uk/img/ajs-logo@2x.png"
+            alt="AJS Control & Automation"
+            className="h-8 w-auto object-contain brightness-0 invert"
+          />
           <div className="hidden sm:block w-px h-8 bg-white/30" />
-          <div className="text-sm sm:text-base text-white/85">
-            <span className="font-bold text-[#FB0436]">Redzone</span>{" "}
-            <span className="text-white/60">Hardware Portal</span>
+          <div className="hidden sm:flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://redzoneproduction.com/images/logo/logo-white.png"
+              alt="Redzone"
+              className="h-5 w-auto object-contain"
+            />
+            <span className="text-white/60 text-sm">Hardware Portal</span>
           </div>
         </button>
 

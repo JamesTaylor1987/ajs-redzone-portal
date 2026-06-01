@@ -27,10 +27,16 @@ export default async function AdminLayout({
           <NavLink href="/admin/orders">Orders</NavLink>
           <NavLink href="/admin/products">Products</NavLink>
         </div>
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-3 text-sm">
           <span className="text-white/70 text-xs hidden sm:block">
             {session.user.email}
           </span>
+          <Link
+            href="/"
+            className="px-3 py-1 rounded border border-white/30 hover:bg-white/10 text-sm font-medium transition-colors"
+          >
+            ← Site
+          </Link>
           <form action={logoutAction}>
             <button
               type="submit"
