@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getServiceClient } from "@/lib/supabase-server";
-import { deleteProductAction } from "./actions";
+import { DeactivateButton } from "./DeactivateButton";
 
 export const dynamic = "force-dynamic";
 
@@ -87,24 +87,7 @@ export default async function AdminProductsPage() {
                       >
                         Edit
                       </Link>
-                      <form action={deleteProductAction}>
-                        <input type="hidden" name="id" value={p.id} />
-                        <button
-                          type="submit"
-                          className="text-rose-500 text-xs font-semibold hover:underline"
-                          onClick={(e) => {
-                            if (
-                              !confirm(
-                                `Deactivate "${p.name}"? It won't appear in the catalogue.`,
-                              )
-                            ) {
-                              e.preventDefault();
-                            }
-                          }}
-                        >
-                          Deactivate
-                        </button>
-                      </form>
+                      <DeactivateButton id={p.id} name={p.name} />
                     </div>
                   </td>
                 </tr>
