@@ -33,20 +33,23 @@ export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: H
           className="flex items-center gap-3 cursor-default select-none"
           aria-label="AJS Redzone Hardware Portal"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://ajsspalding.co.uk/img/ajs-logo@2x.png"
-            alt="AJS Control & Automation"
-            className="h-8 w-auto object-contain brightness-0 invert"
-          />
+          <div className="bg-white rounded px-2 py-1">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://ajsspalding.co.uk/img/ajs-logo@2x.png"
+              alt="AJS Control & Automation"
+              className="h-6 w-auto object-contain"
+            />
+          </div>
           <div className="hidden sm:block w-px h-8 bg-white/30" />
           <div className="hidden sm:flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://redzoneproduction.com/images/logo/logo-white.png"
-              alt="Redzone"
-              className="h-5 w-auto object-contain"
+              src="https://cdn.prod.website-files.com/6977ae7685a0199da7148962/699860f91ee461dc0f2bde24_redzone-favicon.svg"
+              alt=""
+              className="h-5 w-5 object-contain"
             />
+            <span className="font-bold text-white text-sm">Redzone</span>
             <span className="text-white/60 text-sm">Hardware Portal</span>
           </div>
         </button>
