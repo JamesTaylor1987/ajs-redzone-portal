@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getAuthClient } from "@/lib/supabase-auth";
 import { logoutAction } from "./login/actions";
 
@@ -15,8 +14,9 @@ export default async function AdminLayout({
     data: { session },
   } = await supabase.auth.getSession();
 
+  // No session — render children without nav (middleware already handles redirects).
   if (!session) {
-    redirect("/admin/login");
+    return <>{children}</>;
   }
 
   return (
