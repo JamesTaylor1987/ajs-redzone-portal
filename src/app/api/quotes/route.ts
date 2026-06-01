@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase-server";
+import { generateMagicToken, magicLinkExpiry, buildMagicUrl } from "@/lib/magic-link";
+import { sendQuoteEmails } from "@/lib/email";
 import type { CreateQuoteRequest, CreateQuoteResponse } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -83,6 +85,9 @@ export async function POST(request: Request) {
   }
 
   // 3. Insert the quote row.
+  const magicToken = generateMagicToken();
+  const magicExpiresAt = magicLinkExpiry();
+
   const { data: quoteRow, error: quoteError } = await supabase
     .from("quotes")
     .insert({
@@ -105,6 +110,8 @@ export async function POST(request: Request) {
       install_details: body.details.installDetails ?? null,
       subtotal_gbp_pence: subtotalPence,
       submitted_at: new Date().toISOString(),
+      magic_token: magicToken,
+      magic_expires_at: magicExpiresAt.toISOString(),
     })
     .select("id")
     .single();
@@ -125,6 +132,25 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+
+  // 5. Send emails (non-blocking failure — quote is already committed).
+  const magicUrl = buildMagicUrl(ref, magicToken);
+  await sendQuoteEmails(
+    {
+      ref,
+      contact_name: body.details.contactName.trim(),
+      contact_email: body.details.contactEmail.trim(),
+      contact_company: body.details.contactCompany?.trim() || null,
+      subtotal_gbp_pence: subtotalPence,
+    },
+    itemsToInsert.map((i) => ({
+      sku: i.sku,
+      name: i.name,
+      qty: i.qty,
+      line_total_gbp_pence: i.line_total_gbp_pence,
+    })),
+    magicUrl,
+  );
 
   const response: CreateQuoteResponse = { ref, id: quoteRow.id };
   return NextResponse.json(response, { status: 201 });

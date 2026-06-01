@@ -61,8 +61,9 @@ export default async function QuoteConfirmationPage({ params }: PageProps) {
           <div className="p-6 space-y-5">
             <p className="text-ajs-text">
               Thanks {quote.contact_name?.split(" ")[0] ?? "there"} — we&apos;ve received your
-              request. A member of the AJS Redzone team will be in touch shortly to confirm
-              pricing and lead times.
+              request. A confirmation email with your magic link has been sent to{" "}
+              <strong>{quote.contact_email}</strong>. Use that link to amend or accept your quote
+              once it&apos;s been priced.
             </p>
 
             <div>
@@ -100,8 +101,7 @@ export default async function QuoteConfirmationPage({ params }: PageProps) {
                 number required), non-EU customers are zero-rated as export.
               </p>
               <p>
-                Hardware invoiced 100% prior to shipment. DAP delivery terms. We&apos;ll send
-                you a magic link to amend or accept this quote once it&apos;s been priced.
+                Hardware invoiced 100% prior to shipment. DAP delivery terms.
               </p>
             </div>
 
