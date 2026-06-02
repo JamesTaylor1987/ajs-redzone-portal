@@ -33,7 +33,8 @@ export default async function AdminProductsPage() {
             </Link>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[700px]">
             <thead className="border-b border-ajs-light bg-slate-50 text-ajs-dark">
               <tr>
                 <Th></Th>
@@ -94,6 +95,7 @@ export default async function AdminProductsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

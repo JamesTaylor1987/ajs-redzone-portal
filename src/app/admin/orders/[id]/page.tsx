@@ -132,7 +132,8 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
             Items
           </h2>
         </div>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[480px]">
           <thead className="bg-slate-50 border-b border-ajs-light text-ajs-dark">
             <tr>
               <Th>SKU</Th>
@@ -166,6 +167,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
             </tr>
           </tfoot>
         </table>
+        </div>
       </div>
 
       {/* Account info (if accepted) */}

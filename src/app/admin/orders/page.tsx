@@ -52,13 +52,14 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
 
       <StatusFilter />
 
-      <div className="bg-white rounded-xl border border-ajs-light overflow-hidden shadow-sm">
+      <div className="bg-white rounded-xl border border-ajs-light shadow-sm overflow-hidden">
         {!orders?.length ? (
           <div className="p-8 text-center text-ajs-muted text-sm">
             No orders found.
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead className="border-b border-ajs-light bg-slate-50 text-ajs-dark">
               <tr>
                 <Th>Ref</Th>
@@ -112,6 +113,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

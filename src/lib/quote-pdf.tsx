@@ -4,58 +4,58 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
   renderToBuffer,
 } from "@react-pdf/renderer";
 
-const DARK = "#05618e";
-const PRIMARY = "#1886a1";
+// ─── Colours ─────────────────────────────────────────────────────────────────
+const BLUE  = "#05618e";
+const TEAL  = "#1886a1";
+const LIGHT = "#e6ebed";
+const MUTED = "#64748b";
+const FAINT = "#f8fafc";
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  page: { padding: 44, fontFamily: "Helvetica", fontSize: 10, color: "#1e293b", lineHeight: 1.4 },
-  brand: { fontSize: 16, fontFamily: "Helvetica-Bold", color: DARK },
-  brandSub: { fontSize: 9, color: PRIMARY, marginTop: 2 },
-  ref: { fontSize: 22, fontFamily: "Helvetica-Bold", color: DARK, marginTop: 6 },
-  meta: { fontSize: 9, color: "#64748b", marginTop: 3 },
-  divider: { borderBottom: 1, borderColor: "#e6ebed", marginVertical: 14 },
-  sectionTitle: { fontSize: 8, fontFamily: "Helvetica-Bold", color: "#64748b", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 },
-  row: { flexDirection: "row", marginBottom: 3 },
-  label: { width: 120, color: "#64748b" },
-  value: { flex: 1 },
-  thRow: { flexDirection: "row", backgroundColor: "#f8fafc", borderBottom: 1, borderColor: "#e6ebed", padding: "5 6" },
-  tdRow: { flexDirection: "row", borderBottom: 1, borderColor: "#f1f5f9", padding: "5 6" },
-  colSku: { width: 80, fontSize: 9, color: "#94a3b8" },
-  colName: { flex: 1 },
-  colQty: { width: 28, textAlign: "center" },
-  colTotal: { width: 68, textAlign: "right" },
-  bold: { fontFamily: "Helvetica-Bold" },
-  totalRow: { flexDirection: "row", justifyContent: "flex-end", marginTop: 6, padding: "0 6" },
-  notice: { backgroundColor: "#eff6ff", borderRadius: 4, padding: "10 12", marginTop: 14 },
-  noticeText: { fontSize: 9, color: "#1e40af", lineHeight: 1.5 },
-  greenBox: { backgroundColor: "#f0fdf4", borderRadius: 4, padding: "10 12", marginTop: 14 },
-  greenText: { fontSize: 9, color: "#166534", lineHeight: 1.5 },
-  confirmedBadge: { backgroundColor: "#dcfce7", borderRadius: 3, padding: "2 6", marginLeft: 8 },
-  confirmedText: { fontSize: 8, fontFamily: "Helvetica-Bold", color: "#166534" },
-  footer: { position: "absolute", bottom: 28, left: 44, right: 44, fontSize: 8, color: "#94a3b8", textAlign: "center" },
-  terms: { marginTop: 16, fontSize: 8, color: "#94a3b8", lineHeight: 1.5 },
-  // Work order specific
-  woHeader: { backgroundColor: DARK, padding: "16 20", marginBottom: 0 },
-  woHeaderText: { color: "#ffffff", fontSize: 22, fontFamily: "Helvetica-Bold" },
-  woHeaderSub: { color: "rgba(255,255,255,0.65)", fontSize: 9, marginBottom: 4 },
-  woDateBanner: { backgroundColor: "#fef9c3", borderBottom: 3, borderColor: "#eab308", padding: "12 20" },
-  woDateLabel: { fontSize: 8, fontFamily: "Helvetica-Bold", color: "#854d0e", textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 },
-  woDateValue: { fontSize: 20, fontFamily: "Helvetica-Bold", color: "#1e293b" },
-  woBody: { padding: "20 20 44" },
+  page:          { paddingTop: 0, paddingBottom: 50, paddingHorizontal: 0, fontFamily: "Helvetica", fontSize: 10, color: "#1e293b" },
+  headerBar:     { backgroundColor: BLUE, paddingTop: 20, paddingBottom: 20, paddingHorizontal: 36 },
+  headerLabel:   { fontSize: 9, color: "rgba(255,255,255,0.65)", marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 },
+  headerRef:     { fontSize: 24, fontFamily: "Helvetica-Bold", color: "#ffffff" },
+  headerDate:    { fontSize: 9, color: "rgba(255,255,255,0.65)", marginTop: 4 },
+  logoRow:       { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
+  ajsLogo:       { height: 22, width: 80, objectFit: "contain" },
+  rzLabel:       { fontSize: 10, fontFamily: "Helvetica-Bold", color: TEAL },
+  body:          { paddingHorizontal: 36, paddingTop: 24 },
+  divider:       { borderBottomWidth: 1, borderBottomColor: LIGHT, borderBottomStyle: "solid", marginTop: 16, marginBottom: 16 },
+  sectionLabel:  { fontSize: 8, fontFamily: "Helvetica-Bold", color: MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 },
+  dl:            { marginBottom: 14 },
+  dlRow:         { flexDirection: "row", marginBottom: 3 },
+  dlKey:         { width: 120, color: MUTED, fontSize: 10 },
+  dlVal:         { flex: 1, fontSize: 10 },
+  thRow:         { flexDirection: "row", backgroundColor: FAINT, borderBottomWidth: 1, borderBottomColor: LIGHT, borderBottomStyle: "solid", paddingTop: 5, paddingBottom: 5, paddingHorizontal: 6 },
+  tdRow:         { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: FAINT, borderBottomStyle: "solid", paddingTop: 5, paddingBottom: 5, paddingHorizontal: 6 },
+  colSku:        { width: 80, fontSize: 9, color: "#94a3b8" },
+  colName:       { flex: 1, fontSize: 10 },
+  colQty:        { width: 30, textAlign: "center", fontSize: 10 },
+  colAmt:        { width: 70, textAlign: "right", fontSize: 10 },
+  bold:          { fontFamily: "Helvetica-Bold" },
+  totalRow:      { flexDirection: "row", justifyContent: "flex-end", paddingTop: 8, paddingHorizontal: 6 },
+  noticeBox:     { borderRadius: 4, paddingTop: 10, paddingBottom: 10, paddingHorizontal: 12, marginTop: 16 },
+  noticeText:    { fontSize: 9, lineHeight: 1.5 },
+  terms:         { marginTop: 16, fontSize: 8, color: "#94a3b8", lineHeight: 1.5 },
+  footer:        { position: "absolute", bottom: 20, left: 36, right: 36, fontSize: 8, color: "#94a3b8", textAlign: "center", borderTopWidth: 1, borderTopColor: LIGHT, borderTopStyle: "solid", paddingTop: 8 },
+  badge:         { borderRadius: 3, paddingTop: 2, paddingBottom: 2, paddingHorizontal: 6, marginLeft: 8 },
+  // Work order extras
+  woDateBanner:  { backgroundColor: "#fef9c3", borderBottomWidth: 3, borderBottomColor: "#eab308", borderBottomStyle: "solid", paddingTop: 12, paddingBottom: 12, paddingHorizontal: 36 },
+  woDateLabel:   { fontSize: 8, fontFamily: "Helvetica-Bold", color: "#854d0e", textTransform: "uppercase", letterSpacing: 1, marginBottom: 3 },
+  woDateVal:     { fontSize: 20, fontFamily: "Helvetica-Bold", color: "#1e293b" },
+  woColSku:      { width: 90, fontFamily: "Helvetica-Bold", fontSize: 11, color: "#1e293b" },
+  woColName:     { flex: 1, fontSize: 10 },
+  woColQty:      { width: 44, textAlign: "center", fontFamily: "Helvetica-Bold", fontSize: 16, color: BLUE },
 });
 
-function money(gbpPence: number | string, currency = "GBP", fxRate: number | null = null): string {
-  const pence = Number(gbpPence);
-  if (currency === "EUR" && fxRate && fxRate > 1) {
-    return "€" + (pence * fxRate / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-  return "£" + (pence / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
+// ─── Types ────────────────────────────────────────────────────────────────────
 export interface PDFQuote {
   ref: string;
   contact_name: string;
@@ -81,66 +81,103 @@ export interface PDFItem {
   line_total_gbp_pence: number | string;
 }
 
-function CustomerBlock({ quote }: { quote: PDFQuote }) {
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function money(gbpPence: number | string, currency = "GBP", fxRate: number | null = null): string {
+  const p = Number(gbpPence);
+  if (currency === "EUR" && fxRate && fxRate > 1) {
+    return "€" + (p * fxRate / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  return "£" + (p / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+
+function today() {
+  return new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+
+async function fetchLogoBase64(): Promise<string | null> {
+  try {
+    const res = await fetch("https://ajsspalding.co.uk/img/ajs-logo@2x.png");
+    const buf = await res.arrayBuffer();
+    return `data:image/png;base64,${Buffer.from(buf).toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Shared components ────────────────────────────────────────────────────────
+function Header({ label, ref: quoteRef, date, logoSrc, badge }: {
+  label: string; ref: string; date: string; logoSrc: string | null; badge?: React.ReactNode;
+}) {
+  return (
+    <View style={s.headerBar}>
+      <View style={s.logoRow}>
+        {logoSrc
+          ? <Image src={logoSrc} style={s.ajsLogo} />
+          : <Text style={{ fontSize: 13, fontFamily: "Helvetica-Bold", color: "#ffffff" }}>AJS Control &amp; Automation</Text>
+        }
+        <Text style={s.rzLabel}>Redzone Hardware Portal</Text>
+      </View>
+      <Text style={s.headerLabel}>{label}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <Text style={s.headerRef}>{quoteRef}</Text>
+        {badge}
+      </View>
+      <Text style={s.headerDate}>{date}</Text>
+    </View>
+  );
+}
+
+function CustomerSection({ quote }: { quote: PDFQuote }) {
   const addr = [
-    quote.site_address_line1,
-    quote.site_address_line2,
-    quote.site_address_city,
-    quote.site_address_postcode,
-    quote.site_country,
+    quote.site_address_line1, quote.site_address_line2,
+    quote.site_address_city, quote.site_address_postcode, quote.site_country,
   ].filter(Boolean);
 
   return (
-    <View style={{ marginBottom: 14 }}>
-      <Text style={s.sectionTitle}>Customer</Text>
-      <View style={s.row}><Text style={s.label}>Name</Text><Text style={s.value}>{quote.contact_name}</Text></View>
-      {!!quote.contact_company && <View style={s.row}><Text style={s.label}>Company</Text><Text style={s.value}>{quote.contact_company}</Text></View>}
-      <View style={s.row}><Text style={s.label}>Email</Text><Text style={s.value}>{quote.contact_email}</Text></View>
-      {!!quote.contact_phone && <View style={s.row}><Text style={s.label}>Phone</Text><Text style={s.value}>{quote.contact_phone}</Text></View>}
-      {!!quote.required_date && (
-        <View style={s.row}>
-          <Text style={s.label}>Required by</Text>
-          <Text style={s.value}>{new Date(quote.required_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</Text>
-        </View>
-      )}
-      {addr.length > 0 && (
-        <View style={s.row}>
-          <Text style={s.label}>Delivery address</Text>
-          <Text style={s.value}>{addr.join(", ")}</Text>
-        </View>
-      )}
+    <View style={s.dl}>
+      <Text style={s.sectionLabel}>Customer</Text>
+      <View style={s.dlRow}><Text style={s.dlKey}>Name</Text><Text style={s.dlVal}>{quote.contact_name}</Text></View>
+      {!!quote.contact_company && <View style={s.dlRow}><Text style={s.dlKey}>Company</Text><Text style={s.dlVal}>{quote.contact_company}</Text></View>}
+      <View style={s.dlRow}><Text style={s.dlKey}>Email</Text><Text style={s.dlVal}>{quote.contact_email}</Text></View>
+      {!!quote.contact_phone && <View style={s.dlRow}><Text style={s.dlKey}>Phone</Text><Text style={s.dlVal}>{quote.contact_phone}</Text></View>}
+      {!!quote.required_date && <View style={s.dlRow}><Text style={s.dlKey}>Required by</Text><Text style={s.dlVal}>{fmtDate(quote.required_date)}</Text></View>}
+      {addr.length > 0 && <View style={s.dlRow}><Text style={s.dlKey}>Delivery address</Text><Text style={s.dlVal}>{addr.join(", ")}</Text></View>}
     </View>
   );
 }
 
 function ItemsTable({ quote, items }: { quote: PDFQuote; items: PDFItem[] }) {
   const ccy = quote.currency ?? "GBP";
-  const fx = quote.fx_rate_used ?? null;
+  const fx  = quote.fx_rate_used ?? null;
   const total = items.reduce((sum, i) => sum + Number(i.line_total_gbp_pence), 0);
 
   return (
-    <View style={{ marginBottom: 8 }}>
-      <Text style={s.sectionTitle}>Items</Text>
+    <View>
+      <Text style={s.sectionLabel}>Items</Text>
       <View style={s.thRow}>
         <Text style={[s.colSku, s.bold]}>Part code</Text>
         <Text style={[s.colName, s.bold]}>Description</Text>
         <Text style={[s.colQty, s.bold]}>Qty</Text>
-        <Text style={[s.colTotal, s.bold]}>Total</Text>
+        <Text style={[s.colAmt, s.bold]}>Total</Text>
       </View>
       {items.map((item, i) => (
         <View key={i} style={s.tdRow}>
           <Text style={s.colSku}>{item.sku}</Text>
           <Text style={s.colName}>{item.name}</Text>
           <Text style={s.colQty}>{item.qty}</Text>
-          <Text style={s.colTotal}>{money(item.line_total_gbp_pence, ccy, fx)}</Text>
+          <Text style={s.colAmt}>{money(item.line_total_gbp_pence, ccy, fx)}</Text>
         </View>
       ))}
       <View style={s.totalRow}>
         <Text style={[s.bold, { marginRight: 8 }]}>Subtotal (ex-VAT)</Text>
-        <Text style={[s.bold, s.colTotal, { color: DARK, fontSize: 11 }]}>{money(total, ccy, fx)}</Text>
+        <Text style={[s.bold, s.colAmt, { color: BLUE, fontSize: 11 }]}>{money(total, ccy, fx)}</Text>
       </View>
       {ccy === "EUR" && (
-        <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 2, padding: "0 6" }}>
+        <View style={{ flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: 6, marginTop: 2 }}>
           <Text style={{ fontSize: 8, color: "#94a3b8" }}>Indicative EUR rate — invoice issued in GBP</Text>
         </View>
       )}
@@ -148,7 +185,7 @@ function ItemsTable({ quote, items }: { quote: PDFQuote; items: PDFItem[] }) {
   );
 }
 
-function PageFooter({ quoteRef }: { quoteRef: string }) {
+function Footer({ quoteRef }: { quoteRef: string }) {
   return (
     <Text
       style={s.footer}
@@ -160,183 +197,138 @@ function PageFooter({ quoteRef }: { quoteRef: string }) {
   );
 }
 
-// ── Quote request PDF ────────────────────────────────────────────────────────
-
-function QuoteRequestDocument({ quote, items }: { quote: PDFQuote; items: PDFItem[] }) {
+// ─── Documents ────────────────────────────────────────────────────────────────
+function QuoteRequestDocument({ quote, items, logoSrc }: { quote: PDFQuote; items: PDFItem[]; logoSrc: string | null }) {
   return (
     <Document>
       <Page size="A4" style={s.page}>
-        <Text style={s.brand}>AJS Control & Automation</Text>
-        <Text style={s.brandSub}>Redzone Hardware Portal</Text>
-        <Text style={s.ref}>{quote.ref}</Text>
-        <Text style={s.meta}>
-          Quote request · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-        </Text>
-        <View style={s.divider} />
-        <CustomerBlock quote={quote} />
-        <View style={s.divider} />
-        <ItemsTable quote={quote} items={items} />
-        <View style={s.notice}>
-          <Text style={s.noticeText}>
-            This document confirms receipt of your quote request. Prices shown are indicative and subject to
-            confirmation by the AJS Redzone team. You will receive your priced quote by email with a personal
-            link to review, amend, and accept.
-          </Text>
-        </View>
-        <Text style={s.terms}>
-          All prices ex-VAT. VAT applied on invoice based on registration status.{"\n"}
-          Hardware invoiced 100% prior to shipment. DAP delivery terms.
-        </Text>
-        <PageFooter quoteRef={quote.ref} />
-      </Page>
-    </Document>
-  );
-}
-
-// ── Order confirmation PDF ───────────────────────────────────────────────────
-
-function OrderConfirmationDocument({ quote, items }: { quote: PDFQuote; items: PDFItem[] }) {
-  return (
-    <Document>
-      <Page size="A4" style={s.page}>
-        <Text style={s.brand}>AJS Control & Automation</Text>
-        <Text style={s.brandSub}>Redzone Hardware Portal</Text>
-        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}>
-          <Text style={s.ref}>{quote.ref}</Text>
-          <View style={s.confirmedBadge}>
-            <Text style={s.confirmedText}>ORDER CONFIRMED</Text>
+        <Header label="Quote request" ref={quote.ref} date={today()} logoSrc={logoSrc} />
+        <View style={s.body}>
+          <CustomerSection quote={quote} />
+          <View style={s.divider} />
+          <ItemsTable quote={quote} items={items} />
+          <View style={[s.noticeBox, { backgroundColor: "#eff6ff" }]}>
+            <Text style={[s.noticeText, { color: "#1e40af" }]}>
+              This confirms receipt of your quote request. Prices are indicative and subject to confirmation by the AJS Redzone team. You will receive your priced quote by email shortly.
+            </Text>
           </View>
-        </View>
-        <Text style={s.meta}>
-          Confirmed · {new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-        </Text>
-        <View style={s.divider} />
-        <CustomerBlock quote={quote} />
-        <View style={s.divider} />
-        <ItemsTable quote={quote} items={items} />
-        <View style={s.greenBox}>
-          <Text style={[s.greenText, s.bold, { marginBottom: 3 }]}>What happens next</Text>
-          <Text style={s.greenText}>
-            An invoice will be issued within 24 hours, payable 100% prior to shipment.
-            Once payment is received your order moves into production.
-            You will receive automated updates at each stage.
+          <Text style={s.terms}>
+            All prices ex-VAT. VAT applied on invoice based on registration status.{"\n"}
+            Hardware invoiced 100% prior to shipment. DAP delivery terms.
           </Text>
         </View>
-        <Text style={s.terms}>
-          All prices ex-VAT. VAT applied on invoice based on registration status.{"\n"}
-          Hardware invoiced 100% prior to shipment. DAP delivery terms.
-        </Text>
-        <PageFooter quoteRef={quote.ref} />
+        <Footer quoteRef={quote.ref} />
       </Page>
     </Document>
   );
 }
 
-// ── Work order PDF (no prices — operational use only) ───────────────────────
+function OrderConfirmationDocument({ quote, items, logoSrc }: { quote: PDFQuote; items: PDFItem[]; logoSrc: string | null }) {
+  const badge = (
+    <View style={[s.badge, { backgroundColor: "#dcfce7" }]}>
+      <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: "#166534" }}>ORDER CONFIRMED</Text>
+    </View>
+  );
 
-function WorkOrderDocument({ quote, items }: { quote: PDFQuote; items: PDFItem[] }) {
-  const requiredDate = quote.required_date
-    ? new Date(quote.required_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
-    : "NOT SPECIFIED";
+  return (
+    <Document>
+      <Page size="A4" style={s.page}>
+        <Header label="Order confirmation" ref={quote.ref} date={`Confirmed ${today()}`} logoSrc={logoSrc} badge={badge} />
+        <View style={s.body}>
+          <CustomerSection quote={quote} />
+          <View style={s.divider} />
+          <ItemsTable quote={quote} items={items} />
+          <View style={[s.noticeBox, { backgroundColor: "#f0fdf4" }]}>
+            <Text style={[s.noticeText, { fontFamily: "Helvetica-Bold", color: "#166534", marginBottom: 3 }]}>What happens next</Text>
+            <Text style={[s.noticeText, { color: "#166534" }]}>
+              An invoice will be issued within 24 hours, payable 100% prior to shipment. Once payment is received your order moves into production. You will receive automated updates at each stage.
+            </Text>
+          </View>
+          <Text style={s.terms}>
+            All prices ex-VAT. VAT applied on invoice based on registration status.{"\n"}
+            Hardware invoiced 100% prior to shipment. DAP delivery terms.
+          </Text>
+        </View>
+        <Footer quoteRef={quote.ref} />
+      </Page>
+    </Document>
+  );
+}
 
+function WorkOrderDocument({ quote, items, logoSrc }: { quote: PDFQuote; items: PDFItem[]; logoSrc: string | null }) {
+  const requiredDate = quote.required_date ? fmtDate(quote.required_date) : "NOT SPECIFIED";
   const addr = [
-    quote.site_address_line1,
-    quote.site_address_line2,
-    quote.site_address_city,
-    quote.site_address_postcode,
-    quote.site_country,
+    quote.site_address_line1, quote.site_address_line2,
+    quote.site_address_city, quote.site_address_postcode, quote.site_country,
   ].filter(Boolean);
 
   return (
     <Document>
-      <Page size="A4" style={{ fontFamily: "Helvetica", fontSize: 10, color: "#1e293b" }}>
-        {/* Dark header */}
-        <View style={s.woHeader}>
-          <Text style={s.woHeaderSub}>AJS Redzone — Work Order</Text>
-          <Text style={s.woHeaderText}>{quote.ref}</Text>
-        </View>
-
-        {/* Required date banner */}
+      <Page size="A4" style={s.page}>
+        <Header label="Work order" ref={quote.ref} date={today()} logoSrc={logoSrc} />
         <View style={s.woDateBanner}>
           <Text style={s.woDateLabel}>Required delivery date</Text>
-          <Text style={s.woDateValue}>{requiredDate}</Text>
+          <Text style={s.woDateVal}>{requiredDate}</Text>
         </View>
-
-        <View style={s.woBody}>
+        <View style={s.body}>
           {/* Customer & delivery */}
-          <View style={{ marginBottom: 16 }}>
-            <Text style={s.sectionTitle}>Customer & delivery</Text>
-            <View style={s.row}>
-              <Text style={s.label}>Customer</Text>
-              <Text style={[s.value, s.bold]}>
+          <View style={s.dl}>
+            <Text style={s.sectionLabel}>Customer &amp; delivery</Text>
+            <View style={s.dlRow}>
+              <Text style={s.dlKey}>Customer</Text>
+              <Text style={[s.dlVal, s.bold]}>
                 {quote.contact_name}{quote.contact_company ? ` — ${quote.contact_company}` : ""}
               </Text>
             </View>
-            {!!quote.contact_phone && (
-              <View style={s.row}><Text style={s.label}>Phone</Text><Text style={s.value}>{quote.contact_phone}</Text></View>
-            )}
-            {addr.length > 0 && (
-              <View style={s.row}>
-                <Text style={s.label}>Delivery address</Text>
-                <Text style={[s.value, s.bold]}>{addr.join(", ")}</Text>
-              </View>
-            )}
+            {!!quote.contact_phone && <View style={s.dlRow}><Text style={s.dlKey}>Phone</Text><Text style={s.dlVal}>{quote.contact_phone}</Text></View>}
+            {addr.length > 0 && <View style={s.dlRow}><Text style={s.dlKey}>Delivery address</Text><Text style={[s.dlVal, s.bold]}>{addr.join(", ")}</Text></View>}
           </View>
-
           <View style={s.divider} />
-
-          {/* Parts list — NO prices */}
-          <View style={{ marginBottom: 8 }}>
-            <Text style={s.sectionTitle}>Parts to build / ship</Text>
+          {/* Parts — NO prices */}
+          <View>
+            <Text style={s.sectionLabel}>Parts to build / ship</Text>
             <View style={s.thRow}>
-              <Text style={[{ width: 90 }, s.bold]}>Part code</Text>
-              <Text style={[{ flex: 1 }, s.bold]}>Description</Text>
-              <Text style={[{ width: 40, textAlign: "center" }, s.bold]}>Qty</Text>
+              <Text style={[s.woColSku, s.bold]}>Part code</Text>
+              <Text style={[s.woColName, s.bold]}>Description</Text>
+              <Text style={[s.woColQty, s.bold]}>Qty</Text>
             </View>
             {items.map((item, i) => (
               <View key={i} style={s.tdRow}>
-                <Text style={[{ width: 90, fontFamily: "Helvetica-Bold", fontSize: 11, color: "#1e293b" }]}>{item.sku}</Text>
-                <Text style={{ flex: 1 }}>{item.name}</Text>
-                <Text style={{ width: 40, textAlign: "center", fontFamily: "Helvetica-Bold", fontSize: 14, color: DARK }}>{item.qty}</Text>
+                <Text style={s.woColSku}>{item.sku}</Text>
+                <Text style={s.woColName}>{item.name}</Text>
+                <Text style={s.woColQty}>{item.qty}</Text>
               </View>
             ))}
           </View>
-
           {!!quote.install_requested && (
-            <View style={{ backgroundColor: "#fff7ed", borderRadius: 4, padding: "10 12", marginTop: 14 }}>
-              <Text style={{ fontSize: 9, fontFamily: "Helvetica-Bold", color: "#9a3412" }}>
+            <View style={[s.noticeBox, { backgroundColor: "#fff7ed", marginTop: 16 }]}>
+              <Text style={[s.noticeText, { fontFamily: "Helvetica-Bold", color: "#9a3412" }]}>
                 Installation requested — separate installation quote in progress. See portal for details.
               </Text>
             </View>
           )}
-
           <Text style={[s.terms, { marginTop: 24 }]}>
             Generated by AJS Redzone Portal · {quote.ref}
           </Text>
         </View>
-
-        <Text
-          style={[s.footer, { bottom: 16 }]}
-          render={({ pageNumber, totalPages }) =>
-            `${quote.ref}  ·  Page ${pageNumber} of ${totalPages}  ·  AJS Spalding Ltd  ·  rz@ajsspalding.co.uk  ·  01406 424954`
-          }
-          fixed
-        />
+        <Footer quoteRef={quote.ref} />
       </Page>
     </Document>
   );
 }
 
-// ── Render helpers ───────────────────────────────────────────────────────────
-
+// ─── Public render functions ───────────────────────────────────────────────────
 export async function renderQuoteRequestPDF(quote: PDFQuote, items: PDFItem[]): Promise<Buffer> {
-  return renderToBuffer(<QuoteRequestDocument quote={quote} items={items} />);
+  const logoSrc = await fetchLogoBase64();
+  return renderToBuffer(<QuoteRequestDocument quote={quote} items={items} logoSrc={logoSrc} />);
 }
 
 export async function renderOrderConfirmationPDF(quote: PDFQuote, items: PDFItem[]): Promise<Buffer> {
-  return renderToBuffer(<OrderConfirmationDocument quote={quote} items={items} />);
+  const logoSrc = await fetchLogoBase64();
+  return renderToBuffer(<OrderConfirmationDocument quote={quote} items={items} logoSrc={logoSrc} />);
 }
 
 export async function renderWorkOrderPDF(quote: PDFQuote, items: PDFItem[]): Promise<Buffer> {
-  return renderToBuffer(<WorkOrderDocument quote={quote} items={items} />);
+  const logoSrc = await fetchLogoBase64();
+  return renderToBuffer(<WorkOrderDocument quote={quote} items={items} logoSrc={logoSrc} />);
 }
