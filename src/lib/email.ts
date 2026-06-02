@@ -72,6 +72,8 @@ export interface EmailQuoteRow {
   contact_email: string;
   contact_company: string | null;
   subtotal_gbp_pence: number | string;
+  shipping_gbp_pence?: number | null;
+  shipping_pallets?: number | null;
   currency?: string | null;
   fx_rate_used?: number | null;
 }
@@ -165,8 +167,12 @@ function ajsNotifyHtml(quote: EmailQuoteRow, items: EmailItemRow[]): string {
         <td style="padding:6px 0;font-size:13px">${quote.contact_company ?? "&mdash;"}</td></tr>
     <tr><td style="padding:6px 0;font-size:13px;color:#64748b">Email</td>
         <td style="padding:6px 0;font-size:13px">${quote.contact_email}</td></tr>
+    <tr><td style="padding:6px 0;font-size:13px;color:#64748b">Subtotal</td>
+        <td style="padding:6px 0;font-size:13px;font-weight:bold">${gbp(quote.subtotal_gbp_pence)}</td></tr>
+    <tr><td style="padding:6px 0;font-size:13px;color:#64748b">Shipping${quote.shipping_pallets ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})` : ""}</td>
+        <td style="padding:6px 0;font-size:13px;font-weight:bold">${quote.shipping_gbp_pence != null ? gbp(quote.shipping_gbp_pence) : "EXW"}</td></tr>
     <tr><td style="padding:6px 0;font-size:13px;color:#64748b">Total (ex-VAT)</td>
-        <td style="padding:6px 0;font-size:14px;font-weight:bold;color:#1886a1">${gbp(quote.subtotal_gbp_pence)}</td></tr>
+        <td style="padding:6px 0;font-size:14px;font-weight:bold;color:#1886a1">${gbp(Number(quote.subtotal_gbp_pence) + (quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : 0))}</td></tr>
   </table>
   <h2 style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin:0 0 8px">Items</h2>
   <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:16px">
@@ -196,6 +202,8 @@ export async function sendQuoteEmails(
         contact_email: quote.contact_email,
         contact_company: quote.contact_company,
         subtotal_gbp_pence: quote.subtotal_gbp_pence,
+        shipping_gbp_pence: quote.shipping_gbp_pence,
+        shipping_pallets: quote.shipping_pallets,
         currency: quote.currency,
         fx_rate_used: quote.fx_rate_used,
       },
@@ -378,6 +386,7 @@ export async function sendOrderConfirmationEmails(
     site_address_line1: quote.site_address_line1, site_address_line2: quote.site_address_line2,
     site_address_city: quote.site_address_city, site_address_postcode: quote.site_address_postcode,
     site_country: quote.site_country, subtotal_gbp_pence: quote.subtotal_gbp_pence,
+    shipping_gbp_pence: quote.shipping_gbp_pence, shipping_pallets: quote.shipping_pallets,
     currency: quote.currency, fx_rate_used: quote.fx_rate_used,
   };
   const pdfItems = items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty, line_total_gbp_pence: i.line_total_gbp_pence }));

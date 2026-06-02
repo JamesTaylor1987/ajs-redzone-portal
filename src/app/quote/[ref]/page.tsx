@@ -38,14 +38,13 @@ export default async function QuoteConfirmationPage({ params }: PageProps) {
     .select("*")
     .eq("quote_id", quote.id);
 
-  const totalPence = (items ?? []).reduce(
+  const subtotalPence = (items ?? []).reduce(
     (s, i) => s + Number(i.line_total_gbp_pence ?? 0),
     0
   );
-  const total = `£${(totalPence / 100).toLocaleString("en-GB", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  const shippingPence = quote.shipping_gbp_pence ? Number(quote.shipping_gbp_pence) : null;
+  const grandTotalPence = subtotalPence + (shippingPence ?? 0);
+  const fmt = (p: number) => `£${(p / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -87,9 +86,19 @@ export default async function QuoteConfirmationPage({ params }: PageProps) {
                   </li>
                 ))}
               </ul>
-              <div className="flex justify-between font-bold pt-3 mt-2 border-t border-ajs-light">
-                <span>Subtotal (ex-VAT)</span>
-                <span>{total}</span>
+              <div className="flex justify-between text-sm pt-3 mt-2 border-t border-ajs-light text-ajs-muted">
+                <span>Subtotal</span>
+                <span className="font-semibold text-ajs-dark">{fmt(subtotalPence)}</span>
+              </div>
+              <div className="flex justify-between text-sm pt-1 text-ajs-muted">
+                <span>Shipping{quote.shipping_pallets ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})` : ""}</span>
+                <span className={`font-semibold ${shippingPence === null ? "text-amber-600" : "text-ajs-dark"}`}>
+                  {shippingPence !== null ? fmt(shippingPence) : "EXW"}
+                </span>
+              </div>
+              <div className="flex justify-between font-bold pt-2 mt-1 border-t border-ajs-light">
+                <span>Total (ex-VAT)</span>
+                <span>{fmt(grandTotalPence)}</span>
               </div>
             </div>
 
