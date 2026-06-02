@@ -32,6 +32,12 @@ export default async function AdminLayout({
             {session.user.email}
           </span>
           <Link
+            href="/manufacturing"
+            className="px-3 py-1 rounded border border-white/30 hover:bg-white/10 text-sm font-medium transition-colors"
+          >
+            Manufacturing ↗
+          </Link>
+          <Link
             href="/"
             className="px-3 py-1 rounded border border-white/30 hover:bg-white/10 text-sm font-medium transition-colors"
           >

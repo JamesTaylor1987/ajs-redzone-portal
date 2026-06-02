@@ -18,14 +18,14 @@ export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: H
           className="flex items-center gap-3 select-none"
           aria-label="AJS Redzone Hardware Portal"
         >
-          <div className="bg-white rounded px-2 py-1">
+          <Link href="/admin/login" className="bg-white rounded px-2 py-1 block">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://ajsspalding.co.uk/img/ajs-logo@2x.png"
               alt="AJS Control & Automation"
               className="h-6 w-auto object-contain"
             />
-          </div>
+          </Link>
           <div className="hidden sm:block w-px h-8 bg-white/30" />
           <div className="hidden sm:flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -1,16 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase-server";
-import { manufacturingUpdateStatusAction } from "./actions";
+import { StatusUpdateForm } from "./StatusUpdateForm";
 
 export const dynamic = "force-dynamic";
-
-const MFG_STATUSES = [
-  { value: "in_build",      label: "In build" },
-  { value: "ready_to_ship", label: "Ready to ship" },
-  { value: "shipped",       label: "Shipped" },
-  { value: "complete",      label: "Complete" },
-];
 
 const STATUS_COLOUR: Record<string, string> = {
   order_confirmed: "bg-blue-100 text-blue-700",
@@ -141,39 +134,7 @@ export default async function ManufacturingOrderDetailPage({ params }: PageProps
         </table>
       </div>
 
-      <div className="bg-white rounded-xl border border-ajs-light p-5">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark mb-3">Update status</h2>
-        <form action={manufacturingUpdateStatusAction} className="flex gap-3 items-end flex-wrap">
-          <input type="hidden" name="id" value={quote.id} />
-          <div>
-            <label className="block text-xs text-ajs-muted mb-1">Status</label>
-            <select
-              name="status"
-              defaultValue={quote.status}
-              className="border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
-            >
-              {MFG_STATUSES.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-ajs-muted mb-1">Tracking ref <span className="text-ajs-light">(shipped only)</span></label>
-            <input
-              type="text"
-              name="tracking_ref"
-              placeholder="e.g. DPD 1Z9999999"
-              className="border border-ajs-light rounded-md px-3 py-2 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
-            />
-          </div>
-          <button
-            type="submit"
-            className="px-4 py-2 rounded-lg text-sm font-bold text-white bg-ajs-primary hover:bg-ajs-dark transition-colors"
-          >
-            Save &amp; notify customer
-          </button>
-        </form>
-      </div>
+      <StatusUpdateForm quoteId={quote.id} currentStatus={quote.status} />
     </div>
   );
 }

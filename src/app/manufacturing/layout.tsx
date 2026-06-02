@@ -32,8 +32,8 @@ export default async function ManufacturingLayout({ children }: { children: Reac
                 Admin ↗
               </Link>
             )}
-            <Link href="/portal" className="hover:text-white transition-colors">
-              Home
+            <Link href="/" className="hover:text-white transition-colors">
+              ← Site
             </Link>
             <form action={logoutAction}>
               <button type="submit" className="hover:text-white transition-colors">
