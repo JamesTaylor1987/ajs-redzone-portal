@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
+import { REDZONE_LOGO_B64 } from "./pdf-logos";
 
 // ─── pdfmake Node.js singleton ────────────────────────────────────────────────
 // Imported as CJS to avoid ESM/RSC conflicts that broke @react-pdf/renderer.
@@ -96,9 +97,9 @@ function addr(quote: PDFQuote): string {
 // ─── Document sections ────────────────────────────────────────────────────────
 
 function buildHeader(label: string, ref: string, date: string, logoKey: string | null, badge?: string): Content {
-  const logoContent: Content = logoKey
-    ? { image: logoKey, width: 72, margin: [0, 0, 0, 12] } as any
-    : { text: "AJS Control & Automation", bold: true, color: "#ffffff", fontSize: 12, margin: [0, 0, 0, 12] };
+  const ajsLogoContent: Content = logoKey
+    ? { image: logoKey, width: 80, margin: [0, 0, 0, 0] } as any
+    : { text: "AJS Control and Automation Ltd", bold: true, color: BLUE, fontSize: 11 };
 
   const refRow: Content[] = [
     { text: ref, bold: true, color: "#ffffff", fontSize: 22 } as any,
@@ -114,17 +115,41 @@ function buildHeader(label: string, ref: string, date: string, logoKey: string |
     } as any);
   }
 
-  return {
+  // White logo bar — AJS left, "in partnership with" + Redzone right
+  const logoBar: Content = {
+    table: {
+      widths: ["*"],
+      body: [[{
+        columns: [
+          ajsLogoContent,
+          {
+            columns: [
+              { text: "in partnership with", color: MUTED, fontSize: 7, italics: true, alignment: "right" as const, margin: [0, 0, 8, 0] },
+              { image: REDZONE_LOGO_B64, width: 72, margin: [0, 0, 0, 0] } as any,
+            ],
+            columnGap: 0,
+            alignment: "right" as const,
+          },
+        ],
+        verticalAlignment: "center",
+      }]],
+    },
+    layout: {
+      defaultBorder: false,
+      fillColor: () => "#ffffff",
+      paddingLeft: () => 36,
+      paddingRight: () => 36,
+      paddingTop: () => 14,
+      paddingBottom: () => 14,
+    },
+  } as any;
+
+  // Blue ref bar
+  const refBar: Content = {
     table: {
       widths: ["*"],
       body: [[{
         stack: [
-          {
-            columns: [
-              logoContent,
-              { text: "Redzone Hardware Portal", color: TEAL, bold: true, alignment: "right" as const, margin: [0, 3, 0, 12] },
-            ],
-          },
           { text: label.toUpperCase(), color: HEADER_MUTED, fontSize: 8, margin: [0, 0, 0, 4] },
           { columns: refRow },
           { text: date, color: HEADER_MUTED, fontSize: 8, margin: [0, 4, 0, 0] },
@@ -136,10 +161,12 @@ function buildHeader(label: string, ref: string, date: string, logoKey: string |
       fillColor: () => BLUE,
       paddingLeft: () => 36,
       paddingRight: () => 36,
-      paddingTop: () => 20,
-      paddingBottom: () => 20,
+      paddingTop: () => 16,
+      paddingBottom: () => 16,
     },
   } as any;
+
+  return { stack: [logoBar, refBar] } as any;
 }
 
 function buildCustomerSection(quote: PDFQuote): Content {
@@ -256,7 +283,7 @@ function buildDivider(): Content {
 
 function buildFooter(ref: string): (page: number, pages: number) => Content {
   return (page, pages) => ({
-    text: `${ref}  ·  Page ${page} of ${pages}  ·  AJS Spalding Ltd  ·  rz@ajsspalding.co.uk  ·  01406 424954`,
+    text: `${ref}  ·  Page ${page} of ${pages}  ·  AJS Control and Automation Ltd  ·  rz@ajsspalding.co.uk  ·  01406 424954`,
     color: "#94a3b8",
     fontSize: 7,
     alignment: "center",
