@@ -203,6 +203,7 @@ export async function sendQuoteEmails(
     ),
   );
   const pdfAttachment = pdfBuf ? [{ filename: `quote-${quote.ref}.pdf`, content: pdfBuf }] : undefined;
+  console.log(`[email] quote PDF: ${pdfBuf ? pdfBuf.length + " bytes, attaching" : "null — sending without attachment"}`);
 
   try {
     const [customerRes, ajsRes] = await Promise.all([
