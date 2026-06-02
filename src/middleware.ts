@@ -30,18 +30,19 @@ export async function middleware(request: NextRequest) {
   const isLoginPage = path === "/admin/login";
   const isAdminPage = path.startsWith("/admin");
   const isWorkshopPage = path.startsWith("/workshop");
+  const isPortalPage = path.startsWith("/portal");
 
-  if ((isAdminPage && !isLoginPage && !session) || (isWorkshopPage && !session)) {
+  if ((isAdminPage && !isLoginPage && !session) || (isWorkshopPage && !session) || (isPortalPage && !session)) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
   }
 
   if (isLoginPage && session) {
-    return NextResponse.redirect(new URL("/admin/orders", request.url));
+    return NextResponse.redirect(new URL("/portal", request.url));
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/workshop/:path*"],
+  matcher: ["/admin/:path*", "/workshop/:path*", "/portal/:path*", "/portal"],
 };

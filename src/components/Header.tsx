@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { Currency } from "@/lib/types";
 
 interface HeaderProps {
@@ -12,25 +11,11 @@ interface HeaderProps {
 }
 
 export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: HeaderProps) {
-  const router = useRouter();
-  const [clicks, setClicks] = useState(0);
-
-  const handleLogoClick = () => {
-    const next = clicks + 1;
-    if (next >= 5) {
-      setClicks(0);
-      router.push("/admin/login");
-    } else {
-      setClicks(next);
-    }
-  };
-
   return (
     <header className="brand-gradient sticky top-0 z-30 shadow-md">
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
-        <button
-          onClick={handleLogoClick}
-          className="flex items-center gap-3 cursor-default select-none"
+        <div
+          className="flex items-center gap-3 select-none"
           aria-label="AJS Redzone Hardware Portal"
         >
           <div className="bg-white rounded px-2 py-1">
@@ -52,7 +37,7 @@ export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: H
             <span className="font-bold text-white text-sm">Redzone</span>
             <span className="text-white/60 text-sm">Hardware Portal</span>
           </div>
-        </button>
+        </div>
 
         <div className="flex items-center gap-2">
           <div className="hidden sm:flex bg-white/10 rounded-lg overflow-hidden border border-white/20 text-xs font-semibold">
@@ -69,6 +54,13 @@ export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: H
               € EUR
             </button>
           </div>
+
+          <Link
+            href="/portal"
+            className="hidden sm:block text-white/60 hover:text-white text-xs font-semibold transition-colors"
+          >
+            Staff
+          </Link>
 
           <button
             onClick={onCartClick}

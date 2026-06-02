@@ -16,7 +16,7 @@ export default function AdminLoginPage({ searchParams }: PageProps) {
       <div className="w-full max-w-sm">
         <div className="bg-white rounded-2xl shadow-md border border-ajs-light overflow-hidden">
           <div className="brand-gradient text-white p-6">
-            <div className="text-xs uppercase tracking-wide text-white/70">Admin</div>
+            <div className="text-xs uppercase tracking-wide text-white/70">Staff login</div>
             <div className="text-2xl font-extrabold mt-1">AJS Redzone Portal</div>
           </div>
           <form action={loginAction} className="p-6 space-y-4">
