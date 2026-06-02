@@ -1,83 +1,35 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase-server";
-import { verificationHash, buildAccountsUrl } from "@/lib/magic-link";
-import { sendOrderConfirmationEmails, sendAccountsLinkEmail } from "@/lib/email";
+import { sendOrderConfirmationEmails } from "@/lib/email";
 
-export type AcceptState = { error: string } | null;
+export type AcceptAccountsState = { error: string } | null;
 
-export type SendAccountsLinkState = { success: string } | { error: string } | null;
-
-export async function sendAccountsLinkAction(
-  _prev: SendAccountsLinkState,
+export async function acceptAccountsAction(
+  _prevState: AcceptAccountsState,
   formData: FormData,
-): Promise<SendAccountsLinkState> {
+): Promise<AcceptAccountsState> {
   const quoteRef = (formData.get("quoteRef") as string) ?? "";
-  const token = (formData.get("token") as string) ?? "";
-  const toEmail = ((formData.get("toEmail") as string) ?? "").trim();
-
-  if (!toEmail || !toEmail.includes("@")) {
-    return { error: "Please enter a valid email address." };
-  }
-
-  const supabase = getServiceClient();
-  const { data: quote } = await supabase
-    .from("quotes")
-    .select("id, ref, contact_name, contact_company, accounts_token, magic_token")
-    .eq("ref", quoteRef)
-    .single();
-
-  if (!quote || quote.magic_token !== token) {
-    return { error: "Invalid request." };
-  }
-
-  if (!quote.accounts_token) {
-    return { error: "Accounts link not available for this quote. Contact rz@ajsspalding.co.uk." };
-  }
-
-  const accountsUrl = buildAccountsUrl(quote.ref, quote.accounts_token);
-  await sendAccountsLinkEmail(toEmail, quote.ref, accountsUrl, quote.contact_name, quote.contact_company);
-
-  return { success: `Link sent to ${toEmail}.` };
-}
-
-export async function acceptQuoteAction(
-  _prevState: AcceptState,
-  formData: FormData,
-): Promise<AcceptState> {
-  const quoteRef = (formData.get("quoteRef") as string) ?? "";
-  const token = (formData.get("token") as string) ?? "";
+  const accountsToken = (formData.get("accountsToken") as string) ?? "";
 
   const supabase = getServiceClient();
   const { data: quote } = await supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, required_date, install_requested, magic_token, magic_expires_at, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, currency, fx_rate_used",
+      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, required_date, install_requested, accounts_token, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, currency, fx_rate_used",
     )
     .eq("ref", quoteRef)
     .single();
 
-  if (!quote || quote.magic_token !== token) {
-    return { error: "Invalid request. Please return via your magic link." };
-  }
-
-  if (quote.magic_expires_at && new Date(quote.magic_expires_at) < new Date()) {
-    return { error: "Your link has expired. Contact rz@ajsspalding.co.uk for a new one." };
-  }
-
-  // Verify the email-confirmation cookie is still valid.
-  const cookieVal = cookies().get(`rz_v_${quote.id.slice(0, 8)}`)?.value ?? "";
-  if (cookieVal !== verificationHash(token, quote.contact_email)) {
-    redirect(`/quote/${encodeURIComponent(quoteRef)}/edit?token=${token}`);
+  if (!quote || quote.accounts_token !== accountsToken) {
+    return { error: "Invalid request." };
   }
 
   if (quote.status !== "quote_submitted") {
-    redirect(`/quote/${encodeURIComponent(quoteRef)}/edit?token=${token}`);
+    redirect(`/quote/${encodeURIComponent(quoteRef)}/accounts?token=${accountsToken}&done=1`);
   }
 
-  // ── Parse + validate form data ──────────────────────────────────────────────
   const g = (key: string) => ((formData.get(key) as string) ?? "").trim();
 
   const registeredCompanyName = g("registeredCompanyName");
@@ -122,7 +74,6 @@ export async function acceptQuoteAction(
     return { error: "GDPR consent is required to place an order." };
   }
 
-  // ── Persist ──────────────────────────────────────────────────────────────────
   const now = new Date().toISOString();
 
   const accountInfo = {
@@ -155,11 +106,10 @@ export async function acceptQuoteAction(
     .eq("id", quote.id);
 
   if (updateError) {
-    console.error("[accept] DB update failed:", updateError);
+    console.error("[accounts] DB update failed:", updateError);
     return { error: "Could not save your order. Please try again or contact rz@ajsspalding.co.uk." };
   }
 
-  // ── Send emails ──────────────────────────────────────────────────────────────
   const { data: items } = await supabase
     .from("quote_items")
     .select("sku, name, qty, unit_price_gbp_pence, line_total_gbp_pence")
@@ -191,5 +141,5 @@ export async function acceptQuoteAction(
     })),
   );
 
-  redirect(`/quote/${encodeURIComponent(quoteRef)}/edit?token=${token}&accepted=1`);
+  redirect(`/quote/${encodeURIComponent(quoteRef)}/accounts?token=${accountsToken}&done=1`);
 }

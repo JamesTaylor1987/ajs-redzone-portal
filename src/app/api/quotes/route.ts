@@ -87,11 +87,13 @@ export async function POST(request: Request) {
   // 3. Insert the quote row.
   const magicToken = generateMagicToken();
   const magicExpiresAt = magicLinkExpiry();
+  const accountsToken = generateMagicToken();
 
   const { data: quoteRow, error: quoteError } = await supabase
     .from("quotes")
     .insert({
       ref,
+      accounts_token: accountsToken,
       status: "quote_submitted",
       currency: body.currency ?? "GBP",
       fx_rate_used: body.fxRateUsed,

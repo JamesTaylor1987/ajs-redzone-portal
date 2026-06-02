@@ -422,6 +422,71 @@ export async function sendOrderConfirmationEmails(
   }
 }
 
+// ─── Accounts link email ─────────────────────────────────────────────────────
+
+export async function sendAccountsLinkEmail(
+  toEmail: string,
+  ref: string,
+  accountsUrl: string,
+  fromContactName: string,
+  fromCompany: string | null,
+): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return;
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  const sender = fromCompany
+    ? `${fromContactName} at ${fromCompany}`
+    : fromContactName;
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
+<div style="max-width:600px;margin:0 auto;padding:24px 16px">
+
+  ${emailHeader("Account details required", ref)}
+
+  <div style="background:#fff;border-radius:0 0 12px 12px;padding:32px;border:1px solid #e6ebed;border-top:none">
+    <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">
+      ${sender} has placed an order (<strong>${ref}</strong>) with AJS Redzone and asked you to
+      complete the account &amp; billing information so an invoice can be raised.
+    </p>
+
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px 24px;margin-bottom:24px;text-align:center">
+      <p style="color:#475569;font-size:13px;margin:0 0 16px;line-height:1.5">
+        Click the button below to open the account details form. No login required.
+      </p>
+      <a href="${accountsUrl}" style="display:inline-block;background:#1886a1;color:#fff;font-weight:bold;text-decoration:none;padding:13px 28px;border-radius:8px;font-size:14px">
+        Complete Account Details &rarr;
+      </a>
+    </div>
+
+    <p style="color:#64748b;font-size:13px;margin:0;line-height:1.8">
+      Questions? Contact the AJS Redzone team:<br>
+      <a href="mailto:rz@ajsspalding.co.uk" style="color:#1886a1;text-decoration:none">rz@ajsspalding.co.uk</a>
+      &nbsp;&middot;&nbsp; 01406&nbsp;424954
+    </p>
+  </div>
+
+  <p style="color:#94a3b8;font-size:11px;text-align:center;margin:16px 0 0;line-height:1.6">
+    AJS Spalding Ltd &nbsp;&middot;&nbsp; Redzone Hardware Portal
+  </p>
+</div>
+</body></html>`;
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to: recipients(toEmail),
+      subject: `Account details required: ${ref} — AJS Redzone`,
+      html,
+    });
+    if (error) console.error("[email] accounts link failed:", error);
+    else console.log(`[email] accounts link sent to ${toEmail}`);
+  } catch (err) {
+    console.error("[email] accounts link unexpected error:", err);
+  }
+}
+
 // ─── Status update emails ─────────────────────────────────────────────────────
 
 const STATUS_SUBJECT: Partial<Record<string, string>> = {

@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { getServiceClient } from "@/lib/supabase-server";
-import { verificationHash } from "@/lib/magic-link";
+import { verificationHash, buildAccountsUrl } from "@/lib/magic-link";
 import { AccountInfoForm } from "./AccountInfoForm";
+import { ForwardToAccounts } from "./ForwardToAccounts";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
   const { data: quote } = await supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, magic_token, magic_expires_at",
+      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, magic_token, magic_expires_at, accounts_token",
     )
     .eq("ref", ref)
     .single();
@@ -125,6 +126,17 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
             contactEmail: quote.contact_email,
           }}
         />
+
+        {/* Forward to accounts */}
+        {quote.accounts_token && (
+          <div className="bg-white rounded-xl border border-ajs-light p-5">
+            <ForwardToAccounts
+              quoteRef={ref}
+              token={token}
+              accountsUrl={buildAccountsUrl(ref, quote.accounts_token)}
+            />
+          </div>
+        )}
 
         <div className="mt-4">
           <Link
