@@ -29,8 +29,9 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isLoginPage = path === "/admin/login";
   const isAdminPage = path.startsWith("/admin");
+  const isWorkshopPage = path.startsWith("/workshop");
 
-  if (isAdminPage && !isLoginPage && !session) {
+  if ((isAdminPage && !isLoginPage && !session) || (isWorkshopPage && !session)) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
   }
 
@@ -42,5 +43,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/workshop/:path*"],
 };
