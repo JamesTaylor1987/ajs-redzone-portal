@@ -63,6 +63,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
         <form action={updateStatusAction} className="flex gap-3 items-end flex-wrap">
           <input type="hidden" name="id" value={quote.id} />
           <div>
+            <label className="block text-xs text-ajs-muted mb-1">Status</label>
             <select
               name="status"
               defaultValue={quote.status}
@@ -75,11 +76,20 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
               ))}
             </select>
           </div>
+          <div>
+            <label className="block text-xs text-ajs-muted mb-1">Tracking ref <span className="text-ajs-light">(shipped only)</span></label>
+            <input
+              type="text"
+              name="tracking_ref"
+              placeholder="e.g. DPD 1Z9999999"
+              className="border border-ajs-light rounded-md px-3 py-2 text-sm w-52 focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
+            />
+          </div>
           <button
             type="submit"
             className="px-4 py-2 rounded-lg text-sm font-bold text-white bg-ajs-primary hover:bg-ajs-dark transition-colors"
           >
-            Save
+            Save &amp; notify customer
           </button>
         </form>
       </div>

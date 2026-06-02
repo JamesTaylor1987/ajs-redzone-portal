@@ -412,3 +412,103 @@ export async function sendOrderConfirmationEmails(
     console.error("[email] order confirmation unexpected error:", err);
   }
 }
+
+// ─── Status update emails ─────────────────────────────────────────────────────
+
+const STATUS_SUBJECT: Partial<Record<string, string>> = {
+  order_confirmed: "Order confirmed",
+  in_build:        "Your order is in production",
+  ready_to_ship:   "Your order is ready to despatch",
+  shipped:         "Your order has been shipped",
+  complete:        "Your order is complete",
+  cancelled:       "Order update",
+};
+
+const STATUS_COLOUR: Partial<Record<string, { bg: string; border: string; text: string }>> = {
+  order_confirmed: { bg: "#eff6ff", border: "#bfdbfe", text: "#1e40af" },
+  in_build:        { bg: "#f5f3ff", border: "#ddd6fe", text: "#5b21b6" },
+  ready_to_ship:   { bg: "#f0fdfa", border: "#99f6e4", text: "#0f766e" },
+  shipped:         { bg: "#f0fdf4", border: "#bbf7d0", text: "#166534" },
+  complete:        { bg: "#f8fafc", border: "#e2e8f0", text: "#334155" },
+  cancelled:       { bg: "#fff1f2", border: "#fecdd3", text: "#be123c" },
+};
+
+const STATUS_BODY: Partial<Record<string, (ref: string, trackingRef?: string) => string>> = {
+  order_confirmed: (ref) =>
+    `Your order <strong>${ref}</strong> has been confirmed by the AJS Redzone team. An invoice will be issued within 24 hours, payable 100% prior to shipment. Once payment is received your order moves into production and you will receive further updates at each stage.`,
+  in_build: (ref) =>
+    `Your order <strong>${ref}</strong> is now in production. Our workshop team are building your hardware. We&rsquo;ll be in touch again when it&rsquo;s ready to despatch.`,
+  ready_to_ship: (ref) =>
+    `Great news &mdash; your order <strong>${ref}</strong> has been built and is ready to despatch. Our team will be in touch shortly to arrange delivery.`,
+  shipped: (ref, trackingRef) =>
+    `Your order <strong>${ref}</strong> is on its way.${trackingRef ? ` Your tracking reference is <strong>${trackingRef}</strong>.` : ""} Delivery is on DAP terms. Please contact us if you have any questions.`,
+  complete: (ref) =>
+    `Your order <strong>${ref}</strong> is now complete. Thank you for your business &mdash; we hope everything arrived in perfect condition. Please don&rsquo;t hesitate to get in touch if you need anything.`,
+  cancelled: (ref) =>
+    `Your order <strong>${ref}</strong> has been cancelled. If you believe this is an error or have any questions, please contact the AJS Redzone team directly.`,
+};
+
+function statusUpdateHtml(
+  contactName: string,
+  ref: string,
+  status: string,
+  trackingRef?: string,
+): string {
+  const first = contactName.trim().split(" ")[0] ?? "there";
+  const subject = STATUS_SUBJECT[status] ?? "Order update";
+  const colours = STATUS_COLOUR[status] ?? { bg: "#f8fafc", border: "#e2e8f0", text: "#334155" };
+  const bodyFn = STATUS_BODY[status];
+  const body = bodyFn ? bodyFn(ref, trackingRef) : `Your order <strong>${ref}</strong> has been updated. Status: ${status}.`;
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
+<div style="max-width:600px;margin:0 auto;padding:24px 16px">
+
+  ${emailHeader(subject, ref)}
+
+  <div style="background:#fff;border-radius:0 0 12px 12px;padding:32px;border:1px solid #e6ebed;border-top:none">
+    <p style="color:#1e293b;font-size:15px;margin:0 0 16px">Hi ${first},</p>
+    <div style="background:${colours.bg};border:1px solid ${colours.border};border-radius:8px;padding:16px 20px;margin-bottom:24px">
+      <p style="color:${colours.text};font-size:14px;margin:0;line-height:1.6">${body}</p>
+    </div>
+    <p style="color:#64748b;font-size:13px;margin:0;line-height:1.8">
+      Questions? Contact the AJS Redzone team:<br>
+      <a href="mailto:rz@ajsspalding.co.uk" style="color:#1886a1;text-decoration:none">rz@ajsspalding.co.uk</a>
+      &nbsp;&middot;&nbsp; 01406&nbsp;424954
+    </p>
+  </div>
+
+  <p style="color:#94a3b8;font-size:11px;text-align:center;margin:16px 0 0;line-height:1.6">
+    AJS Spalding Ltd &nbsp;&middot;&nbsp; Redzone Hardware Portal
+  </p>
+</div>
+</body></html>`;
+}
+
+export async function sendStatusUpdateEmail(
+  contactName: string,
+  contactEmail: string,
+  ref: string,
+  status: string,
+  trackingRef?: string,
+): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return;
+  if (!STATUS_SUBJECT[status]) return; // no email for quote_submitted
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const subject = `${STATUS_SUBJECT[status]}: ${ref} — AJS Redzone`;
+
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to: recipients(contactEmail),
+      subject,
+      html: statusUpdateHtml(contactName, ref, status, trackingRef),
+    });
+    if (error) console.error("[email] status update failed:", error);
+    else console.log(`[email] status update sent: ${status} → ${contactEmail}`);
+  } catch (err) {
+    console.error("[email] status update unexpected error:", err);
+  }
+}
