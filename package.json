@@ -10,16 +10,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@react-pdf/renderer": "^4.5.1",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.4",
     "next": "14.2.15",
+    "pdfmake": "^0.3.9",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "resend": "^6.12.4"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/pdfmake": "^0.3.3",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.20",

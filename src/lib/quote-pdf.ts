@@ -1,0 +1,455 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
+
+// ─── pdfmake Node.js singleton ────────────────────────────────────────────────
+// Imported as CJS to avoid ESM/RSC conflicts that broke @react-pdf/renderer.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pm: any = require("pdfmake");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const vfsFonts: Record<string, string> = require("pdfmake/build/vfs_fonts");
+
+// One-time setup — runs once when this module is first imported.
+(function initPdfMake() {
+  Object.entries(vfsFonts).forEach(([name, data]) => {
+    pm.virtualfs.writeFileSync(name, Buffer.from(data, "base64"));
+  });
+  pm.fonts = {
+    Roboto: {
+      normal: "Roboto-Regular.ttf",
+      bold: "Roboto-Medium.ttf",
+      italics: "Roboto-Italic.ttf",
+      bolditalics: "Roboto-MediumItalic.ttf",
+    },
+  };
+  pm.setUrlAccessPolicy((url: string) => url.startsWith("data:"));
+  pm.setLocalAccessPolicy(() => false);
+})();
+
+// ─── Colours ──────────────────────────────────────────────────────────────────
+const BLUE  = "#05618e";
+const TEAL  = "#1886a1";
+const LIGHT = "#e6ebed";
+const MUTED = "#64748b";
+const FAINT = "#f8fafc";
+const HEADER_MUTED = "#8bbfd4"; // approx rgba(255,255,255,0.60) on BLUE bg
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+export interface PDFQuote {
+  ref: string;
+  contact_name: string;
+  contact_email: string;
+  contact_company?: string | null;
+  contact_phone?: string | null;
+  required_date?: string | null;
+  install_requested?: boolean;
+  site_address_line1?: string | null;
+  site_address_line2?: string | null;
+  site_address_city?: string | null;
+  site_address_postcode?: string | null;
+  site_country?: string | null;
+  subtotal_gbp_pence: number | string;
+  currency?: string | null;
+  fx_rate_used?: number | null;
+}
+
+export interface PDFItem {
+  sku: string;
+  name: string;
+  qty: number;
+  line_total_gbp_pence: number | string;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function money(gbpPence: number | string, currency = "GBP", fxRate: number | null = null): string {
+  const p = Number(gbpPence);
+  if (currency === "EUR" && fxRate && fxRate > 1) {
+    return "€" + (p * fxRate / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  return "£" + (p / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+
+function today() {
+  return new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+
+async function fetchLogoBase64(): Promise<string | null> {
+  try {
+    const res = await fetch("https://ajsspalding.co.uk/img/ajs-logo@2x.png");
+    const buf = await res.arrayBuffer();
+    return `data:image/png;base64,${Buffer.from(buf).toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+function addr(quote: PDFQuote): string {
+  return [
+    quote.site_address_line1, quote.site_address_line2,
+    quote.site_address_city, quote.site_address_postcode, quote.site_country,
+  ].filter(Boolean).join(", ");
+}
+
+// ─── Document sections ────────────────────────────────────────────────────────
+
+function buildHeader(label: string, ref: string, date: string, logoKey: string | null, badge?: string): Content {
+  const logoContent: Content = logoKey
+    ? { image: logoKey, width: 72, margin: [0, 0, 0, 12] } as any
+    : { text: "AJS Control & Automation", bold: true, color: "#ffffff", fontSize: 12, margin: [0, 0, 0, 12] };
+
+  const refRow: Content[] = [
+    { text: ref, bold: true, color: "#ffffff", fontSize: 22 } as any,
+  ];
+  if (badge) {
+    refRow.push({
+      text: badge,
+      bold: true,
+      fontSize: 7,
+      color: "#166534",
+      background: "#dcfce7",
+      margin: [8, 6, 0, 0],
+    } as any);
+  }
+
+  return {
+    table: {
+      widths: ["*"],
+      body: [[{
+        stack: [
+          {
+            columns: [
+              logoContent,
+              { text: "Redzone Hardware Portal", color: TEAL, bold: true, alignment: "right" as const, margin: [0, 3, 0, 12] },
+            ],
+          },
+          { text: label.toUpperCase(), color: HEADER_MUTED, fontSize: 8, margin: [0, 0, 0, 4] },
+          { columns: refRow },
+          { text: date, color: HEADER_MUTED, fontSize: 8, margin: [0, 4, 0, 0] },
+        ],
+      }]],
+    },
+    layout: {
+      defaultBorder: false,
+      fillColor: () => BLUE,
+      paddingLeft: () => 36,
+      paddingRight: () => 36,
+      paddingTop: () => 20,
+      paddingBottom: () => 20,
+    },
+  } as any;
+}
+
+function buildCustomerSection(quote: PDFQuote): Content {
+  const rows: Content[] = [];
+  function row(label: string, value: string | null | undefined): void {
+    if (!value) return;
+    rows.push({ columns: [{ text: label, color: MUTED, width: 120 }, { text: value, bold: false }] } as any);
+  }
+  row("Name", quote.contact_name);
+  row("Company", quote.contact_company);
+  row("Email", quote.contact_email);
+  row("Phone", quote.contact_phone);
+  const a = addr(quote);
+  if (a) row("Delivery address", a);
+  if (quote.required_date) row("Required by", fmtDate(quote.required_date));
+  return {
+    stack: [
+      { text: "CUSTOMER", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
+      { stack: rows, fontSize: 10 },
+    ],
+    margin: [0, 0, 0, 14],
+  } as any;
+}
+
+function buildItemsTable(quote: PDFQuote, items: PDFItem[]): Content {
+  const ccy = quote.currency ?? "GBP";
+  const fx  = quote.fx_rate_used ?? null;
+  const total = items.reduce((sum, i) => sum + Number(i.line_total_gbp_pence), 0);
+
+  const headerRow: any[] = [
+    { text: "Part code", bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
+    { text: "Description", bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
+    { text: "Qty", bold: true, color: MUTED, fontSize: 8, alignment: "center", fillColor: FAINT },
+    { text: "Total", bold: true, color: MUTED, fontSize: 8, alignment: "right", fillColor: FAINT },
+  ];
+
+  const dataRows: any[][] = items.map((item) => [
+    { text: item.sku, color: "#94a3b8", fontSize: 9 },
+    { text: item.name },
+    { text: String(item.qty), alignment: "center" },
+    { text: money(item.line_total_gbp_pence, ccy, fx), alignment: "right" },
+  ]);
+
+  const totalRow: any[] = [
+    { text: "Subtotal (ex-VAT)", colSpan: 3, bold: true, alignment: "right", border: [false, true, false, false] },
+    {}, {},
+    { text: money(total, ccy, fx), bold: true, color: BLUE, fontSize: 11, alignment: "right", border: [false, true, false, false] },
+  ];
+
+  const sections: Content[] = [
+    { text: "ITEMS", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] } as any,
+    {
+      table: {
+        widths: [72, "*", 28, 68],
+        headerRows: 1,
+        body: [headerRow, ...dataRows, totalRow],
+      },
+      layout: {
+        defaultBorder: false,
+        hLineColor: () => LIGHT,
+        hLineWidth: (i: number, node: any) => (i === 0 || i === node.table.body.length ? 0 : 0.5),
+        vLineWidth: () => 0,
+        paddingTop: () => 5,
+        paddingBottom: () => 5,
+        paddingLeft: () => 4,
+        paddingRight: () => 4,
+      },
+    } as any,
+  ];
+
+  if (ccy === "EUR") {
+    sections.push({ text: "Indicative EUR rate — invoice issued in GBP", color: "#94a3b8", fontSize: 8, alignment: "right", margin: [0, 4, 0, 0] } as any);
+  }
+
+  return { stack: sections } as any;
+}
+
+function buildNoticeBox(text: string, bg: string, color: string, heading?: string): Content {
+  return {
+    table: {
+      widths: ["*"],
+      body: [[{
+        stack: [
+          ...(heading ? [{ text: heading, bold: true, color, fontSize: 9, margin: [0, 0, 0, 3] }] : []),
+          { text, color, fontSize: 9, lineHeight: 1.5 },
+        ],
+      }]],
+    },
+    layout: {
+      defaultBorder: false,
+      fillColor: () => bg,
+      paddingLeft: () => 12,
+      paddingRight: () => 12,
+      paddingTop: () => 10,
+      paddingBottom: () => 10,
+    },
+    margin: [0, 14, 0, 0],
+  } as any;
+}
+
+function buildTerms(): Content {
+  return {
+    text: "All prices ex-VAT. VAT applied on invoice based on registration status.\nHardware invoiced 100% prior to shipment. DAP delivery terms.",
+    color: "#94a3b8",
+    fontSize: 8,
+    lineHeight: 1.5,
+    margin: [0, 14, 0, 0],
+  } as any;
+}
+
+function buildDivider(): Content {
+  return { canvas: [{ type: "line", x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: LIGHT }], margin: [0, 14, 0, 14] } as any;
+}
+
+function buildFooter(ref: string): (page: number, pages: number) => Content {
+  return (page, pages) => ({
+    text: `${ref}  ·  Page ${page} of ${pages}  ·  AJS Spalding Ltd  ·  rz@ajsspalding.co.uk  ·  01406 424954`,
+    color: "#94a3b8",
+    fontSize: 7,
+    alignment: "center",
+    margin: [36, 8, 36, 0],
+  });
+}
+
+// ─── Render helper ─────────────────────────────────────────────────────────────
+function renderDoc(def: TDocumentDefinitions): Promise<Buffer> {
+  return pm.createPdf(def).getBuffer() as Promise<Buffer>;
+}
+
+// ─── Documents ────────────────────────────────────────────────────────────────
+export async function renderQuoteRequestPDF(quote: PDFQuote, items: PDFItem[]): Promise<Buffer> {
+  const logoSrc = await fetchLogoBase64();
+  const images = logoSrc ? { logo: logoSrc } : undefined;
+
+  const def: TDocumentDefinitions = {
+    pageSize: "A4",
+    pageMargins: [0, 0, 0, 50],
+    ...(images && { images }),
+    content: [
+      buildHeader("Quote request", quote.ref, today(), logoSrc ? "logo" : null),
+      {
+        stack: [
+          buildCustomerSection(quote),
+          buildDivider(),
+          buildItemsTable(quote, items),
+          buildNoticeBox(
+            "This confirms receipt of your quote request. Prices are indicative and subject to confirmation by the AJS Redzone team. You will receive your priced quote by email shortly.",
+            "#eff6ff",
+            "#1e40af",
+          ),
+          buildTerms(),
+        ],
+        margin: [36, 24, 36, 0],
+      } as any,
+    ],
+    footer: buildFooter(quote.ref),
+    defaultStyle: { font: "Roboto", fontSize: 10, color: "#1e293b" },
+  } as any;
+
+  return renderDoc(def);
+}
+
+export async function renderOrderConfirmationPDF(quote: PDFQuote, items: PDFItem[]): Promise<Buffer> {
+  const logoSrc = await fetchLogoBase64();
+  const images = logoSrc ? { logo: logoSrc } : undefined;
+
+  const def: TDocumentDefinitions = {
+    pageSize: "A4",
+    pageMargins: [0, 0, 0, 50],
+    ...(images && { images }),
+    content: [
+      buildHeader("Order confirmation", quote.ref, `Confirmed ${today()}`, logoSrc ? "logo" : null, "ORDER CONFIRMED"),
+      {
+        stack: [
+          buildCustomerSection(quote),
+          buildDivider(),
+          buildItemsTable(quote, items),
+          buildNoticeBox(
+            "An invoice will be issued within 24 hours, payable 100% prior to shipment. Once payment is received your order moves into production. You will receive automated updates at each stage.",
+            "#f0fdf4",
+            "#166534",
+            "What happens next",
+          ),
+          buildTerms(),
+        ],
+        margin: [36, 24, 36, 0],
+      } as any,
+    ],
+    footer: buildFooter(quote.ref),
+    defaultStyle: { font: "Roboto", fontSize: 10, color: "#1e293b" },
+  } as any;
+
+  return renderDoc(def);
+}
+
+export async function renderWorkOrderPDF(quote: PDFQuote, items: PDFItem[]): Promise<Buffer> {
+  const logoSrc = await fetchLogoBase64();
+  const images = logoSrc ? { logo: logoSrc } : undefined;
+  const requiredDate = quote.required_date ? fmtDate(quote.required_date) : "NOT SPECIFIED";
+  const delivery = addr(quote);
+
+  const partsRows: any[][] = items.map((item) => [
+    { text: item.sku, bold: true, fontSize: 11, color: "#1e293b" },
+    { text: item.name, fontSize: 10 },
+    { text: String(item.qty), bold: true, fontSize: 14, color: BLUE, alignment: "center" },
+  ]);
+
+  const def: TDocumentDefinitions = {
+    pageSize: "A4",
+    pageMargins: [0, 0, 0, 50],
+    ...(images && { images }),
+    content: [
+      buildHeader("Work order", quote.ref, today(), logoSrc ? "logo" : null),
+      // Yellow date banner
+      {
+        table: {
+          widths: ["*"],
+          body: [[{
+            stack: [
+              { text: "REQUIRED DELIVERY DATE", bold: true, color: "#854d0e", fontSize: 8, margin: [0, 0, 0, 3] },
+              { text: requiredDate, bold: true, fontSize: 20, color: "#1e293b" },
+            ],
+          }]],
+        },
+        layout: {
+          defaultBorder: false,
+          fillColor: () => "#fef9c3",
+          hLineWidth: (i: number, node: any) => (i === node.table.body.length ? 3 : 0),
+          hLineColor: () => "#eab308",
+          paddingLeft: () => 36,
+          paddingRight: () => 36,
+          paddingTop: () => 12,
+          paddingBottom: () => 12,
+        },
+      } as any,
+      {
+        stack: [
+          // Customer & delivery
+          {
+            stack: [
+              { text: "CUSTOMER & DELIVERY", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
+              {
+                columns: [
+                  { text: "Customer", color: MUTED, width: 120 },
+                  { text: `${quote.contact_name}${quote.contact_company ? ` — ${quote.contact_company}` : ""}`, bold: true },
+                ],
+              },
+              ...(quote.contact_phone ? [{
+                columns: [
+                  { text: "Phone", color: MUTED, width: 120 },
+                  { text: quote.contact_phone },
+                ],
+              }] : []),
+              ...(delivery ? [{
+                columns: [
+                  { text: "Delivery address", color: MUTED, width: 120 },
+                  { text: delivery, bold: true },
+                ],
+              }] : []),
+            ],
+            fontSize: 10,
+            margin: [0, 0, 0, 14],
+          } as any,
+          buildDivider(),
+          // Parts list — NO prices
+          { text: "PARTS TO BUILD / SHIP", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] } as any,
+          {
+            table: {
+              widths: [90, "*", 44],
+              headerRows: 1,
+              body: [
+                [
+                  { text: "Part code", bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
+                  { text: "Description", bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
+                  { text: "Qty", bold: true, color: MUTED, fontSize: 8, alignment: "center", fillColor: FAINT },
+                ],
+                ...partsRows,
+              ],
+            },
+            layout: {
+              defaultBorder: false,
+              hLineColor: () => LIGHT,
+              hLineWidth: (i: number, node: any) => (i === 0 || i === node.table.body.length ? 0 : 0.5),
+              vLineWidth: () => 0,
+              paddingTop: () => 6,
+              paddingBottom: () => 6,
+              paddingLeft: () => 4,
+              paddingRight: () => 4,
+            },
+          } as any,
+          ...(quote.install_requested ? [
+            buildNoticeBox(
+              "Installation requested — separate installation quote in progress. See portal for details.",
+              "#fff7ed",
+              "#9a3412",
+            ),
+          ] : []),
+          {
+            text: `Generated by AJS Redzone Portal · ${quote.ref}`,
+            color: "#94a3b8",
+            fontSize: 8,
+            margin: [0, 24, 0, 0],
+          } as any,
+        ],
+        margin: [36, 24, 36, 0],
+      } as any,
+    ],
+    footer: buildFooter(quote.ref),
+    defaultStyle: { font: "Roboto", fontSize: 10, color: "#1e293b" },
+  } as any;
+
+  return renderDoc(def);
+}
