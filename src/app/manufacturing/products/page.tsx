@@ -7,7 +7,6 @@ const STOCK_OPTIONS = [
   "In Stock",
   "Limited Stock",
   "On Order",
-  "Discontinued",
 ];
 
 const STOCK_COLOUR: Record<string, string> = {
