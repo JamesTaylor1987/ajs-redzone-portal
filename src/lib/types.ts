@@ -67,6 +67,8 @@ export interface CreateQuoteRequest {
   fxRateUsed: number | null;
   lines: CartLine[];
   details: CheckoutDetails;
+  shippingPallets: number;
+  shippingGbpPence: number | null; // null = EXW
 }
 
 export interface CreateQuoteResponse {

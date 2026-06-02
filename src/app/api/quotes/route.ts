@@ -109,6 +109,8 @@ export async function POST(request: Request) {
       install_requested: !!body.details.installRequested,
       install_details: body.details.installDetails ?? null,
       subtotal_gbp_pence: subtotalPence,
+      shipping_gbp_pence: body.shippingGbpPence ?? null,
+      shipping_pallets: body.shippingPallets ?? 1,
       submitted_at: new Date().toISOString(),
       magic_token: magicToken,
       magic_expires_at: magicExpiresAt.toISOString(),

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { CartLine, CheckoutDetails, Currency, CreateQuoteResponse } from "@/lib/types";
 import { formatMoney, getFxRate } from "@/lib/format";
+import { SHIPPING_OPTIONS, calcPallets, calcShippingPence } from "@/lib/shipping";
 
 interface CheckoutFormProps {
   lines: CartLine[];
@@ -32,6 +33,11 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
   const [error, setError] = useState<string | null>(null);
 
   const subtotal = lines.reduce((s, l) => s + l.qty * l.unitPricePence, 0);
+  const totalQty = lines.reduce((s, l) => s + l.qty, 0);
+  const pallets = calcPallets(totalQty);
+  const shippingPence = calcShippingPence(details.siteCountry, totalQty);
+  const isEXW = shippingPence === null;
+  const grandTotal = subtotal + (shippingPence ?? 0);
 
   const set =
     <K extends keyof CheckoutDetails>(key: K) =>
@@ -65,6 +71,8 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
           fxRateUsed: currency === "EUR" ? getFxRate("EUR") : null,
           lines,
           details,
+          shippingPallets: pallets,
+          shippingGbpPence: shippingPence,
         }),
       });
       if (!res.ok) {
@@ -98,7 +106,22 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
           <Field label="Address line 2" value={details.siteAddressLine2} onChange={set("siteAddressLine2")} className="sm:col-span-2" />
           <Field label="Town / City" value={details.siteAddressCity} onChange={set("siteAddressCity")} />
           <Field label="Postcode" value={details.siteAddressPostcode} onChange={set("siteAddressPostcode")} />
-          <Field label="Country" value={details.siteCountry} onChange={set("siteCountry")} className="sm:col-span-2" />
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
+              Destination country
+            </label>
+            <select
+              value={details.siteCountry}
+              onChange={set("siteCountry")}
+              className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
+            >
+              {SHIPPING_OPTIONS.map((o) => (
+                <option key={o.country} value={o.country}>
+                  {o.label}{o.ratePence !== null ? ` — £${(o.ratePence / 100).toFixed(0)}/pallet` : " — EXW (you arrange shipping)"}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -150,11 +173,32 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
             </li>
           ))}
         </ul>
-        <div className="flex justify-between font-bold text-lg pt-3 mt-2 border-t border-ajs-light">
-          <span>Total</span>
-          <span>{formatMoney(subtotal, currency)}</span>
+
+        <div className="mt-3 pt-3 border-t border-ajs-light space-y-2 text-sm">
+          <div className="flex justify-between text-ajs-muted">
+            <span>Products subtotal</span>
+            <span className="font-semibold text-ajs-dark">{formatMoney(subtotal, currency)}</span>
+          </div>
+          <div className="flex justify-between text-ajs-muted">
+            <span>
+              Shipping
+              <span className="text-xs ml-1">
+                ({pallets} pallet{pallets !== 1 ? "s" : ""}, {details.siteCountry})
+              </span>
+            </span>
+            <span className={`font-semibold ${isEXW ? "text-amber-600" : "text-ajs-dark"}`}>
+              {isEXW ? "EXW — you arrange" : formatMoney(shippingPence!, currency)}
+            </span>
+          </div>
+          {!isEXW && (
+            <div className="flex justify-between font-bold text-lg pt-2 border-t border-ajs-light">
+              <span>Estimated total</span>
+              <span>{formatMoney(grandTotal, currency)}</span>
+            </div>
+          )}
         </div>
-        <div className="text-xs text-ajs-muted mt-2 space-y-1 leading-relaxed">
+
+        <div className="text-xs text-ajs-muted mt-3 space-y-1 leading-relaxed">
           <p>
             <strong className="text-ajs-text">All prices ex-VAT.</strong> VAT is applied on the
             invoice based on your country and VAT registration status:
@@ -164,7 +208,7 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
             <li>EU VAT-registered businesses — zero-rated under reverse charge (VAT number required)</li>
             <li>Non-EU customers — zero-rated export</li>
           </ul>
-          <p>Hardware invoiced 100% prior to shipment. DAP delivery terms.</p>
+          <p>Shipping is estimated and confirmed on invoice. Hardware invoiced 100% prior to shipment. DAP delivery terms.</p>
         </div>
       </div>
 
