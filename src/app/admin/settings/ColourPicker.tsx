@@ -44,9 +44,9 @@ export function ColourPicker({ current }: Props) {
       )}
 
       <form action={action} className="space-y-5">
-        <ColourRow name="stock_color_in_stock"     label="In Stock"     selected={inStock}    onChange={setInStock} />
-        <ColourRow name="stock_color_low_stock"    label="Low Stock"    selected={lowStock}   onChange={setLowStock} />
-        <ColourRow name="stock_color_out_of_stock" label="Out of Stock" selected={outOfStock} onChange={setOutOfStock} />
+        <ColourRow name="stock_color_in_stock"     label="In Stock"      selected={inStock}    onChange={setInStock} />
+        <ColourRow name="stock_color_low_stock"    label="Limited Stock" selected={lowStock}   onChange={setLowStock} />
+        <ColourRow name="stock_color_out_of_stock" label="On Order"      selected={outOfStock} onChange={setOutOfStock} />
         <SaveButton />
       </form>
     </div>

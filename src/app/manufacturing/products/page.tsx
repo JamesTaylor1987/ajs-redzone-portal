@@ -5,16 +5,16 @@ export const dynamic = "force-dynamic";
 
 const STOCK_OPTIONS = [
   "In Stock",
-  "Low Stock",
-  "Out of Stock",
+  "Limited Stock",
+  "On Order",
   "Discontinued",
 ];
 
 const STOCK_COLOUR: Record<string, string> = {
-  "In Stock":     "bg-emerald-100 text-emerald-700",
-  "Low Stock":    "bg-amber-100 text-amber-700",
-  "Out of Stock": "bg-rose-100 text-rose-700",
-  "Discontinued": "bg-slate-100 text-slate-500",
+  "In Stock":      "bg-emerald-100 text-emerald-700",
+  "Limited Stock": "bg-amber-100 text-amber-700",
+  "On Order":      "bg-rose-100 text-rose-700",
+  "Discontinued":  "bg-slate-100 text-slate-500",
 };
 
 export default async function WorkshopProductsPage() {

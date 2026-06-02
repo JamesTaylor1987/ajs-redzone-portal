@@ -167,9 +167,9 @@ function Card({
 }) {
   const active = qty > 0;
   const stockClass =
-    product.stock_status === "In Stock"     ? getClasses(stockColours.inStock) :
-    product.stock_status === "Low Stock"    ? getClasses(stockColours.lowStock) :
-    product.stock_status === "Out of Stock" ? getClasses(stockColours.outOfStock) :
+    product.stock_status === "In Stock"      ? getClasses(stockColours.inStock) :
+    product.stock_status === "Limited Stock" ? getClasses(stockColours.lowStock) :
+    product.stock_status === "On Order"      ? getClasses(stockColours.outOfStock) :
     "bg-slate-100 text-slate-500";
 
   return (
