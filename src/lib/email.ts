@@ -437,7 +437,7 @@ const STATUS_BODY: Partial<Record<string, (ref: string, trackingRef?: string) =>
   order_confirmed: (ref) =>
     `Your order <strong>${ref}</strong> has been confirmed by the AJS Redzone team. An invoice will be issued within 24 hours, payable 100% prior to shipment. Once payment is received your order moves into production and you will receive further updates at each stage.`,
   in_build: (ref) =>
-    `Your order <strong>${ref}</strong> is now in production. Our workshop team are building your hardware. We&rsquo;ll be in touch again when it&rsquo;s ready to despatch.`,
+    `Your order <strong>${ref}</strong> is now in production. Our manufacturing team are building your hardware. We&rsquo;ll be in touch again when it&rsquo;s ready to despatch.`,
   ready_to_ship: (ref) =>
     `Great news &mdash; your order <strong>${ref}</strong> has been built and is ready to despatch. Our team will be in touch shortly to arrange delivery.`,
   shipped: (ref, trackingRef) =>

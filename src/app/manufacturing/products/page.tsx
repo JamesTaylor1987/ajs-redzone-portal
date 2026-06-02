@@ -1,5 +1,5 @@
 import { getServiceClient } from "@/lib/supabase-server";
-import { workshopUpdateProductAction } from "./actions";
+import { manufacturingUpdateProductAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +59,7 @@ export default async function WorkshopProductsPage() {
                     <td className="px-4 py-3 font-mono text-xs text-ajs-muted font-bold whitespace-nowrap">{p.sku}</td>
                     <td className="px-4 py-3 font-medium text-ajs-text">{p.name}</td>
                     <td className="px-4 py-3" colSpan={3}>
-                      <form action={workshopUpdateProductAction} className="flex items-center gap-2 flex-wrap">
+                      <form action={manufacturingUpdateProductAction} className="flex items-center gap-2 flex-wrap">
                         <input type="hidden" name="id" value={p.id} />
                         <div className="flex items-center gap-2">
                           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STOCK_COLOUR[p.stock_status] ?? "bg-slate-100 text-slate-600"}`}>

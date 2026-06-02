@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase-server";
-import { workshopUpdateStatusAction } from "./actions";
+import { manufacturingUpdateStatusAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-const WORKSHOP_STATUSES = [
+const MFG_STATUSES = [
   { value: "in_build",      label: "In build" },
   { value: "ready_to_ship", label: "Ready to ship" },
   { value: "shipped",       label: "Shipped" },
@@ -32,7 +32,7 @@ interface PageProps {
   params: { id: string };
 }
 
-export default async function WorkshopOrderDetailPage({ params }: PageProps) {
+export default async function ManufacturingOrderDetailPage({ params }: PageProps) {
   const supabase = getServiceClient();
 
   const { data: quote } = await supabase
@@ -66,7 +66,7 @@ export default async function WorkshopOrderDetailPage({ params }: PageProps) {
   return (
     <div className="space-y-5 max-w-2xl">
       <div className="flex items-center gap-3">
-        <Link href="/workshop/orders" className="text-ajs-muted text-sm hover:underline">
+        <Link href="/manufacturing/orders" className="text-ajs-muted text-sm hover:underline">
           ← Work orders
         </Link>
         <span className="text-ajs-light">/</span>
@@ -76,7 +76,6 @@ export default async function WorkshopOrderDetailPage({ params }: PageProps) {
         </span>
       </div>
 
-      {/* Required date banner */}
       {requiredDate && (
         <div className={`rounded-xl p-4 border-2 ${daysUntil !== null && daysUntil < 0 ? "bg-rose-50 border-rose-400" : daysUntil !== null && daysUntil <= 7 ? "bg-amber-50 border-amber-400" : "bg-yellow-50 border-yellow-300"}`}>
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Required delivery date</p>
@@ -89,7 +88,6 @@ export default async function WorkshopOrderDetailPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Customer & delivery */}
       <div className="bg-white rounded-xl border border-ajs-light p-5">
         <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark mb-3">Customer &amp; delivery</h2>
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
@@ -119,7 +117,6 @@ export default async function WorkshopOrderDetailPage({ params }: PageProps) {
         </dl>
       </div>
 
-      {/* Parts list — NO prices */}
       <div className="bg-white rounded-xl border border-ajs-light overflow-hidden">
         <div className="px-5 py-3 border-b border-ajs-light">
           <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">Parts to build / ship</h2>
@@ -144,10 +141,9 @@ export default async function WorkshopOrderDetailPage({ params }: PageProps) {
         </table>
       </div>
 
-      {/* Status update */}
       <div className="bg-white rounded-xl border border-ajs-light p-5">
         <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark mb-3">Update status</h2>
-        <form action={workshopUpdateStatusAction} className="flex gap-3 items-end flex-wrap">
+        <form action={manufacturingUpdateStatusAction} className="flex gap-3 items-end flex-wrap">
           <input type="hidden" name="id" value={quote.id} />
           <div>
             <label className="block text-xs text-ajs-muted mb-1">Status</label>
@@ -156,7 +152,7 @@ export default async function WorkshopOrderDetailPage({ params }: PageProps) {
               defaultValue={quote.status}
               className="border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
             >
-              {WORKSHOP_STATUSES.map((s) => (
+              {MFG_STATUSES.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>

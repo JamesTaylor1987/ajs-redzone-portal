@@ -11,6 +11,9 @@ export default async function PortalHubPage() {
 
   if (!session) redirect("/admin/login");
 
+  const role = (session.user.app_metadata?.role as string) ?? "standard";
+  const isElevated = role === "admin" || role === "manager";
+
   return (
     <main className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md space-y-6">
@@ -27,24 +30,26 @@ export default async function PortalHubPage() {
           <p className="text-sm text-ajs-muted mt-1">{session.user.email}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className={`grid gap-4 ${isElevated ? "grid-cols-2" : "grid-cols-1 max-w-xs mx-auto"}`}>
           <Link
-            href="/workshop"
+            href="/manufacturing"
             className="bg-white rounded-2xl border border-ajs-light p-6 text-center hover:shadow-md hover:border-ajs-primary/40 transition-all group"
           >
             <div className="text-3xl mb-3">🔧</div>
-            <div className="font-extrabold text-ajs-dark text-sm group-hover:text-ajs-primary transition-colors">Workshop</div>
+            <div className="font-extrabold text-ajs-dark text-sm group-hover:text-ajs-primary transition-colors">Manufacturing</div>
             <div className="text-xs text-ajs-muted mt-1">Work orders &amp; stock</div>
           </Link>
 
-          <Link
-            href="/admin/orders"
-            className="bg-white rounded-2xl border border-ajs-light p-6 text-center hover:shadow-md hover:border-ajs-primary/40 transition-all group"
-          >
-            <div className="text-3xl mb-3">📋</div>
-            <div className="font-extrabold text-ajs-dark text-sm group-hover:text-ajs-primary transition-colors">Admin</div>
-            <div className="text-xs text-ajs-muted mt-1">Orders, quotes &amp; products</div>
-          </Link>
+          {isElevated && (
+            <Link
+              href="/admin/orders"
+              className="bg-white rounded-2xl border border-ajs-light p-6 text-center hover:shadow-md hover:border-ajs-primary/40 transition-all group"
+            >
+              <div className="text-3xl mb-3">📋</div>
+              <div className="font-extrabold text-ajs-dark text-sm group-hover:text-ajs-primary transition-colors">Admin</div>
+              <div className="text-xs text-ajs-muted mt-1">Orders, quotes &amp; products</div>
+            </Link>
+          )}
         </div>
 
         <div className="text-center">

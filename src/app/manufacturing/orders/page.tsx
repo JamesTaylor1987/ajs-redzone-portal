@@ -21,7 +21,7 @@ const STATUS_COLOUR: Record<string, string> = {
 
 const ACTIVE_STATUSES = ["order_confirmed", "in_build", "ready_to_ship", "shipped"];
 
-export default async function WorkshopOrdersPage() {
+export default async function ManufacturingOrdersPage() {
   const supabase = getServiceClient();
 
   const { data: orders } = await supabase
@@ -57,7 +57,7 @@ export default async function WorkshopOrdersPage() {
             return (
               <Link
                 key={o.id}
-                href={`/workshop/orders/${o.id}`}
+                href={`/manufacturing/orders/${o.id}`}
                 className="block bg-white rounded-xl border border-ajs-light p-4 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start justify-between gap-3 flex-wrap">
