@@ -55,7 +55,7 @@ export default async function WorkshopProductsPage() {
               <tbody className="divide-y divide-ajs-light">
                 {active.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-ajs-muted font-bold whitespace-nowrap">{p.sku}</td>
+                    <td className="px-4 py-3 font-mono text-xs font-bold text-ajs-dark whitespace-nowrap">{p.sku}</td>
                     <td className="px-4 py-3 font-medium text-ajs-text">{p.name}</td>
                     <td className="px-4 py-3" colSpan={3}>
                       <form action={manufacturingUpdateProductAction} className="flex items-center gap-2 flex-wrap">
@@ -107,7 +107,7 @@ export default async function WorkshopProductsPage() {
               <tbody className="divide-y divide-ajs-light">
                 {inactive.map((p) => (
                   <tr key={p.id}>
-                    <td className="px-4 py-3 font-mono text-xs text-ajs-muted font-bold whitespace-nowrap">{p.sku}</td>
+                    <td className="px-4 py-3 font-mono text-xs font-bold text-ajs-dark whitespace-nowrap">{p.sku}</td>
                     <td className="px-4 py-3 font-medium text-ajs-text line-through">{p.name}</td>
                     <td className="px-4 py-3 text-xs text-ajs-muted">{p.stock_status}</td>
                     <td className="px-4 py-3 text-xs text-ajs-muted">{p.lead_time}</td>

@@ -55,7 +55,7 @@ export function CartDrawer({
               {lines.map((line) => (
                 <li key={line.productId} className="py-3 flex justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="text-[10px] font-mono text-ajs-muted">{line.sku}</div>
+                    <div className="text-xs font-mono font-bold text-ajs-dark">{line.sku}</div>
                     <div className="text-sm font-semibold text-ajs-text leading-tight">
                       {line.name}
                     </div>

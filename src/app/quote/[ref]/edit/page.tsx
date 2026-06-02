@@ -133,7 +133,7 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
                 {(items ?? []).map((i) => (
                   <li key={i.id} className="py-2.5 flex justify-between gap-3">
                     <span>
-                      <span className="font-mono text-xs text-ajs-muted">{i.sku}</span>{" "}
+                      <span className="font-mono text-xs font-bold text-ajs-dark">{i.sku}</span>{" "}
                       {i.name} &times; {i.qty}
                     </span>
                     <span className="font-semibold whitespace-nowrap">

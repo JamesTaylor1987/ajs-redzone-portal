@@ -182,7 +182,7 @@ function Card({
         {product.sku}
       </div>
       <div className="p-3 space-y-1.5">
-        <div className="text-[10px] font-mono text-ajs-muted">{product.sku}</div>
+        <div className="text-xs font-mono font-bold text-ajs-dark">{product.sku}</div>
         <div className="font-bold text-sm leading-tight text-ajs-text">
           {product.name}
         </div>

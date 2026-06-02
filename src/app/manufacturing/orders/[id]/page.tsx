@@ -125,7 +125,7 @@ export default async function ManufacturingOrderDetailPage({ params }: PageProps
           <tbody className="divide-y divide-ajs-light">
             {(items ?? []).map((i) => (
               <tr key={i.id}>
-                <td className="px-4 py-3 font-mono text-xs text-ajs-muted font-bold">{i.sku}</td>
+                <td className="px-4 py-3 font-mono text-xs font-bold text-ajs-dark">{i.sku}</td>
                 <td className="px-4 py-3 font-medium">{i.name}</td>
                 <td className="px-4 py-3 text-center text-xl font-extrabold text-ajs-primary">{i.qty}</td>
               </tr>

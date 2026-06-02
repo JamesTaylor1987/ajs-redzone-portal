@@ -68,7 +68,7 @@ export default async function AdminProductsPage() {
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-2 font-mono text-xs text-ajs-muted">
+                  <td className="px-4 py-2 font-mono text-xs font-bold text-ajs-dark">
                     {p.sku}
                   </td>
                   <td className="px-4 py-2 font-medium text-ajs-text">{p.name}</td>

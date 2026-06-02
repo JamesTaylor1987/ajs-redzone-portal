@@ -164,7 +164,7 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
           {lines.map((l) => (
             <li key={l.productId} className="py-2 flex justify-between gap-2">
               <span>
-                <span className="font-mono text-xs text-ajs-muted">{l.sku}</span>{" "}
+                <span className="font-mono text-xs font-bold text-ajs-dark">{l.sku}</span>{" "}
                 {l.name} × {l.qty}
               </span>
               <span className="font-semibold">

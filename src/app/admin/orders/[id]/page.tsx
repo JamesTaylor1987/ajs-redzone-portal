@@ -158,7 +158,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
           <tbody className="divide-y divide-ajs-light">
             {(items ?? []).map((i) => (
               <tr key={i.id}>
-                <td className="px-4 py-2.5 font-mono text-xs text-ajs-muted">
+                <td className="px-4 py-2.5 font-mono text-xs font-bold text-ajs-dark">
                   {i.sku}
                 </td>
                 <td className="px-4 py-2.5">{i.name}</td>
