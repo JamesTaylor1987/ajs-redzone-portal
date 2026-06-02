@@ -104,7 +104,11 @@ function customerHtml(quote: EmailQuoteRow, items: EmailItemRow[], magicUrl: str
   const first = quote.contact_name.trim().split(" ")[0] ?? "there";
   const ccy = quote.currency ?? "GBP";
   const fx = quote.fx_rate_used ?? null;
-  const totalPence = items.reduce((s, i) => s + Number(i.line_total_gbp_pence), 0);
+  const subtotalPence = items.reduce((s, i) => s + Number(i.line_total_gbp_pence), 0);
+  const shippingPence = quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : null;
+  const grandTotalPence = subtotalPence + (shippingPence ?? 0);
+  const pallets = quote.shipping_pallets;
+  const shippingLabel = `Shipping${pallets ? ` (${pallets} pallet${pallets !== 1 ? "s" : ""})` : ""}`;
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -124,8 +128,16 @@ function customerHtml(quote: EmailQuoteRow, items: EmailItemRow[], magicUrl: str
     <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:24px">
       ${itemRows(items, ccy, fx)}
       <tr style="border-top:2px solid #e6ebed">
-        <td colspan="2" style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px">Subtotal (ex-VAT)</td>
-        <td style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px;text-align:right;white-space:nowrap">${money(totalPence, ccy, fx)}</td>
+        <td colspan="2" style="padding:8px 0;color:#475569;font-size:13px">Subtotal (ex-VAT)</td>
+        <td style="padding:8px 0;font-weight:bold;color:#1e293b;font-size:13px;text-align:right;white-space:nowrap">${money(subtotalPence, ccy, fx)}</td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding:4px 0;color:#475569;font-size:13px">${shippingLabel}</td>
+        <td style="padding:4px 0;font-weight:bold;font-size:13px;text-align:right;white-space:nowrap;color:${shippingPence === null ? "#d97706" : "#1e293b"}">${shippingPence !== null ? money(shippingPence, "GBP") : "EXW"}</td>
+      </tr>
+      <tr style="border-top:2px solid #e6ebed">
+        <td colspan="2" style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px">Total (ex-VAT)</td>
+        <td style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px;text-align:right;white-space:nowrap">${money(grandTotalPence, ccy, fx)}</td>
       </tr>
     </table>
     ${ccy === "EUR" ? `<p style="color:#94a3b8;font-size:11px;margin:-16px 0 24px">Indicative EUR rate &mdash; invoice issued in GBP.</p>` : ""}
