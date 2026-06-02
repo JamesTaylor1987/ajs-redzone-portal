@@ -35,10 +35,12 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
     .select("id, sku, name, qty, unit_price_gbp_pence, line_total_gbp_pence")
     .eq("quote_id", quote.id);
 
-  const totalPence = (items ?? []).reduce(
+  const subtotalPence = (items ?? []).reduce(
     (s, i) => s + Number(i.line_total_gbp_pence),
     0,
   );
+  const shippingPence = quote.shipping_gbp_pence ? Number(quote.shipping_gbp_pence) : null;
+  const grandTotalPence = subtotalPence + (shippingPence ?? 0);
 
   const ai = quote.account_info as Record<string, unknown> | null;
 
@@ -168,12 +170,22 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
               </tr>
             ))}
           </tbody>
-          <tfoot className="border-t-2 border-ajs-light bg-slate-50">
+          <tfoot className="border-t-2 border-ajs-light bg-slate-50 text-sm">
             <tr>
-              <td colSpan={4} className="px-4 py-2.5 font-bold text-right">
-                Subtotal (ex-VAT)
+              <td colSpan={4} className="px-4 py-2 text-right text-ajs-muted">Subtotal (ex-VAT)</td>
+              <td className="px-4 py-2 font-semibold">{gbp(subtotalPence)}</td>
+            </tr>
+            <tr>
+              <td colSpan={4} className="px-4 py-2 text-right text-ajs-muted">
+                Shipping{quote.shipping_pallets ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})` : ""}
               </td>
-              <td className="px-4 py-2.5 font-extrabold">{gbp(totalPence)}</td>
+              <td className="px-4 py-2 font-semibold">
+                {shippingPence !== null ? gbp(shippingPence) : <span className="text-amber-600">EXW</span>}
+              </td>
+            </tr>
+            <tr className="border-t border-ajs-light">
+              <td colSpan={4} className="px-4 py-2.5 font-bold text-right">Total (ex-VAT)</td>
+              <td className="px-4 py-2.5 font-extrabold text-ajs-primary">{gbp(grandTotalPence)}</td>
             </tr>
           </tfoot>
         </table>

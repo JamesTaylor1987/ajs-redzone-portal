@@ -49,6 +49,8 @@ export interface PDFQuote {
   site_address_postcode?: string | null;
   site_country?: string | null;
   subtotal_gbp_pence: number | string;
+  shipping_gbp_pence?: number | null;
+  shipping_pallets?: number | null;
   currency?: string | null;
   fx_rate_used?: number | null;
 }
@@ -210,11 +212,33 @@ function buildItemsTable(quote: PDFQuote, items: PDFItem[]): Content {
     { text: money(item.line_total_gbp_pence, ccy, fx), alignment: "right" },
   ]);
 
-  const totalRow: any[] = [
-    { text: "Subtotal (ex-VAT)", colSpan: 3, bold: true, alignment: "right", border: [false, true, false, false] },
+  const shippingPence = quote.shipping_gbp_pence ? Number(quote.shipping_gbp_pence) : null;
+  const pallets = quote.shipping_pallets ?? 1;
+  const grandTotal = total + (shippingPence ?? 0);
+
+  const subtotalRow: any[] = [
+    { text: "Subtotal (ex-VAT)", colSpan: 3, alignment: "right", border: [false, true, false, false] },
     {}, {},
-    { text: money(total, ccy, fx), bold: true, color: BLUE, fontSize: 11, alignment: "right", border: [false, true, false, false] },
+    { text: money(total, ccy, fx), alignment: "right", border: [false, true, false, false] },
   ];
+
+  const shippingRow: any[] = shippingPence !== null ? [
+    { text: `Shipping (${pallets} pallet${pallets !== 1 ? "s" : ""})`, colSpan: 3, alignment: "right", border: [false, false, false, false] },
+    {}, {},
+    { text: money(shippingPence, ccy, fx), alignment: "right", border: [false, false, false, false] },
+  ] : [
+    { text: `Shipping (${pallets} pallet${pallets !== 1 ? "s" : ""})`, colSpan: 3, alignment: "right", border: [false, false, false, false] },
+    {}, {},
+    { text: "EXW", alignment: "right", color: MUTED, border: [false, false, false, false] },
+  ];
+
+  const grandTotalRow: any[] = [
+    { text: "Total (ex-VAT)", colSpan: 3, bold: true, alignment: "right", border: [false, true, false, false] },
+    {}, {},
+    { text: money(grandTotal, ccy, fx), bold: true, color: BLUE, fontSize: 11, alignment: "right", border: [false, true, false, false] },
+  ];
+
+  const tableBody = [headerRow, ...dataRows, subtotalRow, shippingRow, grandTotalRow];
 
   const sections: Content[] = [
     { text: "ITEMS", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] } as any,
@@ -222,7 +246,7 @@ function buildItemsTable(quote: PDFQuote, items: PDFItem[]): Content {
       table: {
         widths: [72, "*", 28, 68],
         headerRows: 1,
-        body: [headerRow, ...dataRows, totalRow],
+        body: tableBody,
       },
       layout: {
         defaultBorder: false,
