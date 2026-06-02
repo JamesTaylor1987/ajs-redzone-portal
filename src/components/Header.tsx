@@ -55,13 +55,6 @@ export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: H
             </button>
           </div>
 
-          <Link
-            href="/portal"
-            className="hidden sm:block text-white/60 hover:text-white text-xs font-semibold transition-colors"
-          >
-            Staff
-          </Link>
-
           <button
             onClick={onCartClick}
             className="bg-white/15 border border-white/25 rounded-lg px-3 py-2 text-white text-sm font-semibold hover:bg-white/25 transition-colors flex items-center gap-2"
