@@ -26,6 +26,7 @@ export default async function AdminLayout({
           <span className="font-extrabold text-lg tracking-tight">RZ Admin</span>
           <NavLink href="/admin/orders">Orders</NavLink>
           <NavLink href="/admin/products">Products</NavLink>
+          <NavLink href="/admin/users">Users</NavLink>
         </div>
         <div className="flex items-center gap-3 text-sm">
           <span className="text-white/70 text-xs hidden sm:block">
