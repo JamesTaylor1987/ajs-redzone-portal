@@ -71,6 +71,12 @@ export interface CreateQuoteRequest {
   shippingGbpPence: number | null; // null = EXW
 }
 
+export interface StockColourSettings {
+  inStock: string;
+  lowStock: string;
+  outOfStock: string;
+}
+
 export interface CreateQuoteResponse {
   ref: string;         // Q26-RZ0001
   id: string;

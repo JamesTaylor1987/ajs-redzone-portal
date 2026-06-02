@@ -1,17 +1,17 @@
 import { getPublicServerClient } from "@/lib/supabase-server";
 import type { Product } from "@/lib/types";
 import { PortalApp } from "@/components/PortalApp";
+import { DEFAULT_STOCK_COLOURS, type StockColours } from "@/lib/stock-colours";
 
-// Always read fresh from DB while we're iterating; we'll add ISR later.
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const supabase = getPublicServerClient();
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("active", true)
-    .order("sort_order", { ascending: true });
+
+  const [{ data, error }, { data: settings }] = await Promise.all([
+    supabase.from("products").select("*").eq("active", true).order("sort_order", { ascending: true }),
+    supabase.from("settings").select("key, value").in("key", ["stock_color_in_stock", "stock_color_low_stock", "stock_color_out_of_stock"]),
+  ]);
 
   if (error) {
     return (
@@ -31,7 +31,14 @@ export default async function HomePage() {
     );
   }
 
+  const kvMap = Object.fromEntries((settings ?? []).map((s) => [s.key, s.value]));
+  const stockColours: StockColours = {
+    inStock:    kvMap["stock_color_in_stock"]     ?? DEFAULT_STOCK_COLOURS.inStock,
+    lowStock:   kvMap["stock_color_low_stock"]    ?? DEFAULT_STOCK_COLOURS.lowStock,
+    outOfStock: kvMap["stock_color_out_of_stock"] ?? DEFAULT_STOCK_COLOURS.outOfStock,
+  };
+
   const products: Product[] = (data ?? []) as Product[];
 
-  return <PortalApp products={products} />;
+  return <PortalApp products={products} stockColours={stockColours} />;
 }

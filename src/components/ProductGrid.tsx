@@ -1,24 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Product, Currency, CartLine } from "@/lib/types";
+import type { Product, Currency, CartLine, StockColourSettings } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
+import { getClasses } from "@/lib/stock-colours";
 
 interface ProductGridProps {
   products: Product[];
   currency: Currency;
   lines: CartLine[];
   onQtyChange: (product: Product, qty: number) => void;
+  stockColours: StockColourSettings;
 }
 
-const STOCK_COLOUR: Record<string, string> = {
-  "In Stock":     "bg-emerald-100 text-emerald-700",
-  "Low Stock":    "bg-amber-100 text-amber-700",
-  "Out of Stock": "bg-rose-100 text-rose-700",
-  "Discontinued": "bg-slate-100 text-slate-500",
-};
 
-export function ProductGrid({ products, currency, lines, onQtyChange }: ProductGridProps) {
+export function ProductGrid({ products, currency, lines, onQtyChange, stockColours }: ProductGridProps) {
   const [plcFilter, setPlcFilter] = useState<string>("All");
   const [matFilter, setMatFilter] = useState<string>("All");
 
@@ -57,6 +53,7 @@ export function ProductGrid({ products, currency, lines, onQtyChange }: ProductG
               currency={currency}
               qty={qtyFor(p.id)}
               onQtyChange={(q) => onQtyChange(p, q)}
+              stockColours={stockColours}
             />
           ))}
           {filteredPanels.length === 0 && (
@@ -76,6 +73,7 @@ export function ProductGrid({ products, currency, lines, onQtyChange }: ProductG
               currency={currency}
               qty={qtyFor(p.id)}
               onQtyChange={(q) => onQtyChange(p, q)}
+              stockColours={stockColours}
             />
           ))}
         </Grid>
@@ -159,15 +157,20 @@ function Card({
   currency,
   qty,
   onQtyChange,
+  stockColours,
 }: {
   product: Product;
   currency: Currency;
   qty: number;
   onQtyChange: (q: number) => void;
+  stockColours: StockColourSettings;
 }) {
   const active = qty > 0;
   const stockClass =
-    STOCK_COLOUR[product.stock_status] ?? "bg-slate-100 text-slate-700";
+    product.stock_status === "In Stock"     ? getClasses(stockColours.inStock) :
+    product.stock_status === "Low Stock"    ? getClasses(stockColours.lowStock) :
+    product.stock_status === "Out of Stock" ? getClasses(stockColours.outOfStock) :
+    "bg-slate-100 text-slate-500";
 
   return (
     <div

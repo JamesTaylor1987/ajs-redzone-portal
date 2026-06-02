@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { CartLine, Currency, Product, CreateQuoteResponse } from "@/lib/types";
+import type { CartLine, Currency, Product, CreateQuoteResponse, StockColourSettings } from "@/lib/types";
 import { Header } from "./Header";
 import { ProductGrid } from "./ProductGrid";
 import { CartDrawer } from "./CartDrawer";
@@ -10,6 +10,7 @@ import { CheckoutForm } from "./CheckoutForm";
 
 interface PortalAppProps {
   products: Product[];
+  stockColours: StockColourSettings;
 }
 
 type Step = "browse" | "checkout";
@@ -17,7 +18,7 @@ type Step = "browse" | "checkout";
 const CART_STORAGE_KEY = "ajs_redzone_cart_v1";
 const CCY_STORAGE_KEY = "ajs_redzone_ccy_v1";
 
-export function PortalApp({ products }: PortalAppProps) {
+export function PortalApp({ products, stockColours }: PortalAppProps) {
   const router = useRouter();
   const [currency, setCurrency] = useState<Currency>("GBP");
   const [lines, setLines] = useState<CartLine[]>([]);
@@ -97,6 +98,7 @@ export function PortalApp({ products }: PortalAppProps) {
             currency={currency}
             lines={lines}
             onQtyChange={handleQtyChange}
+            stockColours={stockColours}
           />
         )}
         {step === "checkout" && (
