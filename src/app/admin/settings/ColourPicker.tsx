@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { saveStockColoursAction, type SettingsState } from "./actions";
 import { COLOUR_OPTIONS } from "@/lib/stock-colours";
@@ -23,6 +24,9 @@ interface Props {
 
 export function ColourPicker({ current }: Props) {
   const [state, action] = useFormState<SettingsState, FormData>(saveStockColoursAction, {});
+  const [inStock,    setInStock]    = useState(current.inStock);
+  const [lowStock,   setLowStock]   = useState(current.lowStock);
+  const [outOfStock, setOutOfStock] = useState(current.outOfStock);
 
   return (
     <div className="bg-white rounded-xl border border-ajs-light p-5 space-y-6">
@@ -40,30 +44,47 @@ export function ColourPicker({ current }: Props) {
       )}
 
       <form action={action} className="space-y-5">
-        <ColourRow name="stock_color_in_stock"     label="In Stock"     current={current.inStock} />
-        <ColourRow name="stock_color_low_stock"    label="Low Stock"    current={current.lowStock} />
-        <ColourRow name="stock_color_out_of_stock" label="Out of Stock" current={current.outOfStock} />
+        <ColourRow name="stock_color_in_stock"     label="In Stock"     selected={inStock}    onChange={setInStock} />
+        <ColourRow name="stock_color_low_stock"    label="Low Stock"    selected={lowStock}   onChange={setLowStock} />
+        <ColourRow name="stock_color_out_of_stock" label="Out of Stock" selected={outOfStock} onChange={setOutOfStock} />
         <SaveButton />
       </form>
     </div>
   );
 }
 
-function ColourRow({ name, label, current }: { name: string; label: string; current: string }) {
+function ColourRow({
+  name, label, selected, onChange,
+}: {
+  name: string;
+  label: string;
+  selected: string;
+  onChange: (v: string) => void;
+}) {
   return (
     <div>
       <p className="text-sm font-semibold text-ajs-dark mb-2">{label}</p>
       <div className="flex flex-wrap gap-2">
-        {COLOUR_OPTIONS.map((opt) => (
-          <label key={opt.key} className="cursor-pointer">
-            <input type="radio" name={name} value={opt.key} defaultChecked={current === opt.key} className="sr-only" />
-            <span
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all select-none ${opt.classes} ${current === opt.key ? "border-ajs-dark ring-2 ring-ajs-dark/20" : "border-transparent"}`}
-            >
-              {label}
-            </span>
-          </label>
-        ))}
+        {COLOUR_OPTIONS.map((opt) => {
+          const isSelected = selected === opt.key;
+          return (
+            <label key={opt.key} className="cursor-pointer">
+              <input
+                type="radio"
+                name={name}
+                value={opt.key}
+                checked={isSelected}
+                onChange={() => onChange(opt.key)}
+                className="sr-only"
+              />
+              <span
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all select-none ${opt.classes} ${isSelected ? "border-ajs-dark ring-2 ring-ajs-dark/20" : "border-transparent opacity-60 hover:opacity-100"}`}
+              >
+                {label}
+              </span>
+            </label>
+          );
+        })}
       </div>
     </div>
   );
