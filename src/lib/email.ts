@@ -1,6 +1,25 @@
 import { Resend } from "resend";
 import { renderQuoteRequestPDF, renderOrderConfirmationPDF, renderWorkOrderPDF } from "./quote-pdf";
 
+const PDF_TIMEOUT_MS = 8_000;
+
+async function tryGeneratePDF(
+  name: string,
+  fn: () => Promise<Buffer>,
+): Promise<Buffer | null> {
+  try {
+    return await Promise.race([
+      fn(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`PDF timeout after ${PDF_TIMEOUT_MS}ms`)), PDF_TIMEOUT_MS),
+      ),
+    ]);
+  } catch (err) {
+    console.error(`[email] ${name} PDF failed:`, err);
+    return null;
+  }
+}
+
 const FROM = process.env.RESEND_FROM_EMAIL
   ? `AJS Redzone <${process.env.RESEND_FROM_EMAIL}>`
   : "AJS Redzone <rz@ajsspalding.co.uk>";
@@ -169,10 +188,8 @@ export async function sendQuoteEmails(
 
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  // Generate PDF attachment (non-fatal if it fails)
-  let pdfAttachment: { filename: string; content: Buffer } | undefined;
-  try {
-    const buf = await renderQuoteRequestPDF(
+  const pdfBuf = await tryGeneratePDF("quote", () =>
+    renderQuoteRequestPDF(
       {
         ref: quote.ref,
         contact_name: quote.contact_name,
@@ -183,11 +200,9 @@ export async function sendQuoteEmails(
         fx_rate_used: quote.fx_rate_used,
       },
       items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty, line_total_gbp_pence: i.line_total_gbp_pence })),
-    );
-    pdfAttachment = { filename: `quote-${quote.ref}.pdf`, content: buf };
-  } catch (err) {
-    console.error("[email] PDF generation failed:", err);
-  }
+    ),
+  );
+  const pdfAttachment = pdfBuf ? [{ filename: `quote-${quote.ref}.pdf`, content: pdfBuf }] : undefined;
 
   try {
     const [customerRes, ajsRes] = await Promise.all([
@@ -196,7 +211,7 @@ export async function sendQuoteEmails(
         to: recipients(quote.contact_email),
         subject: `Your Redzone quote ${quote.ref}`,
         html: customerHtml(quote, items, magicUrl),
-        attachments: pdfAttachment ? [pdfAttachment] : undefined,
+        attachments: pdfAttachment,
       }),
       resend.emails.send({
         from: FROM,
@@ -355,57 +370,23 @@ export async function sendOrderConfirmationEmails(
 
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  // Generate PDFs (non-fatal if either fails)
-  let confirmationPdf: { filename: string; content: Buffer } | undefined;
-  let workOrderPdf: { filename: string; content: Buffer } | undefined;
-  try {
-    const buf = await renderOrderConfirmationPDF(
-      {
-        ref: quote.ref,
-        contact_name: quote.contact_name,
-        contact_email: quote.contact_email,
-        contact_company: quote.contact_company,
-        contact_phone: quote.contact_phone,
-        required_date: quote.required_date,
-        install_requested: quote.install_requested,
-        site_address_line1: quote.site_address_line1,
-        site_address_line2: quote.site_address_line2,
-        site_address_city: quote.site_address_city,
-        site_address_postcode: quote.site_address_postcode,
-        site_country: quote.site_country,
-        subtotal_gbp_pence: quote.subtotal_gbp_pence,
-        currency: quote.currency,
-        fx_rate_used: quote.fx_rate_used,
-      },
-      items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty, line_total_gbp_pence: i.line_total_gbp_pence })),
-    );
-    confirmationPdf = { filename: `order-${quote.ref}.pdf`, content: buf };
-  } catch (err) {
-    console.error("[email] order confirmation PDF failed:", err);
-  }
-  try {
-    const buf = await renderWorkOrderPDF(
-      {
-        ref: quote.ref,
-        contact_name: quote.contact_name,
-        contact_email: quote.contact_email,
-        contact_company: quote.contact_company,
-        contact_phone: quote.contact_phone,
-        required_date: quote.required_date,
-        install_requested: quote.install_requested,
-        site_address_line1: quote.site_address_line1,
-        site_address_line2: quote.site_address_line2,
-        site_address_city: quote.site_address_city,
-        site_address_postcode: quote.site_address_postcode,
-        site_country: quote.site_country,
-        subtotal_gbp_pence: quote.subtotal_gbp_pence,
-      },
-      items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty, line_total_gbp_pence: i.line_total_gbp_pence })),
-    );
-    workOrderPdf = { filename: `work-order-${quote.ref}.pdf`, content: buf };
-  } catch (err) {
-    console.error("[email] work order PDF failed:", err);
-  }
+  const pdfQuote = {
+    ref: quote.ref, contact_name: quote.contact_name, contact_email: quote.contact_email,
+    contact_company: quote.contact_company, contact_phone: quote.contact_phone,
+    required_date: quote.required_date, install_requested: quote.install_requested,
+    site_address_line1: quote.site_address_line1, site_address_line2: quote.site_address_line2,
+    site_address_city: quote.site_address_city, site_address_postcode: quote.site_address_postcode,
+    site_country: quote.site_country, subtotal_gbp_pence: quote.subtotal_gbp_pence,
+    currency: quote.currency, fx_rate_used: quote.fx_rate_used,
+  };
+  const pdfItems = items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty, line_total_gbp_pence: i.line_total_gbp_pence }));
+
+  const [confirmBuf, workOrderBuf] = await Promise.all([
+    tryGeneratePDF("order-confirmation", () => renderOrderConfirmationPDF(pdfQuote, pdfItems)),
+    tryGeneratePDF("work-order", () => renderWorkOrderPDF(pdfQuote, pdfItems)),
+  ]);
+  const confirmationPdf = confirmBuf ? [{ filename: `order-${quote.ref}.pdf`, content: confirmBuf }] : undefined;
+  const workOrderPdf    = workOrderBuf ? [{ filename: `work-order-${quote.ref}.pdf`, content: workOrderBuf }] : undefined;
 
   try {
     const [customerRes, workOrderRes] = await Promise.all([
@@ -414,14 +395,14 @@ export async function sendOrderConfirmationEmails(
         to: recipients(quote.contact_email),
         subject: `Order confirmed: ${quote.ref} — AJS Redzone`,
         html: orderConfirmationHtml(quote, items),
-        attachments: confirmationPdf ? [confirmationPdf] : undefined,
+        attachments: confirmationPdf,
       }),
       resend.emails.send({
         from: FROM,
         to: recipients(...workOrderRecipients),
         subject: `Work order: ${quote.ref} — ${quote.contact_company ?? quote.contact_name}`,
         html: workOrderHtml(quote, items),
-        attachments: workOrderPdf ? [workOrderPdf] : undefined,
+        attachments: workOrderPdf,
       }),
     ]);
     if (customerRes.error) console.error("[email] order confirmation failed:", customerRes.error);
