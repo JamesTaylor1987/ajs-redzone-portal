@@ -26,16 +26,16 @@ export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: H
               className="h-6 w-auto object-contain"
             />
           </Link>
-          <div className="hidden sm:block w-px h-8 bg-white/30" />
-          <Link href="/redzone/login" className="hidden sm:flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <div className="w-px h-8 bg-white/30" />
+          <Link href="/redzone/login" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://cdn.prod.website-files.com/6977ae7685a0199da7148962/699860f91ee461dc0f2bde24_redzone-favicon.svg"
-              alt=""
+              alt="Redzone PM Portal"
               className="h-5 w-5 object-contain"
             />
-            <span className="font-bold text-white text-sm">Redzone</span>
-            <span className="text-white/60 text-sm">Hardware Portal</span>
+            <span className="font-bold text-white text-sm hidden sm:inline">Redzone</span>
+            <span className="text-white/60 text-sm hidden sm:inline">Hardware Portal</span>
           </Link>
         </div>
 
