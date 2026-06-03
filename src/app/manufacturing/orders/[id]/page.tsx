@@ -58,8 +58,8 @@ export default async function ManufacturingOrderDetailPage({ params }: PageProps
 
   return (
     <div className="space-y-5 max-w-2xl">
-      <div className="flex items-center gap-3">
-        <Link href="/manufacturing/orders" className="text-ajs-muted text-sm hover:underline">
+      <div className="flex items-center gap-2 flex-wrap">
+        <Link href="/manufacturing/orders" className="text-ajs-muted text-sm hover:underline shrink-0">
           ← Work orders
         </Link>
         <span className="text-ajs-light">/</span>
@@ -114,24 +114,26 @@ export default async function ManufacturingOrderDetailPage({ params }: PageProps
         <div className="px-5 py-3 border-b border-ajs-light">
           <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">Parts to build / ship</h2>
         </div>
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 border-b border-ajs-light">
-            <tr>
-              <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Part code</th>
-              <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Description</th>
-              <th className="px-4 py-2.5 text-center text-xs font-bold uppercase tracking-wide text-ajs-dark">Qty</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-ajs-light">
-            {(items ?? []).map((i) => (
-              <tr key={i.id}>
-                <td className="px-4 py-3 font-mono text-xs font-bold text-ajs-dark">{i.sku}</td>
-                <td className="px-4 py-3 font-medium">{i.name}</td>
-                <td className="px-4 py-3 text-center text-xl font-extrabold text-ajs-primary">{i.qty}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[360px]">
+            <thead className="bg-slate-50 border-b border-ajs-light">
+              <tr>
+                <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Part code</th>
+                <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Description</th>
+                <th className="px-4 py-2.5 text-center text-xs font-bold uppercase tracking-wide text-ajs-dark">Qty</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-ajs-light">
+              {(items ?? []).map((i) => (
+                <tr key={i.id}>
+                  <td className="px-4 py-3 font-mono text-xs font-bold text-ajs-dark whitespace-nowrap">{i.sku}</td>
+                  <td className="px-4 py-3 font-medium">{i.name}</td>
+                  <td className="px-4 py-3 text-center text-xl font-extrabold text-ajs-primary">{i.qty}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <StatusUpdateForm quoteId={quote.id} currentStatus={quote.status} />

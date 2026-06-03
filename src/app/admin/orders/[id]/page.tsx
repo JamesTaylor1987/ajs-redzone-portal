@@ -62,34 +62,34 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
         <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark mb-3">
           Status
         </h2>
-        <form action={updateStatusAction} className="flex gap-3 items-end flex-wrap">
+        <form action={updateStatusAction} className="space-y-3">
           <input type="hidden" name="id" value={quote.id} />
-          <div>
-            <label className="block text-xs text-ajs-muted mb-1">Status</label>
-            <select
-              name="status"
-              defaultValue={quote.status}
-              className="border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
-            >
-              {STATUSES.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-ajs-muted mb-1">Tracking ref <span className="text-ajs-light">(shipped only)</span></label>
-            <input
-              type="text"
-              name="tracking_ref"
-              placeholder="e.g. DPD 1Z9999999"
-              className="border border-ajs-light rounded-md px-3 py-2 text-sm w-52 focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-ajs-muted mb-1">Status</label>
+              <select
+                name="status"
+                defaultValue={quote.status}
+                className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
+              >
+                {STATUSES.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-ajs-muted mb-1">Tracking ref <span className="text-ajs-light">(shipped only)</span></label>
+              <input
+                type="text"
+                name="tracking_ref"
+                placeholder="e.g. DPD 1Z9999999"
+                className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
+              />
+            </div>
           </div>
           <button
             type="submit"
-            className="px-4 py-2 rounded-lg text-sm font-bold text-white bg-ajs-primary hover:bg-ajs-dark transition-colors"
+            className="w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-bold text-white bg-ajs-primary hover:bg-ajs-dark transition-colors"
           >
             Save &amp; notify customer
           </button>
