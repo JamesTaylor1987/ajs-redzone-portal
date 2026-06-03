@@ -27,7 +27,7 @@ export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: H
             />
           </Link>
           <div className="hidden sm:block w-px h-8 bg-white/30" />
-          <div className="hidden sm:flex items-center gap-2">
+          <Link href="/redzone/login" className="hidden sm:flex items-center gap-2 hover:opacity-80 transition-opacity">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://cdn.prod.website-files.com/6977ae7685a0199da7148962/699860f91ee461dc0f2bde24_redzone-favicon.svg"
@@ -36,7 +36,7 @@ export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: H
             />
             <span className="font-bold text-white text-sm">Redzone</span>
             <span className="text-white/60 text-sm">Hardware Portal</span>
-          </div>
+          </Link>
         </div>
 
         <div className="flex items-center gap-2">
