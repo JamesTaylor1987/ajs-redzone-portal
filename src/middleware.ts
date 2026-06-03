@@ -53,8 +53,10 @@ export async function middleware(request: NextRequest) {
     if (isAdminLoginPage) {
       return NextResponse.redirect(new URL(isRZPM ? "/redzone/quotes" : "/portal", request.url));
     }
-    if (isRZLoginPage) {
-      return NextResponse.redirect(new URL(isRZPM ? "/redzone/quotes" : "/portal", request.url));
+    // RZ login page: only skip if already logged in as a PM — let other roles through
+    // so admins using the portal can still reach the RZ PM login independently
+    if (isRZLoginPage && isRZPM) {
+      return NextResponse.redirect(new URL("/redzone/quotes", request.url));
     }
 
     // Standard users can only access /manufacturing and /portal
