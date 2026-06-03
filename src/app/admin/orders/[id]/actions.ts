@@ -14,19 +14,37 @@ const VALID_STATUSES = [
   "cancelled",
 ] as const;
 
-export async function updateStatusAction(formData: FormData): Promise<void> {
+export interface StatusUpdateState {
+  success?: boolean;
+  error?: string;
+}
+
+export async function updateStatusAction(
+  _prev: StatusUpdateState,
+  formData: FormData,
+): Promise<StatusUpdateState> {
   const id = (formData.get("id") as string) ?? "";
   const status = (formData.get("status") as string) ?? "";
-  const trackingRef = (formData.get("tracking_ref") as string | null)?.trim() || undefined;
-  const trackingUrl = (formData.get("tracking_url") as string | null)?.trim() || undefined;
+  const trackingRef = (formData.get("tracking_ref") as string | null)?.trim() || null;
+  const trackingUrl = (formData.get("tracking_url") as string | null)?.trim() || null;
 
-  if (!VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])) return;
+  if (!VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])) {
+    return { error: "Invalid status" };
+  }
 
   const supabase = getServiceClient();
 
-  await supabase.from("quotes").update({ status }).eq("id", id);
+  const { error } = await supabase
+    .from("quotes")
+    .update({
+      status,
+      ...(trackingRef !== null && { tracking_ref: trackingRef }),
+      ...(trackingUrl !== null && { tracking_url: trackingUrl }),
+    })
+    .eq("id", id);
 
-  // Fire status email — fetch quote for contact details
+  if (error) return { error: "Failed to update — please try again" };
+
   const { data: quote } = await supabase
     .from("quotes")
     .select("ref, contact_name, contact_email")
@@ -39,11 +57,13 @@ export async function updateStatusAction(formData: FormData): Promise<void> {
       quote.contact_email,
       quote.ref,
       status,
-      trackingRef,
-      trackingUrl,
+      trackingRef ?? undefined,
+      trackingUrl ?? undefined,
     );
   }
 
   revalidatePath(`/admin/orders/${id}`);
   revalidatePath("/admin/orders");
+
+  return { success: true };
 }
