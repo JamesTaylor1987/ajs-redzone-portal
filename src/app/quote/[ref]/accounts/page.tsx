@@ -19,7 +19,7 @@ export default async function AccountsPage({ params, searchParams }: PageProps) 
   const { data: quote } = await supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_company, contact_email, contact_phone, subtotal_gbp_pence, accounts_token",
+      "id, ref, status, contact_name, contact_company, contact_email, contact_phone, subtotal_gbp_pence, shipping_gbp_pence, shipping_pallets, accounts_token",
     )
     .eq("ref", ref)
     .single();
@@ -75,7 +75,9 @@ export default async function AccountsPage({ params, searchParams }: PageProps) 
     .select("id, sku, name, qty, line_total_gbp_pence")
     .eq("quote_id", quote.id);
 
-  const totalPence = (items ?? []).reduce((s, i) => s + Number(i.line_total_gbp_pence), 0);
+  const subtotalPence = (items ?? []).reduce((s, i) => s + Number(i.line_total_gbp_pence), 0);
+  const shippingPence = quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : null;
+  const grandTotalPence = subtotalPence + (shippingPence ?? 0);
   const gbp = (p: number) =>
     "£" +
     (p / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -112,9 +114,19 @@ export default async function AccountsPage({ params, searchParams }: PageProps) 
                 </li>
               ))}
             </ul>
-            <div className="flex justify-between font-bold text-sm pt-2 border-t border-ajs-light">
+            <div className="flex justify-between text-sm pt-2 border-t border-ajs-light text-ajs-muted">
+              <span>Subtotal</span>
+              <span className="font-semibold text-ajs-dark">{gbp(subtotalPence)}</span>
+            </div>
+            <div className="flex justify-between text-sm pt-1 text-ajs-muted">
+              <span>Shipping{quote.shipping_pallets ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})` : ""}</span>
+              <span className={`font-semibold ${shippingPence === null ? "text-amber-600" : "text-ajs-dark"}`}>
+                {shippingPence !== null ? gbp(shippingPence) : "EXW"}
+              </span>
+            </div>
+            <div className="flex justify-between font-bold text-sm pt-2 mt-1 border-t border-ajs-light">
               <span>Total (ex-VAT)</span>
-              <span>{gbp(totalPence)}</span>
+              <span>{gbp(grandTotalPence)}</span>
             </div>
           </div>
         </div>
