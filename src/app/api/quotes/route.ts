@@ -94,6 +94,7 @@ export async function POST(request: Request) {
     .insert({
       ref,
       accounts_token: accountsToken,
+      original_quote_ref: body.originalQuoteRef ?? null,
       status: "quote_submitted",
       currency: body.currency ?? "GBP",
       fx_rate_used: body.fxRateUsed,
@@ -137,7 +138,16 @@ export async function POST(request: Request) {
     );
   }
 
-  // 5. Send emails (non-blocking failure — quote is already committed).
+  // 5. Mark the original quote as revised (non-blocking).
+  if (body.originalQuoteRef) {
+    await supabase
+      .from("quotes")
+      .update({ status: "revised" })
+      .eq("ref", body.originalQuoteRef)
+      .eq("status", "quote_submitted"); // only if still open — don't overwrite accepted orders
+  }
+
+  // 6. Send emails (non-blocking failure — quote is already committed).
   const magicUrl = buildMagicUrl(ref, magicToken);
   await sendQuoteEmails(
     {

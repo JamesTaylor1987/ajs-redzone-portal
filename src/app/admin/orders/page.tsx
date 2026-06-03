@@ -12,6 +12,7 @@ const STATUS_LABEL: Record<string, string> = {
   shipped: "Shipped",
   complete: "Complete",
   cancelled: "Cancelled",
+  revised: "Superseded",
 };
 
 const STATUS_COLOUR: Record<string, string> = {
@@ -22,6 +23,7 @@ const STATUS_COLOUR: Record<string, string> = {
   shipped: "bg-green-100 text-green-700",
   complete: "bg-slate-100 text-slate-600",
   cancelled: "bg-rose-100 text-rose-600",
+  revised: "bg-slate-100 text-slate-400",
 };
 
 interface PageProps {
@@ -34,12 +36,15 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
   let query = supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_company, contact_email, subtotal_gbp_pence, created_at",
+      "id, ref, status, contact_name, contact_company, contact_email, subtotal_gbp_pence, created_at, original_quote_ref",
     )
     .order("created_at", { ascending: false });
 
   if (searchParams.status) {
     query = query.eq("status", searchParams.status);
+  } else {
+    // Hide superseded quotes from the default view — they're replaced by a revision
+    query = query.neq("status", "revised");
   }
 
   const { data: orders } = await query;
@@ -73,8 +78,13 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
             <tbody className="divide-y divide-ajs-light">
               {orders.map((o) => (
                 <tr key={o.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3 font-mono text-xs font-bold text-ajs-dark">
-                    {o.ref}
+                  <td className="px-4 py-3">
+                    <div className="font-mono text-xs font-bold text-ajs-dark">{o.ref}</div>
+                    {o.original_quote_ref && (
+                      <div className="text-xs text-blue-600 mt-0.5">
+                        Rev. of {o.original_quote_ref}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="font-medium text-ajs-text">{o.contact_name}</div>

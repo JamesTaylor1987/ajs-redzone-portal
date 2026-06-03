@@ -2,16 +2,26 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import type { CartLine } from "@/lib/types";
+import type { CartLine, CheckoutDetails } from "@/lib/types";
 
-const CART_KEY = "ajs_redzone_cart_v1";
+const CART_KEY    = "ajs_redzone_cart_v1";
+const PREFILL_KEY = "ajs_redzone_prefill_v1";
+const AMEND_KEY   = "ajs_redzone_amend_ref_v1";
 
-export function RestoreBasket({ lines }: { lines: CartLine[] }) {
+interface Props {
+  lines: CartLine[];
+  prefill: Partial<CheckoutDetails>;
+  originalRef: string;
+}
+
+export function RestoreBasket({ lines, prefill, originalRef }: Props) {
   const router = useRouter();
 
   useEffect(() => {
     try {
       localStorage.setItem(CART_KEY, JSON.stringify(lines));
+      localStorage.setItem(PREFILL_KEY, JSON.stringify(prefill));
+      localStorage.setItem(AMEND_KEY, originalRef);
     } catch {
       /* ignore */
     }

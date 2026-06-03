@@ -69,6 +69,7 @@ export interface CreateQuoteRequest {
   details: CheckoutDetails;
   shippingPallets: number;
   shippingGbpPence: number | null; // null = EXW
+  originalQuoteRef?: string;       // set when amending an existing quote
 }
 
 export interface StockColourSettings {

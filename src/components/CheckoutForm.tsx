@@ -27,8 +27,31 @@ const EMPTY: CheckoutDetails = {
   installRequested: false,
 };
 
+const PREFILL_KEY = "ajs_redzone_prefill_v1";
+const AMEND_KEY   = "ajs_redzone_amend_ref_v1";
+
 export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFormProps) {
-  const [details, setDetails] = useState<CheckoutDetails>(EMPTY);
+  const [details, setDetails] = useState<CheckoutDetails>(() => {
+    if (typeof window === "undefined") return EMPTY;
+    try {
+      const saved = localStorage.getItem(PREFILL_KEY);
+      if (saved) {
+        localStorage.removeItem(PREFILL_KEY);
+        return { ...EMPTY, ...(JSON.parse(saved) as Partial<CheckoutDetails>) };
+      }
+    } catch { /* ignore */ }
+    return EMPTY;
+  });
+
+  const [originalQuoteRef] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const r = localStorage.getItem(AMEND_KEY);
+      if (r) { localStorage.removeItem(AMEND_KEY); return r; }
+    } catch { /* ignore */ }
+    return null;
+  });
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,6 +96,7 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
           details,
           shippingPallets: pallets,
           shippingGbpPence: shippingPence,
+          ...(originalQuoteRef ? { originalQuoteRef } : {}),
         }),
       });
       if (!res.ok) {
@@ -89,6 +113,11 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {originalQuoteRef && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-4 py-3 leading-relaxed">
+          Amending <span className="font-mono font-bold">{originalQuoteRef}</span> — your details are pre-filled. Adjust your basket and submit to create a revised quote. The original will be marked as superseded.
+        </div>
+      )}
       <div className="bg-white rounded-xl border border-ajs-light p-4">
         <h2 className="font-bold text-lg mb-3 text-ajs-dark">Your details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

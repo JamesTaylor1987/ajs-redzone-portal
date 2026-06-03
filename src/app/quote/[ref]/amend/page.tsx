@@ -1,5 +1,5 @@
 import { getServiceClient } from "@/lib/supabase-server";
-import type { CartLine } from "@/lib/types";
+import type { CartLine, CheckoutDetails } from "@/lib/types";
 import { RestoreBasket } from "./RestoreBasket";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ export default async function AmendQuotePage({ params, searchParams }: PageProps
   const supabase = getServiceClient();
   const { data: quote } = await supabase
     .from("quotes")
-    .select("id, ref, status, magic_token, magic_expires_at")
+    .select("id, ref, status, magic_token, magic_expires_at, contact_name, contact_company, contact_email, contact_phone, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, required_date, project_description")
     .eq("ref", ref)
     .single();
 
@@ -82,5 +82,19 @@ export default async function AmendQuotePage({ params, searchParams }: PageProps
     unitPricePence: Number(i.unit_price_gbp_pence),
   }));
 
-  return <RestoreBasket lines={cartLines} />;
+  const prefill: Partial<CheckoutDetails> = {
+    contactName: quote.contact_name ?? "",
+    contactCompany: quote.contact_company ?? "",
+    contactEmail: quote.contact_email ?? "",
+    contactPhone: quote.contact_phone ?? "",
+    siteAddressLine1: quote.site_address_line1 ?? "",
+    siteAddressLine2: quote.site_address_line2 ?? "",
+    siteAddressCity: quote.site_address_city ?? "",
+    siteAddressPostcode: quote.site_address_postcode ?? "",
+    siteCountry: quote.site_country ?? "United Kingdom",
+    requiredDate: quote.required_date ?? "",
+    projectDescription: quote.project_description ?? "",
+  };
+
+  return <RestoreBasket lines={cartLines} prefill={prefill} originalRef={ref} />;
 }
