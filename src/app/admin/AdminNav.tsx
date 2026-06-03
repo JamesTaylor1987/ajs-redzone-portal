@@ -24,6 +24,8 @@ export function AdminNav({ email, isAdmin }: Props) {
       {/* Top bar */}
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="https://cdn.prod.website-files.com/6977ae7685a0199da7148962/699860f91ee461dc0f2bde24_redzone-favicon.svg" alt="" aria-hidden="true" className="h-6 w-6" />
           <span className="font-extrabold text-lg tracking-tight">RZ Admin</span>
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-5">

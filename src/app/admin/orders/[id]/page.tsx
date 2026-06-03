@@ -64,7 +64,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
         </h2>
         <form action={updateStatusAction} className="space-y-3">
           <input type="hidden" name="id" value={quote.id} />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs text-ajs-muted mb-1">Status</label>
               <select
@@ -82,7 +82,18 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
               <input
                 type="text"
                 name="tracking_ref"
+                defaultValue={quote.tracking_ref ?? ""}
                 placeholder="e.g. DPD 1Z9999999"
+                className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-ajs-muted mb-1">Tracking link <span className="text-ajs-light">(optional URL)</span></label>
+              <input
+                type="url"
+                name="tracking_url"
+                defaultValue={quote.tracking_url ?? ""}
+                placeholder="https://track.dpd.co.uk/…"
                 className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
               />
             </div>

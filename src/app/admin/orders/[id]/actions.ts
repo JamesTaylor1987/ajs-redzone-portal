@@ -18,6 +18,7 @@ export async function updateStatusAction(formData: FormData): Promise<void> {
   const id = (formData.get("id") as string) ?? "";
   const status = (formData.get("status") as string) ?? "";
   const trackingRef = (formData.get("tracking_ref") as string | null)?.trim() || undefined;
+  const trackingUrl = (formData.get("tracking_url") as string | null)?.trim() || undefined;
 
   if (!VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])) return;
 
@@ -39,6 +40,7 @@ export async function updateStatusAction(formData: FormData): Promise<void> {
       quote.ref,
       status,
       trackingRef,
+      trackingUrl,
     );
   }
 

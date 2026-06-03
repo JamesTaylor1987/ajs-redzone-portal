@@ -16,6 +16,8 @@ export function MfgNav({ isAdmin }: Props) {
       {/* Top bar */}
       <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-14">
         <div className="flex items-center gap-6">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="https://cdn.prod.website-files.com/6977ae7685a0199da7148962/699860f91ee461dc0f2bde24_redzone-favicon.svg" alt="" aria-hidden="true" className="h-5 w-5" />
           <span className="font-extrabold text-sm tracking-wide">Manufacturing</span>
           {/* Desktop nav */}
           <nav className="hidden sm:flex gap-4 text-sm">
