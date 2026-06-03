@@ -187,20 +187,13 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
 
               {quote.status === "quote_submitted" && !justAccepted && (
                 <>
-                  <p className="text-xs text-ajs-muted">
-                    To amend your quote contact{" "}
-                    <a href="mailto:rz@ajsspalding.co.uk" className="text-ajs-primary underline">
-                      rz@ajsspalding.co.uk
-                    </a>{" "}
-                    or call 01406&nbsp;424954.
-                  </p>
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <a
-                      href={`mailto:rz@ajsspalding.co.uk?subject=Amendment request: ${quote.ref}`}
-                      className="flex-1 text-center px-5 py-3 rounded-lg border-2 border-ajs-light text-ajs-muted font-bold hover:bg-ajs-light transition-colors"
+                    <Link
+                      href={`/quote/${encodeURIComponent(ref)}/amend?token=${token}`}
+                      className="flex-1 text-center px-5 py-3 rounded-lg border-2 border-ajs-light text-ajs-dark font-bold hover:bg-ajs-light transition-colors"
                     >
-                      Request amendment
-                    </a>
+                      Amend quote
+                    </Link>
                     <Link
                       href={`/quote/${encodeURIComponent(ref)}/accept?token=${token}`}
                       className="flex-1 text-center px-5 py-3 rounded-lg font-bold text-white bg-ajs-primary hover:bg-ajs-dark transition-colors"
