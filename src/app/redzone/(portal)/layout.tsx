@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAuthClient } from "@/lib/supabase-auth";
 import { getServiceClient } from "@/lib/supabase-server";
-import { RedzoneNav } from "./RedzoneNav";
+import { RedzoneNav } from "../RedzoneNav";
 
 export default async function RedzoneLayout({ children }: { children: React.ReactNode }) {
   const supabase = getAuthClient();
