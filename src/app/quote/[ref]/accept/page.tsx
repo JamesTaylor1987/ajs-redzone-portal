@@ -22,7 +22,7 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
   const { data: quote } = await supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, magic_token, magic_expires_at, accounts_token",
+      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, shipping_gbp_pence, shipping_pallets, magic_token, magic_expires_at, accounts_token",
     )
     .eq("ref", ref)
     .single();
@@ -77,8 +77,10 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
     .select("id, sku, name, qty, line_total_gbp_pence")
     .eq("quote_id", quote.id);
 
-  const totalPence = (items ?? []).reduce((s, i) => s + Number(i.line_total_gbp_pence), 0);
-  const total = "£" + (totalPence / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const subtotalPence = (items ?? []).reduce((s, i) => s + Number(i.line_total_gbp_pence), 0);
+  const shippingPence = quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : null;
+  const grandTotalPence = subtotalPence + (shippingPence ?? 0);
+  const fmt = (p: number) => "£" + (p / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -103,15 +105,23 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
                     <span className="font-mono text-xs font-bold text-ajs-dark">{i.sku}</span>{" "}
                     {i.name} &times; {i.qty}
                   </span>
-                  <span className="font-semibold whitespace-nowrap">
-                    {"£" + (Number(i.line_total_gbp_pence) / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
+                  <span className="font-semibold whitespace-nowrap">{fmt(Number(i.line_total_gbp_pence))}</span>
                 </li>
               ))}
             </ul>
-            <div className="flex justify-between font-bold text-sm pt-2 border-t border-ajs-light">
+            <div className="flex justify-between text-sm pt-2 border-t border-ajs-light text-ajs-muted">
+              <span>Subtotal</span>
+              <span className="font-semibold text-ajs-dark">{fmt(subtotalPence)}</span>
+            </div>
+            <div className="flex justify-between text-sm pt-1 text-ajs-muted">
+              <span>Shipping{quote.shipping_pallets ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})` : ""}</span>
+              <span className={`font-semibold ${shippingPence === null ? "text-amber-600" : "text-ajs-dark"}`}>
+                {shippingPence !== null ? fmt(shippingPence) : "EXW"}
+              </span>
+            </div>
+            <div className="flex justify-between font-bold text-sm pt-2 mt-1 border-t border-ajs-light">
               <span>Total (ex-VAT)</span>
-              <span>{total}</span>
+              <span>{fmt(grandTotalPence)}</span>
             </div>
           </div>
         </div>

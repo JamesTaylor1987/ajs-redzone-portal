@@ -29,7 +29,7 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
   const supabase = getServiceClient();
   const { data: quote } = await supabase
     .from("quotes")
-    .select("id, ref, status, contact_name, contact_email, contact_company, contact_phone, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, required_date, project_description, install_requested, subtotal_gbp_pence, magic_token, magic_expires_at, currency, created_at")
+    .select("id, ref, status, contact_name, contact_email, contact_company, contact_phone, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, required_date, project_description, install_requested, subtotal_gbp_pence, shipping_gbp_pence, shipping_pallets, magic_token, magic_expires_at, currency, created_at")
     .eq("ref", ref)
     .single();
 
@@ -142,9 +142,19 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
                   </li>
                 ))}
               </ul>
-              <div className="flex justify-between font-bold text-base pt-3 mt-1 border-t border-ajs-light">
-                <span>Subtotal (ex-VAT)</span>
-                <span>{gbp(totalPence)}</span>
+              <div className="flex justify-between text-sm pt-3 mt-1 border-t border-ajs-light text-ajs-muted">
+                <span>Subtotal</span>
+                <span className="font-semibold text-ajs-dark">{gbp(totalPence)}</span>
+              </div>
+              <div className="flex justify-between text-sm pt-1 text-ajs-muted">
+                <span>Shipping{quote.shipping_pallets ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})` : ""}</span>
+                <span className={`font-semibold ${quote.shipping_gbp_pence == null ? "text-amber-600" : "text-ajs-dark"}`}>
+                  {quote.shipping_gbp_pence != null ? gbp(Number(quote.shipping_gbp_pence)) : "EXW"}
+                </span>
+              </div>
+              <div className="flex justify-between font-bold text-base pt-2 mt-1 border-t border-ajs-light">
+                <span>Total (ex-VAT)</span>
+                <span>{gbp(totalPence + (quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : 0))}</span>
               </div>
             </div>
 
