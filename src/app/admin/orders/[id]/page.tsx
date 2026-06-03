@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase-server";
 import { StatusUpdateForm } from "./StatusUpdateForm";
+import { AssignPMForm } from "./AssignPMForm";
 
 export const dynamic = "force-dynamic";
 
@@ -12,11 +13,10 @@ interface PageProps {
 export default async function AdminOrderDetailPage({ params }: PageProps) {
   const supabase = getServiceClient();
 
-  const { data: quote } = await supabase
-    .from("quotes")
-    .select("*")
-    .eq("id", params.id)
-    .single();
+  const [{ data: quote }, { data: pms }] = await Promise.all([
+    supabase.from("quotes").select("*").eq("id", params.id).single(),
+    supabase.from("rz_pms").select("id, name, email").order("name"),
+  ]);
 
   if (!quote) notFound();
 
@@ -53,6 +53,13 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
         currentStatus={quote.status}
         currentTrackingRef={quote.tracking_ref}
         currentTrackingUrl={quote.tracking_url}
+      />
+
+      {/* Redzone PM assignment */}
+      <AssignPMForm
+        quoteId={quote.id}
+        currentPMId={quote.rz_pm_id ?? null}
+        pms={pms ?? []}
       />
 
       {/* Contact */}

@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/products", label: "Products" },
   { href: "/admin/users", label: "Users" },
+  { href: "/admin/redzone-pms", label: "Redzone PMs" },
   { href: "/admin/settings", label: "Settings" },
 ];
 

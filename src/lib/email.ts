@@ -602,22 +602,26 @@ export async function sendStatusUpdateEmail(
   status: string,
   trackingRef?: string,
   trackingUrl?: string,
+  rzPmEmail?: string,
 ): Promise<void> {
   if (!process.env.RESEND_API_KEY) return;
   if (!STATUS_SUBJECT[status]) return; // no email for quote_submitted
 
   const resend = new Resend(process.env.RESEND_API_KEY);
   const subject = `${STATUS_SUBJECT[status]}: ${ref} — AJS Redzone`;
+  const override = process.env.RESEND_TEST_TO?.trim();
+  const cc = !override && rzPmEmail ? [rzPmEmail] : undefined;
 
   try {
     const { error } = await resend.emails.send({
       from: FROM,
       to: recipients(contactEmail),
+      cc,
       subject,
       html: statusUpdateHtml(contactName, ref, status, trackingRef, trackingUrl),
     });
     if (error) console.error("[email] status update failed:", error);
-    else console.log(`[email] status update sent: ${status} → ${contactEmail}`);
+    else console.log(`[email] status update sent: ${status} → ${contactEmail}${rzPmEmail ? ` (CC: ${rzPmEmail})` : ""}`);
   } catch (err) {
     console.error("[email] status update unexpected error:", err);
   }

@@ -45,13 +45,24 @@ export async function updateStatusAction(
 
   if (error) return { error: "Failed to update — please try again" };
 
+  // Fetch quote + assigned PM for notifications
   const { data: quote } = await supabase
     .from("quotes")
-    .select("ref, contact_name, contact_email")
+    .select("ref, contact_name, contact_email, rz_pm_id")
     .eq("id", id)
     .single();
 
   if (quote) {
+    let rzPmEmail: string | undefined;
+    if (quote.rz_pm_id) {
+      const { data: pm } = await supabase
+        .from("rz_pms")
+        .select("email")
+        .eq("id", quote.rz_pm_id)
+        .single();
+      rzPmEmail = pm?.email ?? undefined;
+    }
+
     await sendStatusUpdateEmail(
       quote.contact_name,
       quote.contact_email,
@@ -59,11 +70,38 @@ export async function updateStatusAction(
       status,
       trackingRef ?? undefined,
       trackingUrl ?? undefined,
+      rzPmEmail,
     );
   }
 
   revalidatePath(`/admin/orders/${id}`);
   revalidatePath("/admin/orders");
 
+  return { success: true };
+}
+
+export interface AssignPMState {
+  success?: boolean;
+  error?: string;
+}
+
+export async function assignPMAction(
+  _prev: AssignPMState,
+  formData: FormData,
+): Promise<AssignPMState> {
+  const id = (formData.get("id") as string) ?? "";
+  const rzPmId = ((formData.get("rz_pm_id") as string) ?? "").trim() || null;
+
+  if (!id) return { error: "Missing order id" };
+
+  const supabase = getServiceClient();
+  const { error } = await supabase
+    .from("quotes")
+    .update({ rz_pm_id: rzPmId })
+    .eq("id", id);
+
+  if (error) return { error: "Failed to save — please try again" };
+
+  revalidatePath(`/admin/orders/${id}`);
   return { success: true };
 }
