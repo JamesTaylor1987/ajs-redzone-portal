@@ -101,6 +101,7 @@ export default async function RedzoneQuoteDetailPage({ params }: PageProps) {
 
       {/* Delivery */}
       <Card title="Delivery address">
+        <Row label="Site name" value={quote.site_name} />
         <Row
           label="Address"
           value={[

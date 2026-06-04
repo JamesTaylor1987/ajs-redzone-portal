@@ -17,6 +17,7 @@ const EMPTY: CheckoutDetails = {
   contactCompany: "",
   contactEmail: "",
   contactPhone: "",
+  siteName: "",
   siteAddressLine1: "",
   siteAddressLine2: "",
   siteAddressCity: "",
@@ -143,6 +144,7 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
       <div className="bg-white rounded-xl border border-ajs-light p-4">
         <h2 className="font-bold text-lg mb-3 text-ajs-dark">Delivery / site address</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Field label="Site name (if different from company)" value={details.siteName} onChange={set("siteName")} className="sm:col-span-2" placeholder="e.g. Manchester Factory, Unit 4 Warehouse" />
           <Field label="Address line 1" value={details.siteAddressLine1} onChange={set("siteAddressLine1")} className="sm:col-span-2" />
           <Field label="Address line 2" value={details.siteAddressLine2} onChange={set("siteAddressLine2")} className="sm:col-span-2" />
           <Field label="Town / City" value={details.siteAddressCity} onChange={set("siteAddressCity")} />
@@ -286,6 +288,7 @@ function Field({
   onChange,
   required,
   className = "",
+  placeholder,
 }: {
   label: string;
   type?: string;
@@ -293,6 +296,7 @@ function Field({
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
   className?: string;
+  placeholder?: string;
 }) {
   return (
     <div className={className}>
@@ -304,6 +308,7 @@ function Field({
         value={value}
         onChange={onChange}
         required={required}
+        placeholder={placeholder}
         className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
       />
     </div>

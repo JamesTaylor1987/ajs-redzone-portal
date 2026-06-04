@@ -102,6 +102,7 @@ export async function POST(request: Request) {
       contact_company: body.details.contactCompany?.trim() || null,
       contact_email: body.details.contactEmail.trim(),
       contact_phone: body.details.contactPhone?.trim() || null,
+      site_name: body.details.siteName?.trim() || null,
       site_address_line1: body.details.siteAddressLine1?.trim() || null,
       site_address_line2: body.details.siteAddressLine2?.trim() || null,
       site_address_city: body.details.siteAddressCity?.trim() || null,

@@ -17,7 +17,7 @@ export async function acceptAccountsAction(
   const { data: quote } = await supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, shipping_gbp_pence, shipping_pallets, required_date, install_requested, accounts_token, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, currency, fx_rate_used",
+      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, shipping_gbp_pence, shipping_pallets, required_date, install_requested, accounts_token, site_name, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, currency, fx_rate_used",
     )
     .eq("ref", quoteRef)
     .single();
@@ -127,6 +127,7 @@ export async function acceptAccountsAction(
       shipping_pallets: quote.shipping_pallets,
       required_date: quote.required_date,
       install_requested: quote.install_requested,
+      site_name: quote.site_name,
       site_address_line1: quote.site_address_line1,
       site_address_line2: quote.site_address_line2,
       site_address_city: quote.site_address_city,

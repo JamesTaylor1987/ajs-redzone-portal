@@ -43,6 +43,7 @@ export interface CheckoutDetails {
   contactCompany: string;
   contactEmail: string;
   contactPhone: string;
+  siteName: string;
   siteAddressLine1: string;
   siteAddressLine2: string;
   siteAddressCity: string;

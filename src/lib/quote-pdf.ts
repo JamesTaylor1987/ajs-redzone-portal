@@ -43,6 +43,7 @@ export interface PDFQuote {
   contact_phone?: string | null;
   required_date?: string | null;
   install_requested?: boolean;
+  site_name?: string | null;
   site_address_line1?: string | null;
   site_address_line2?: string | null;
   site_address_city?: string | null;
@@ -449,6 +450,12 @@ export async function renderWorkOrderPDF(quote: PDFQuote, items: PDFItem[]): Pro
                 columns: [
                   { text: "Phone", color: MUTED, width: 120 },
                   { text: quote.contact_phone },
+                ],
+              }] : []),
+              ...(quote.site_name ? [{
+                columns: [
+                  { text: "Site", color: MUTED, width: 120 },
+                  { text: quote.site_name, bold: true },
                 ],
               }] : []),
               ...(delivery ? [{

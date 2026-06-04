@@ -258,6 +258,7 @@ export interface OrderQuoteRow extends EmailQuoteRow {
   contact_phone: string | null;
   required_date: string | null;
   install_requested: boolean;
+  site_name: string | null;
   site_address_line1: string | null;
   site_address_line2: string | null;
   site_address_city: string | null;
@@ -372,6 +373,8 @@ function workOrderHtml(quote: OrderQuoteRow, items: EmailItemRow[]): string {
           <td style="padding:5px 0;font-size:14px;font-weight:bold">${quote.contact_name}${quote.contact_company ? ` &mdash; ${quote.contact_company}` : ""}</td></tr>
       <tr><td style="padding:5px 0;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#64748b">Phone</td>
           <td style="padding:5px 0;font-size:14px">${quote.contact_phone ?? "&mdash;"}</td></tr>
+      ${quote.site_name ? `<tr><td style="padding:5px 0;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#64748b">Site</td>
+          <td style="padding:5px 0;font-size:14px;font-weight:bold">${quote.site_name}</td></tr>` : ""}
       <tr><td style="padding:5px 0;font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#64748b;vertical-align:top">Delivery address</td>
           <td style="padding:5px 0;font-size:14px;font-weight:bold">${deliveryAddress}</td></tr>
     </table>
@@ -423,6 +426,7 @@ export async function sendOrderConfirmationEmails(
     ref: quote.ref, contact_name: quote.contact_name, contact_email: quote.contact_email,
     contact_company: quote.contact_company, contact_phone: quote.contact_phone,
     required_date: quote.required_date, install_requested: quote.install_requested,
+    site_name: quote.site_name,
     site_address_line1: quote.site_address_line1, site_address_line2: quote.site_address_line2,
     site_address_city: quote.site_address_city, site_address_postcode: quote.site_address_postcode,
     site_country: quote.site_country, subtotal_gbp_pence: quote.subtotal_gbp_pence,
