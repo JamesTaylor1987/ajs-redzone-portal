@@ -77,8 +77,12 @@ export function calculateInstallationQuote(
     travel_pence = rate * engineer_count;
   }
 
-  // Hotels (nights between days — e.g. 3 days = 2 nights)
-  const hotel_nights = Math.max(0, total_days - 1);
+  // Hotels: if travelling, count outward travel nights (1 per travel day) + all install nights.
+  // Return journey is not hotelled separately — 2-day travel adds 1 extra night vs 1-day travel.
+  // If same-day travel (T=0), just count overnight stays between install days.
+  const hotel_nights = a.travel_days_one_way > 0
+    ? a.travel_days_one_way + install_days
+    : Math.max(0, install_days - 1);
   const hotels_pence = hotel_nights * engineer_count * C.hotel_rate_pence;
 
   // Infrastructure uplift
