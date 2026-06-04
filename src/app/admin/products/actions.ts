@@ -27,27 +27,6 @@ export async function upsertProductAction(formData: FormData) {
 
   const supabase = getServiceClient();
 
-  // Handle image upload
-  let image_url: string | null = null;
-  const imageFile = formData.get("image") as File | null;
-
-  if (imageFile && imageFile.size > 0) {
-    const ext = imageFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const path = `products/${sku.toLowerCase().replace(/\s+/g, "-")}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from("product-images")
-      .upload(path, imageFile, { upsert: true, contentType: imageFile.type });
-
-    if (uploadError) {
-      return { error: `Image upload failed: ${uploadError.message}` };
-    }
-
-    const { data: urlData } = supabase.storage
-      .from("product-images")
-      .getPublicUrl(path);
-    image_url = urlData.publicUrl;
-  }
-
   const payload = {
     sku,
     name,
@@ -61,7 +40,6 @@ export async function upsertProductAction(formData: FormData) {
     lead_time,
     sort_order,
     active,
-    ...(image_url ? { image_url } : {}),
   };
 
   if (id) {

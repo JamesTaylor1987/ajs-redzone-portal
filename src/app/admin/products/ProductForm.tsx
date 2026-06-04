@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { upsertProductAction } from "./actions";
 import type { Product } from "@/lib/types";
 
@@ -12,9 +11,6 @@ interface Props {
 export function ProductForm({ product }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [preview, setPreview] = useState<string | null>(
-    product?.image_url ?? null,
-  );
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,13 +23,6 @@ export function ProductForm({ product }: Props) {
       setSubmitting(false);
     }
     // On success the action redirects.
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setPreview(URL.createObjectURL(file));
-    }
   };
 
   return (
@@ -154,32 +143,6 @@ export function ProductForm({ product }: Props) {
           type="number"
           defaultValue={product?.sort_order?.toString() ?? "0"}
         />
-      </Section>
-
-      <Section title="Image">
-        <div className="sm:col-span-2">
-          {preview && (
-            <div className="mb-3">
-              <Image
-                src={preview}
-                alt="Product preview"
-                width={160}
-                height={160}
-                className="rounded-lg border border-ajs-light object-contain bg-white"
-              />
-            </div>
-          )}
-          <input
-            type="file"
-            name="image"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="text-sm text-ajs-muted file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-ajs-light file:text-ajs-dark hover:file:bg-ajs-primary/10"
-          />
-          <p className="text-xs text-ajs-muted mt-1">
-            JPG, PNG or WebP. Max 5 MB. Leave blank to keep existing image.
-          </p>
-        </div>
       </Section>
 
       <div className="bg-white rounded-xl border border-ajs-light p-5">
