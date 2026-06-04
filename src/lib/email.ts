@@ -222,7 +222,7 @@ export async function sendQuoteEmails(
       items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty, line_total_gbp_pence: i.line_total_gbp_pence })),
     ),
   );
-  const pdfAttachment = pdfBuf ? [{ filename: `quote-${quote.ref}.pdf`, content: pdfBuf }] : undefined;
+  const pdfAttachment = pdfBuf ? [{ filename: `Quote-${quote.ref}.pdf`, content: pdfBuf }] : undefined;
   console.log(`[email] quote PDF: ${pdfBuf ? pdfBuf.length + " bytes, attaching" : "null — sending without attachment"}`);
 
   try {
@@ -429,8 +429,8 @@ export async function sendOrderConfirmationEmails(
     tryGeneratePDF("order-confirmation", () => renderOrderConfirmationPDF(pdfQuote, pdfItems)),
     tryGeneratePDF("work-order", () => renderWorkOrderPDF(pdfQuote, pdfItems)),
   ]);
-  const confirmationPdf = confirmBuf ? [{ filename: `order-${quote.ref}.pdf`, content: confirmBuf }] : undefined;
-  const workOrderPdf    = workOrderBuf ? [{ filename: `work-order-${quote.ref}.pdf`, content: workOrderBuf }] : undefined;
+  const confirmationPdf = confirmBuf ? [{ filename: `Order-${quote.ref}.pdf`, content: confirmBuf }] : undefined;
+  const workOrderPdf    = workOrderBuf ? [{ filename: `Work-Order-${quote.ref}.pdf`, content: workOrderBuf }] : undefined;
 
   try {
     const [customerRes, workOrderRes] = await Promise.all([
