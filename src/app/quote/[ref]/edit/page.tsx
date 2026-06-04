@@ -31,7 +31,7 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
   const supabase = getServiceClient();
   const { data: quote } = await supabase
     .from("quotes")
-    .select("id, ref, status, contact_name, contact_email, contact_company, contact_phone, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, required_date, project_description, install_requested, subtotal_gbp_pence, shipping_gbp_pence, shipping_pallets, magic_token, magic_expires_at, currency, fx_rate_used, created_at")
+    .select("id, ref, status, contact_name, contact_email, contact_company, contact_phone, site_name, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, required_date, project_description, install_requested, subtotal_gbp_pence, shipping_gbp_pence, shipping_pallets, magic_token, magic_expires_at, currency, fx_rate_used, created_at")
     .eq("ref", ref)
     .single();
 
@@ -160,6 +160,9 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
               <p><span className="text-ajs-muted">Name:</span> {quote.contact_name}</p>
               {quote.contact_company && (
                 <p><span className="text-ajs-muted">Company:</span> {quote.contact_company}</p>
+              )}
+              {quote.site_name && (
+                <p><span className="text-ajs-muted">Site:</span> {quote.site_name}</p>
               )}
               <p><span className="text-ajs-muted">Email:</span> {quote.contact_email}</p>
               {quote.required_date && (

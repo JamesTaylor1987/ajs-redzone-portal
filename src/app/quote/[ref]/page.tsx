@@ -68,6 +68,11 @@ export default async function QuoteConfirmationPage({ params }: PageProps) {
               once it&apos;s been priced.
             </p>
 
+            <div className="text-sm space-y-0.5">
+              {quote.contact_company && <p><span className="text-ajs-muted">Company:</span> <span className="font-semibold">{quote.contact_company}</span></p>}
+              {quote.site_name && <p><span className="text-ajs-muted">Site:</span> <span className="font-semibold">{quote.site_name}</span></p>}
+            </div>
+
             <div>
               <h2 className="text-sm font-bold text-ajs-dark uppercase tracking-wide mb-2">
                 Items

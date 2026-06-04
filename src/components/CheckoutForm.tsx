@@ -136,6 +136,7 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Full name *" required value={details.contactName} onChange={set("contactName")} />
           <Field label="Company *" required value={details.contactCompany} onChange={set("contactCompany")} />
+          <Field label="Site name" value={details.siteName} onChange={set("siteName")} placeholder="e.g. Manchester Factory, Unit 4 Warehouse" className="sm:col-span-2" />
           <Field label="Email *" type="email" required value={details.contactEmail} onChange={set("contactEmail")} />
           <Field label="Phone *" type="tel" required value={details.contactPhone} onChange={set("contactPhone")} />
         </div>
@@ -144,7 +145,6 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
       <div className="bg-white rounded-xl border border-ajs-light p-4">
         <h2 className="font-bold text-lg mb-3 text-ajs-dark">Delivery / site address</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Site name (if different from company)" value={details.siteName} onChange={set("siteName")} className="sm:col-span-2" placeholder="e.g. Manchester Factory, Unit 4 Warehouse" />
           <Field label="Address line 1" value={details.siteAddressLine1} onChange={set("siteAddressLine1")} className="sm:col-span-2" />
           <Field label="Address line 2" value={details.siteAddressLine2} onChange={set("siteAddressLine2")} className="sm:col-span-2" />
           <Field label="Town / City" value={details.siteAddressCity} onChange={set("siteAddressCity")} />
