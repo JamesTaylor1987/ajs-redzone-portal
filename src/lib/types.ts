@@ -8,7 +8,8 @@ export type ProductCategory =
   | "sensor"
   | "accessory"
   | "software"
-  | "peripheral";
+  | "peripheral"
+  | "visual_factory";
 
 export type Currency = "GBP" | "EUR";
 

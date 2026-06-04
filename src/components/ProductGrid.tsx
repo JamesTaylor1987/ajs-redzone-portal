@@ -23,7 +23,11 @@ export function ProductGrid({ products, currency, lines, onQtyChange, stockColou
     [products]
   );
   const addons = useMemo(
-    () => products.filter((p) => p.category !== "panel"),
+    () => products.filter((p) => p.category !== "panel" && p.category !== "visual_factory"),
+    [products]
+  );
+  const visualFactory = useMemo(
+    () => products.filter((p) => p.category === "visual_factory"),
     [products]
   );
 
@@ -78,6 +82,23 @@ export function ProductGrid({ products, currency, lines, onQtyChange, stockColou
           ))}
         </Grid>
       </Section>
+
+      {visualFactory.length > 0 && (
+        <Section title="Visual Factory">
+          <Grid>
+            {visualFactory.map((p) => (
+              <Card
+                key={p.id}
+                product={p}
+                currency={currency}
+                qty={qtyFor(p.id)}
+                onQtyChange={(q) => onQtyChange(p, q)}
+                stockColours={stockColours}
+              />
+            ))}
+          </Grid>
+        </Section>
+      )}
     </div>
   );
 }

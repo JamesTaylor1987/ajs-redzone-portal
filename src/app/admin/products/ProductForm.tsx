@@ -78,6 +78,7 @@ export function ProductForm({ product }: Props) {
             <option value="accessory">Accessory</option>
             <option value="software">Software</option>
             <option value="peripheral">Peripheral</option>
+            <option value="visual_factory">Visual Factory</option>
           </select>
         </div>
         <div>
