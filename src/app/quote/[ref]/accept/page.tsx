@@ -4,6 +4,7 @@ import { getServiceClient } from "@/lib/supabase-server";
 import { verificationHash, buildAccountsUrl } from "@/lib/magic-link";
 import { AccountInfoForm } from "./AccountInfoForm";
 import { ForwardToAccounts } from "./ForwardToAccounts";
+import { SupportBanner } from "@/components/SupportBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -148,7 +149,8 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
           </div>
         )}
 
-        <div className="mt-4">
+        <div className="mt-4 space-y-4">
+          <SupportBanner />
           <Link
             href={`/quote/${encodeURIComponent(ref)}/edit?token=${token}`}
             className="text-sm text-ajs-muted underline"

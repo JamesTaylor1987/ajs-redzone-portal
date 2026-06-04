@@ -79,6 +79,18 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
       setError("Name and email are required.");
       return;
     }
+    if (!details.contactCompany.trim()) {
+      setError("Company name is required.");
+      return;
+    }
+    if (!details.contactPhone.trim()) {
+      setError("Phone number is required.");
+      return;
+    }
+    if (!details.siteAddressPostcode.trim()) {
+      setError("Postcode is required.");
+      return;
+    }
     if (lines.length === 0) {
       setError("Basket is empty.");
       return;
@@ -122,9 +134,9 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
         <h2 className="font-bold text-lg mb-3 text-ajs-dark">Your details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Full name *" required value={details.contactName} onChange={set("contactName")} />
-          <Field label="Company" value={details.contactCompany} onChange={set("contactCompany")} />
+          <Field label="Company *" required value={details.contactCompany} onChange={set("contactCompany")} />
           <Field label="Email *" type="email" required value={details.contactEmail} onChange={set("contactEmail")} />
-          <Field label="Phone" type="tel" value={details.contactPhone} onChange={set("contactPhone")} />
+          <Field label="Phone *" type="tel" required value={details.contactPhone} onChange={set("contactPhone")} />
         </div>
       </div>
 
@@ -134,7 +146,7 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
           <Field label="Address line 1" value={details.siteAddressLine1} onChange={set("siteAddressLine1")} className="sm:col-span-2" />
           <Field label="Address line 2" value={details.siteAddressLine2} onChange={set("siteAddressLine2")} className="sm:col-span-2" />
           <Field label="Town / City" value={details.siteAddressCity} onChange={set("siteAddressCity")} />
-          <Field label="Postcode" value={details.siteAddressPostcode} onChange={set("siteAddressPostcode")} />
+          <Field label="Postcode *" required value={details.siteAddressPostcode} onChange={set("siteAddressPostcode")} />
           <div className="sm:col-span-2">
             <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
               Destination country
@@ -160,14 +172,14 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
           <Field label="Required delivery date" type="date" value={details.requiredDate} onChange={set("requiredDate")} />
           <div className="sm:col-span-2">
             <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
-              Project / order description
+              Any further information
             </label>
             <textarea
               value={details.projectDescription}
               onChange={set("projectDescription")}
               rows={3}
               className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
-              placeholder="Brief description of the site or use case…"
+              placeholder="Site details, special requirements, anything else we should know…"
             />
           </div>
           <label className="sm:col-span-2 flex items-start gap-2 text-sm text-ajs-text">

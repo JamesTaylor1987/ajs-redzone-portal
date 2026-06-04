@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { updateStatusAction, type StatusUpdateState } from "./actions";
 
@@ -35,6 +36,7 @@ interface Props {
 
 export function StatusUpdateForm({ quoteId, currentStatus, currentTrackingRef, currentTrackingUrl }: Props) {
   const [state, action] = useFormState<StatusUpdateState, FormData>(updateStatusAction, {});
+  const [selectedStatus, setSelectedStatus] = useState(currentStatus);
 
   return (
     <div className="bg-white rounded-xl border border-ajs-light p-5">
@@ -58,7 +60,8 @@ export function StatusUpdateForm({ quoteId, currentStatus, currentTrackingRef, c
             <label className="block text-xs text-ajs-muted mb-1">Status</label>
             <select
               name="status"
-              defaultValue={currentStatus}
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
               className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
             >
               {STATUSES.map((s) => (
@@ -91,6 +94,21 @@ export function StatusUpdateForm({ quoteId, currentStatus, currentTrackingRef, c
             />
           </div>
         </div>
+
+        {selectedStatus === "cancelled" && (
+          <div>
+            <label className="block text-xs text-ajs-muted mb-1">
+              Cancellation reason <span className="text-ajs-light">(optional — included in customer email)</span>
+            </label>
+            <textarea
+              name="cancellation_reason"
+              rows={2}
+              placeholder="e.g. Customer found alternative supplier, budget withdrawn…"
+              className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
+            />
+          </div>
+        )}
+
         <SubmitButton />
       </form>
     </div>

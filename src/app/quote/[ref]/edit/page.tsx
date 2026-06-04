@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getServiceClient } from "@/lib/supabase-server";
 import { verificationHash } from "@/lib/magic-link";
 import { VerifyForm } from "./VerifyForm";
+import { SupportBanner } from "@/components/SupportBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -232,6 +233,10 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
               ← Back to the catalogue
             </Link>
           </div>
+        </div>
+
+        <div className="mt-4">
+          <SupportBanner />
         </div>
       </div>
     </main>

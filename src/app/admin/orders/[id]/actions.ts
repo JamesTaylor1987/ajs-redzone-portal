@@ -27,6 +27,7 @@ export async function updateStatusAction(
   const status = (formData.get("status") as string) ?? "";
   const trackingRef = (formData.get("tracking_ref") as string | null)?.trim() || null;
   const trackingUrl = (formData.get("tracking_url") as string | null)?.trim() || null;
+  const cancellationReason = (formData.get("cancellation_reason") as string | null)?.trim() || null;
 
   if (!VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])) {
     return { error: "Invalid status" };
@@ -40,6 +41,7 @@ export async function updateStatusAction(
       status,
       ...(trackingRef !== null && { tracking_ref: trackingRef }),
       ...(trackingUrl !== null && { tracking_url: trackingUrl }),
+      ...(cancellationReason !== null && { cancellation_reason: cancellationReason }),
     })
     .eq("id", id);
 
@@ -71,6 +73,7 @@ export async function updateStatusAction(
       trackingRef ?? undefined,
       trackingUrl ?? undefined,
       rzPmEmail,
+      cancellationReason ?? undefined,
     );
   }
 

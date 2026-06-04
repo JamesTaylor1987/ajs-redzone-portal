@@ -541,7 +541,7 @@ const STATUS_COLOUR: Partial<Record<string, { bg: string; border: string; text: 
   cancelled:       { bg: "#fff1f2", border: "#fecdd3", text: "#be123c" },
 };
 
-const STATUS_BODY: Partial<Record<string, (ref: string, trackingRef?: string, trackingUrl?: string) => string>> = {
+const STATUS_BODY: Partial<Record<string, (ref: string, trackingRef?: string, trackingUrl?: string, cancellationReason?: string) => string>> = {
   order_confirmed: (ref) =>
     `Your order <strong>${ref}</strong> has been confirmed by the AJS Redzone team. An invoice will be issued within 24 hours, payable 100% prior to shipment. Once payment is received your order moves into production and you will receive further updates at each stage.`,
   in_build: (ref) =>
@@ -552,8 +552,8 @@ const STATUS_BODY: Partial<Record<string, (ref: string, trackingRef?: string, tr
     `Your order <strong>${ref}</strong> is on its way.${trackingRef ? ` Your tracking reference is <strong>${trackingRef}</strong>.` : ""}${trackingUrl ? ` <a href="${trackingUrl}" style="color:#b91c1c">Track your shipment &rarr;</a>` : ""} Delivery is on DAP terms. Please contact us if you have any questions.`,
   complete: (ref) =>
     `Your order <strong>${ref}</strong> is now complete. Thank you for your business &mdash; we hope everything arrived in perfect condition. Please don&rsquo;t hesitate to get in touch if you need anything.`,
-  cancelled: (ref) =>
-    `Your order <strong>${ref}</strong> has been cancelled. If you believe this is an error or have any questions, please contact the AJS Redzone team directly.`,
+  cancelled: (ref, _trackingRef, _trackingUrl, cancellationReason) =>
+    `Your order <strong>${ref}</strong> has been cancelled.${cancellationReason ? ` Reason: ${cancellationReason}.` : ""} If you have any questions, please contact the AJS Redzone team directly.`,
 };
 
 function statusUpdateHtml(
@@ -562,12 +562,13 @@ function statusUpdateHtml(
   status: string,
   trackingRef?: string,
   trackingUrl?: string,
+  cancellationReason?: string,
 ): string {
   const first = contactName.trim().split(" ")[0] ?? "there";
   const subject = STATUS_SUBJECT[status] ?? "Order update";
   const colours = STATUS_COLOUR[status] ?? { bg: "#f8fafc", border: "#e2e8f0", text: "#334155" };
   const bodyFn = STATUS_BODY[status];
-  const body = bodyFn ? bodyFn(ref, trackingRef, trackingUrl) : `Your order <strong>${ref}</strong> has been updated. Status: ${status}.`;
+  const body = bodyFn ? bodyFn(ref, trackingRef, trackingUrl, cancellationReason) : `Your order <strong>${ref}</strong> has been updated. Status: ${status}.`;
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -603,6 +604,7 @@ export async function sendStatusUpdateEmail(
   trackingRef?: string,
   trackingUrl?: string,
   rzPmEmail?: string,
+  cancellationReason?: string,
 ): Promise<void> {
   if (!process.env.RESEND_API_KEY) return;
   if (!STATUS_SUBJECT[status]) return; // no email for quote_submitted
@@ -618,7 +620,7 @@ export async function sendStatusUpdateEmail(
       to: recipients(contactEmail),
       cc,
       subject,
-      html: statusUpdateHtml(contactName, ref, status, trackingRef, trackingUrl),
+      html: statusUpdateHtml(contactName, ref, status, trackingRef, trackingUrl, cancellationReason),
     });
     if (error) console.error("[email] status update failed:", error);
     else console.log(`[email] status update sent: ${status} → ${contactEmail}${rzPmEmail ? ` (CC: ${rzPmEmail})` : ""}`);
