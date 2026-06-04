@@ -133,7 +133,7 @@ function customerHtml(quote: EmailQuoteRow, items: EmailItemRow[], magicUrl: str
       </tr>
       <tr>
         <td colspan="2" style="padding:4px 0;color:#475569;font-size:13px">${shippingLabel}</td>
-        <td style="padding:4px 0;font-weight:bold;font-size:13px;text-align:right;white-space:nowrap;color:${shippingPence === null ? "#d97706" : "#1e293b"}">${shippingPence !== null ? money(shippingPence, "GBP") : "EXW"}</td>
+        <td style="padding:4px 0;font-weight:bold;font-size:13px;text-align:right;white-space:nowrap;color:${shippingPence === null ? "#d97706" : "#1e293b"}">${shippingPence !== null ? money(shippingPence, ccy, fx) : "EXW"}</td>
       </tr>
       <tr style="border-top:2px solid #e6ebed">
         <td colspan="2" style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px">Total (ex-VAT)</td>
@@ -295,7 +295,7 @@ function orderConfirmationHtml(quote: OrderQuoteRow, items: EmailItemRow[]): str
       </tr>
       <tr>
         <td colspan="2" style="padding:4px 0;color:#475569;font-size:13px">${shippingLabel}</td>
-        <td style="padding:4px 0;font-weight:bold;font-size:13px;text-align:right;white-space:nowrap;color:${shippingPence === null ? "#d97706" : "#1e293b"}">${shippingPence !== null ? money(shippingPence, "GBP") : "EXW"}</td>
+        <td style="padding:4px 0;font-weight:bold;font-size:13px;text-align:right;white-space:nowrap;color:${shippingPence === null ? "#d97706" : "#1e293b"}">${shippingPence !== null ? money(shippingPence, ccy, fx) : "EXW"}</td>
       </tr>
       <tr style="border-top:2px solid #e6ebed">
         <td colspan="2" style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px">Total (ex-VAT)</td>
