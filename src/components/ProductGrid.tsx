@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { Product, Currency, CartLine, StockColourSettings } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
 import { getClasses } from "@/lib/stock-colours";
+import { Lightbox } from "./Lightbox";
 
 interface ProductGridProps {
   products: Product[];
@@ -195,6 +196,7 @@ function Card({
 }) {
   const active = qty > 0;
   const [imgIdx, setImgIdx] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
   const stockClass =
     product.stock_status === "In Stock"      ? getClasses(stockColours.inStock) :
     product.stock_status === "Limited Stock" ? getClasses(stockColours.lowStock) :
@@ -224,8 +226,9 @@ function Card({
               src={images[imgIdx]}
               alt={product.name}
               fill
-              className="object-cover"
+              className="object-cover cursor-zoom-in"
               sizes="200px"
+              onClick={() => setLightbox(true)}
             />
             {images.length > 1 && (
               <>
@@ -258,6 +261,18 @@ function Card({
           product.sku
         )}
       </div>
+
+      {lightbox && (
+        <Lightbox
+          images={images}
+          index={imgIdx}
+          alt={product.name}
+          onClose={() => setLightbox(false)}
+          onPrev={() => setImgIdx((i) => (i - 1 + images.length) % images.length)}
+          onNext={() => setImgIdx((i) => (i + 1) % images.length)}
+        />
+      )}
+
       <div className="p-3 space-y-1.5">
         <div className="text-xs font-mono font-bold text-ajs-dark">{product.sku}</div>
         <div className="font-bold text-sm leading-tight text-ajs-text">
