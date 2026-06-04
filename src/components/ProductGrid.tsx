@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import Image from "next/image";
 import type { Product, Currency, CartLine, StockColourSettings } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
@@ -8,6 +8,7 @@ import { getClasses } from "@/lib/stock-colours";
 
 interface ProductGridProps {
   products: Product[];
+  productImages: Record<string, string[]>;
   currency: Currency;
   lines: CartLine[];
   onQtyChange: (product: Product, qty: number) => void;
@@ -15,7 +16,7 @@ interface ProductGridProps {
 }
 
 
-export function ProductGrid({ products, currency, lines, onQtyChange, stockColours }: ProductGridProps) {
+export function ProductGrid({ products, productImages, currency, lines, onQtyChange, stockColours }: ProductGridProps) {
   const [plcFilter, setPlcFilter] = useState<string>("All");
   const [matFilter, setMatFilter] = useState<string>("All");
 
@@ -55,6 +56,7 @@ export function ProductGrid({ products, currency, lines, onQtyChange, stockColou
             <Card
               key={p.id}
               product={p}
+              images={productImages[p.id] ?? (p.image_url ? [p.image_url] : [])}
               currency={currency}
               qty={qtyFor(p.id)}
               onQtyChange={(q) => onQtyChange(p, q)}
@@ -75,6 +77,7 @@ export function ProductGrid({ products, currency, lines, onQtyChange, stockColou
             <Card
               key={p.id}
               product={p}
+              images={productImages[p.id] ?? (p.image_url ? [p.image_url] : [])}
               currency={currency}
               qty={qtyFor(p.id)}
               onQtyChange={(q) => onQtyChange(p, q)}
@@ -91,6 +94,7 @@ export function ProductGrid({ products, currency, lines, onQtyChange, stockColou
               <Card
                 key={p.id}
                 product={p}
+                images={productImages[p.id] ?? (p.image_url ? [p.image_url] : [])}
                 currency={currency}
                 qty={qtyFor(p.id)}
                 onQtyChange={(q) => onQtyChange(p, q)}
@@ -176,23 +180,36 @@ function Grid({ children }: { children: React.ReactNode }) {
 
 function Card({
   product,
+  images,
   currency,
   qty,
   onQtyChange,
   stockColours,
 }: {
   product: Product;
+  images: string[];
   currency: Currency;
   qty: number;
   onQtyChange: (q: number) => void;
   stockColours: StockColourSettings;
 }) {
   const active = qty > 0;
+  const [imgIdx, setImgIdx] = useState(0);
   const stockClass =
     product.stock_status === "In Stock"      ? getClasses(stockColours.inStock) :
     product.stock_status === "Limited Stock" ? getClasses(stockColours.lowStock) :
     product.stock_status === "On Order"      ? getClasses(stockColours.outOfStock) :
     "bg-slate-100 text-slate-500";
+
+  const prev = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setImgIdx((i) => (i - 1 + images.length) % images.length);
+  }, [images.length]);
+
+  const next = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setImgIdx((i) => (i + 1) % images.length);
+  }, [images.length]);
 
   return (
     <div
@@ -200,15 +217,43 @@ function Card({
         active ? "border-ajs-primary bg-ajs-primary/5 shadow" : "border-ajs-light bg-white"
       }`}
     >
-      <div className="aspect-square bg-gradient-to-br from-slate-200 to-slate-100 flex items-center justify-center text-ajs-dark/30 text-xs font-mono p-3 relative overflow-hidden">
-        {product.image_url ? (
-          <Image
-            src={product.image_url}
-            alt={product.name}
-            fill
-            className="object-cover"
-            sizes="200px"
-          />
+      <div className="aspect-square bg-gradient-to-br from-slate-200 to-slate-100 flex items-center justify-center text-ajs-dark/30 text-xs font-mono p-3 relative overflow-hidden group/img">
+        {images.length > 0 ? (
+          <>
+            <Image
+              src={images[imgIdx]}
+              alt={product.name}
+              fill
+              className="object-cover"
+              sizes="200px"
+            />
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={prev}
+                  className="absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 bg-black/50 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
+                  aria-label="Previous photo"
+                >
+                  ‹
+                </button>
+                <button
+                  onClick={next}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 bg-black/50 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
+                  aria-label="Next photo"
+                >
+                  ›
+                </button>
+                <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1">
+                  {images.map((_, i) => (
+                    <span
+                      key={i}
+                      className={`w-1.5 h-1.5 rounded-full ${i === imgIdx ? "bg-white" : "bg-white/40"}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         ) : (
           product.sku
         )}

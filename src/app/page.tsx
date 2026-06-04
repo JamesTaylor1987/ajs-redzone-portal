@@ -8,9 +8,10 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const supabase = getPublicServerClient();
 
-  const [{ data, error }, { data: settings }] = await Promise.all([
+  const [{ data, error }, { data: settings }, { data: imageRows }] = await Promise.all([
     supabase.from("products").select("*").eq("active", true).order("sort_order", { ascending: true }),
     supabase.from("settings").select("key, value").in("key", ["stock_color_in_stock", "stock_color_low_stock", "stock_color_out_of_stock"]),
+    supabase.from("product_images").select("product_id, url").order("sort_order", { ascending: true }),
   ]);
 
   if (error) {
@@ -40,5 +41,11 @@ export default async function HomePage() {
 
   const products: Product[] = (data ?? []) as Product[];
 
-  return <PortalApp products={products} stockColours={stockColours} />;
+  const productImages: Record<string, string[]> = {};
+  for (const row of imageRows ?? []) {
+    if (!productImages[row.product_id]) productImages[row.product_id] = [];
+    productImages[row.product_id].push(row.url);
+  }
+
+  return <PortalApp products={products} productImages={productImages} stockColours={stockColours} />;
 }
