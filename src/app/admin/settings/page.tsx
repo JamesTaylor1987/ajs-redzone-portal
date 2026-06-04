@@ -2,7 +2,7 @@ import { getServiceClient } from "@/lib/supabase-server";
 import { ColourPicker } from "./ColourPicker";
 import { InstallRatesPicker, type InstallRates } from "./InstallRatesPicker";
 import { DEFAULT_STOCK_COLOURS } from "@/lib/stock-colours";
-import { INSTALL_RATE_KEYS } from "./actions";
+import { INSTALL_RATE_KEYS } from "@/lib/installation-quote/settings-keys";
 import { INSTALL_CONFIG } from "@/lib/installation-quote/config";
 
 export const dynamic = "force-dynamic";

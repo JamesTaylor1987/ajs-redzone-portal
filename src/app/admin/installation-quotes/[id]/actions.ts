@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getServiceClient } from "@/lib/supabase-server";
 import { calculateInstallationQuote, type AssessmentInputs, type InstallConfig } from "@/lib/installation-quote/calculate";
 import { INSTALL_CONFIG } from "@/lib/installation-quote/config";
-import { INSTALL_RATE_KEYS } from "@/app/admin/settings/actions";
+import { INSTALL_RATE_KEYS } from "@/lib/installation-quote/settings-keys";
 import { sendInstallationBudgetEmail } from "@/lib/email";
 
 export async function saveAssessmentAction(formData: FormData) {
