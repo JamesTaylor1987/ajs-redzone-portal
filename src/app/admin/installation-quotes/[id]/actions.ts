@@ -54,11 +54,16 @@ export async function sendInstallQuoteAction(formData: FormData) {
   const supabase = getServiceClient();
   const { data: iq } = await supabase
     .from("installation_quotes")
-    .select("quote_ref, customer_email, customer_name, company_name, hardware_quote_ref")
+    .select("quote_ref, customer_email, customer_name, company_name, hardware_quote_id, hardware_quote_ref, site_name, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, required_date")
     .eq("id", id)
     .single();
 
   if (!iq) return;
+
+  // Fetch hardware items for the PDF
+  const { data: itemRows } = iq.hardware_quote_id
+    ? await supabase.from("quote_items").select("sku, name, qty").eq("quote_id", iq.hardware_quote_id)
+    : { data: [] };
 
   await sendInstallationBudgetEmail({
     quoteRef: iq.quote_ref,
@@ -66,9 +71,19 @@ export async function sendInstallQuoteAction(formData: FormData) {
     customerEmail: iq.customer_email,
     customerName: iq.customer_name ?? "there",
     companyName: iq.company_name,
+    siteName: iq.site_name,
+    siteAddressLine1: iq.site_address_line1,
+    siteAddressLine2: iq.site_address_line2,
+    siteAddressCity: iq.site_address_city,
+    siteAddressPostcode: iq.site_address_postcode,
+    siteCountry: iq.site_country,
+    requiredDate: iq.required_date,
     budgetFromPence: budgetFrom,
     budgetToPence: budgetTo,
     notes,
+    items: (itemRows ?? []).map((i: { sku: string; name: string; qty: number }) => ({
+      sku: i.sku, name: i.name, qty: i.qty,
+    })),
   });
 
   await supabase.from("installation_quotes").update({
@@ -80,5 +95,12 @@ export async function sendInstallQuoteAction(formData: FormData) {
     email_sent_at:     new Date().toISOString(),
   }).eq("id", id);
 
+  revalidatePath(`/admin/installation-quotes/${id}`);
+}
+
+export async function reviseInstallQuoteAction(formData: FormData) {
+  const id = formData.get("id") as string;
+  const supabase = getServiceClient();
+  await supabase.from("installation_quotes").update({ status: "assessed" }).eq("id", id);
   revalidatePath(`/admin/installation-quotes/${id}`);
 }

@@ -316,6 +316,32 @@ function buildFooter(ref: string): (page: number, pages: number) => Content {
   });
 }
 
+// ─── Installation quote types ────────────────────────────────────────────────
+
+export interface InstallPDFQuote {
+  ref: string;
+  hardware_ref: string | null;
+  customer_name: string;
+  customer_email: string;
+  company_name?: string | null;
+  site_name?: string | null;
+  site_address_line1?: string | null;
+  site_address_line2?: string | null;
+  site_address_city?: string | null;
+  site_address_postcode?: string | null;
+  site_country?: string | null;
+  required_date?: string | null;
+  budget_from_pence: number;
+  budget_to_pence: number;
+  ajs_notes?: string | null;
+}
+
+export interface InstallPDFItem {
+  sku: string;
+  name: string;
+  qty: number;
+}
+
 // ─── Render helper ─────────────────────────────────────────────────────────────
 function renderDoc(def: TDocumentDefinitions): Promise<Buffer> {
   return pm.createPdf(def).getBuffer() as Promise<Buffer>;
@@ -508,6 +534,130 @@ export async function renderWorkOrderPDF(quote: PDFQuote, items: PDFItem[]): Pro
             color: "#94a3b8",
             fontSize: 8,
             margin: [0, 24, 0, 0],
+          } as any,
+        ],
+        margin: [36, 24, 36, 0],
+      } as any,
+    ],
+    footer: buildFooter(quote.ref),
+    defaultStyle: { font: "Roboto", fontSize: 10, color: "#1e293b" },
+  } as any;
+
+  return renderDoc(def);
+}
+
+export async function renderInstallationQuotePDF(
+  quote: InstallPDFQuote,
+  items: InstallPDFItem[],
+): Promise<Buffer> {
+  const logoSrc = await fetchLogoBase64();
+  const images = logoSrc ? { logo: logoSrc } : undefined;
+
+  const gbpRound = (p: number) =>
+    "£" + (p / 100).toLocaleString("en-GB", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  const addrStr = [
+    quote.site_address_line1, quote.site_address_line2,
+    quote.site_address_city, quote.site_address_postcode, quote.site_country,
+  ].filter(Boolean).join(", ");
+
+  function drow(label: string, value: string | null | undefined): any {
+    if (!value) return null;
+    return { columns: [{ text: label, color: MUTED, width: 120 }, { text: value }], fontSize: 10, margin: [0, 0, 0, 3] };
+  }
+
+  const customerRows = [
+    drow("Name", quote.customer_name),
+    drow("Company", quote.company_name),
+    drow("Email", quote.customer_email),
+    drow("Site", quote.site_name),
+    drow("Address", addrStr || null),
+    quote.required_date ? drow("Required by", fmtDate(quote.required_date)) : null,
+    quote.hardware_ref ? drow("Hardware ref", quote.hardware_ref) : null,
+  ].filter(Boolean);
+
+  const itemRows: any[][] = items.map((i) => [
+    { text: i.sku, color: "#94a3b8", fontSize: 9 },
+    { text: i.name },
+    { text: String(i.qty), alignment: "center" },
+  ]);
+
+  const def: TDocumentDefinitions = {
+    pageSize: "A4",
+    pageMargins: [0, 0, 0, 50],
+    ...(images && { images }),
+    content: [
+      buildHeader("Installation Budget Estimate", quote.ref, today(), logoSrc ? "logo" : null),
+      {
+        stack: [
+          {
+            stack: [
+              { text: "CUSTOMER & SITE", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
+              ...customerRows,
+            ],
+            margin: [0, 0, 0, 14],
+          } as any,
+          buildDivider(),
+          ...(items.length > 0 ? [
+            { text: "HARDWARE ORDERED", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] } as any,
+            {
+              table: {
+                widths: [72, "*", 28],
+                headerRows: 1,
+                body: [
+                  [
+                    { text: "Part code", bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
+                    { text: "Description", bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
+                    { text: "Qty", bold: true, color: MUTED, fontSize: 8, alignment: "center", fillColor: FAINT },
+                  ],
+                  ...itemRows,
+                ],
+              },
+              layout: {
+                defaultBorder: false,
+                hLineColor: () => LIGHT,
+                hLineWidth: (i: number, node: any) => (i === 0 || i === node.table.body.length ? 0 : 0.5),
+                vLineWidth: () => 0,
+                paddingTop: () => 5,
+                paddingBottom: () => 5,
+                paddingLeft: () => 4,
+                paddingRight: () => 4,
+              },
+              margin: [0, 0, 0, 14],
+            } as any,
+            buildDivider(),
+          ] : []),
+          {
+            table: {
+              widths: ["*"],
+              body: [[{
+                stack: [
+                  { text: "INSTALLATION BUDGET ESTIMATE (EX-VAT)", bold: true, color: HEADER_MUTED, fontSize: 8, margin: [0, 0, 0, 8] },
+                  { text: `${gbpRound(quote.budget_from_pence)} – ${gbpRound(quote.budget_to_pence)}`, bold: true, color: "#ffffff", fontSize: 28 },
+                ],
+              }]],
+            },
+            layout: {
+              defaultBorder: false,
+              fillColor: () => BLUE,
+              paddingLeft: () => 24,
+              paddingRight: () => 24,
+              paddingTop: () => 20,
+              paddingBottom: () => 20,
+            },
+          } as any,
+          ...(quote.ajs_notes ? [buildNoticeBox(quote.ajs_notes, FAINT, "#1e293b", "NOTES FROM AJS REDZONE")] : []),
+          buildNoticeBox(
+            "This is a budget estimate only, based on the information provided. A detailed quotation will follow a site survey. Final price may vary based on site conditions, access requirements, and confirmed scope of work.",
+            "#eff6ff",
+            "#1e40af",
+          ),
+          {
+            text: "All prices ex-VAT. Subject to survey and final agreement.\nAJS Control and Automation Ltd  ·  rz@ajsspalding.co.uk  ·  01406 424954",
+            color: "#94a3b8",
+            fontSize: 8,
+            lineHeight: 1.5,
+            margin: [0, 14, 0, 0],
           } as any,
         ],
         margin: [36, 24, 36, 0],

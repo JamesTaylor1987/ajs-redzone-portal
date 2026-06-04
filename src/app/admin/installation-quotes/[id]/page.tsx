@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getAuthClient } from "@/lib/supabase-auth";
 import { getServiceClient } from "@/lib/supabase-server";
-import { saveAssessmentAction, sendInstallQuoteAction } from "./actions";
+import { saveAssessmentAction, sendInstallQuoteAction, reviseInstallQuoteAction } from "./actions";
 import type { AssessmentInputs } from "@/lib/installation-quote/calculate";
 
 export const dynamic = "force-dynamic";
@@ -64,10 +64,18 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
       </div>
 
       {isQuoted && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-green-800">
-          <strong>Budget sent</strong> — emailed to {iq.customer_email} on{" "}
-          {iq.email_sent_at ? new Date(iq.email_sent_at).toLocaleString("en-GB") : "—"}.
-          Budget: {gbp(iq.budget_from_pence)} – {gbp(iq.budget_to_pence)}.
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-green-800 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <strong>Budget sent</strong> — emailed to {iq.customer_email} on{" "}
+            {iq.email_sent_at ? new Date(iq.email_sent_at).toLocaleString("en-GB") : "—"}.
+            Budget: {gbp(iq.budget_from_pence)} – {gbp(iq.budget_to_pence)}.
+          </div>
+          <form action={reviseInstallQuoteAction}>
+            <input type="hidden" name="id" value={iq.id} />
+            <button type="submit" className="text-xs font-semibold text-ajs-primary hover:underline whitespace-nowrap">
+              Revise quote →
+            </button>
+          </form>
         </div>
       )}
 

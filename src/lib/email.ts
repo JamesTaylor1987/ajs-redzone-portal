@@ -1,5 +1,6 @@
 import { Resend } from "resend";
-import { renderQuoteRequestPDF, renderOrderConfirmationPDF, renderWorkOrderPDF } from "./quote-pdf";
+import { renderQuoteRequestPDF, renderOrderConfirmationPDF, renderWorkOrderPDF, renderInstallationQuotePDF } from "./quote-pdf";
+import type { InstallPDFItem } from "./quote-pdf";
 
 const PDF_TIMEOUT_MS = 8_000;
 
@@ -647,9 +648,17 @@ interface InstallBudgetEmailParams {
   customerEmail: string;
   customerName: string;
   companyName: string | null;
+  siteName: string | null;
+  siteAddressLine1: string | null;
+  siteAddressLine2: string | null;
+  siteAddressCity: string | null;
+  siteAddressPostcode: string | null;
+  siteCountry: string | null;
+  requiredDate: string | null;
   budgetFromPence: number;
   budgetToPence: number;
   notes: string | null;
+  items: InstallPDFItem[];
 }
 
 function installBudgetHtml(p: InstallBudgetEmailParams): string {
@@ -714,12 +723,43 @@ export async function sendInstallationBudgetEmail(p: InstallBudgetEmailParams): 
     return;
   }
   const resend = new Resend(process.env.RESEND_API_KEY);
+
+  let pdfBuf: Buffer | null = null;
+  try {
+    pdfBuf = await Promise.race([
+      renderInstallationQuotePDF(
+        {
+          ref: p.quoteRef,
+          hardware_ref: p.hardwareRef,
+          customer_name: p.customerName,
+          customer_email: p.customerEmail,
+          company_name: p.companyName,
+          site_name: p.siteName,
+          site_address_line1: p.siteAddressLine1,
+          site_address_line2: p.siteAddressLine2,
+          site_address_city: p.siteAddressCity,
+          site_address_postcode: p.siteAddressPostcode,
+          site_country: p.siteCountry,
+          required_date: p.requiredDate,
+          budget_from_pence: p.budgetFromPence,
+          budget_to_pence: p.budgetToPence,
+          ajs_notes: p.notes,
+        },
+        p.items,
+      ),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("PDF timeout")), 8000)),
+    ]);
+  } catch (err) {
+    console.error("[email] install PDF generation failed:", err);
+  }
+
   try {
     const { error } = await resend.emails.send({
       from: FROM,
       to: recipients(p.customerEmail),
       subject: `Your Redzone Installation Budget Estimate — ${p.quoteRef}`,
       html: installBudgetHtml(p),
+      attachments: pdfBuf ? [{ filename: `Install-Quote-${p.quoteRef}.pdf`, content: pdfBuf }] : undefined,
     });
     if (error) console.error("[email] installation budget email failed:", error);
     else console.log(`[email] installation budget sent → ${p.customerEmail}`);
