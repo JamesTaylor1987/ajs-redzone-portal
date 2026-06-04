@@ -241,7 +241,7 @@ export async function sendQuoteEmails(
       resend.emails.send({
         from: FROM,
         to: recipients(AJS_NOTIFY),
-        subject: `New Redzone quote: ${quote.ref} — ${quote.contact_company ?? quote.contact_name} (${gbp(quote.subtotal_gbp_pence)})`,
+        subject: `New Redzone quote: ${quote.ref} — ${quote.contact_company ?? quote.contact_name} (${money(Number(quote.subtotal_gbp_pence) + (quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : 0), quote.currency ?? "GBP", quote.fx_rate_used ?? null)})`,
         html: ajsNotifyHtml(quote, items),
       }),
     ]);

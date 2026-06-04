@@ -92,6 +92,10 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
       setError("Postcode is required.");
       return;
     }
+    if (!details.requiredDate) {
+      setError("Required delivery date is required.");
+      return;
+    }
     if (lines.length === 0) {
       setError("Basket is empty.");
       return;
@@ -171,7 +175,7 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
       <div className="bg-white rounded-xl border border-ajs-light p-4">
         <h2 className="font-bold text-lg mb-3 text-ajs-dark">Project details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Required delivery date" type="date" value={details.requiredDate} onChange={set("requiredDate")} />
+          <Field label="Required delivery date *" type="date" required value={details.requiredDate} onChange={set("requiredDate")} />
           <div className="sm:col-span-2">
             <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
               Any further information
