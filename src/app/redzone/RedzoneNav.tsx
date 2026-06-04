@@ -30,6 +30,7 @@ export function RedzoneNav({ name }: Props) {
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex items-center gap-4 text-xs text-white/60">
             <span>{name}</span>
+            <Link href="/" className="hover:text-white transition-colors">← Site</Link>
             <form action={rzLogoutAction}>
               <button type="submit" className="hover:text-white transition-colors">Sign out</button>
             </form>
@@ -60,6 +61,9 @@ export function RedzoneNav({ name }: Props) {
           </Link>
           <div className="border-t border-white/20 pt-2 mt-2 space-y-1">
             <div className="px-3 py-1 text-xs text-white/50">{name}</div>
+            <Link href="/" onClick={() => setOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 hover:bg-white/10 transition-colors">
+              ← Site
+            </Link>
             <form action={rzLogoutAction}>
               <button type="submit" className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 hover:bg-white/10 transition-colors">
                 Sign out
