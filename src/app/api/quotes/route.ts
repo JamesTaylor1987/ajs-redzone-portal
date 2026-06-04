@@ -148,7 +148,30 @@ export async function POST(request: Request) {
       .eq("status", "quote_submitted"); // only if still open — don't overwrite accepted orders
   }
 
-  // 6. Send emails (non-blocking failure — quote is already committed).
+  // 6. If installation requested, create an installation_quote row (non-blocking).
+  if (body.details.installRequested) {
+    const { data: iqRefData } = await supabase.rpc("allocate_installation_quote_ref");
+    if (iqRefData) {
+      await supabase.from("installation_quotes").insert({
+        quote_ref: String(iqRefData),
+        hardware_quote_id: quoteRow.id,
+        hardware_quote_ref: ref,
+        customer_email: body.details.contactEmail.trim(),
+        customer_name: body.details.contactName.trim(),
+        company_name: body.details.contactCompany?.trim() || null,
+        site_name: body.details.siteName?.trim() || null,
+        site_address_line1: body.details.siteAddressLine1?.trim() || null,
+        site_address_line2: body.details.siteAddressLine2?.trim() || null,
+        site_address_city: body.details.siteAddressCity?.trim() || null,
+        site_address_postcode: body.details.siteAddressPostcode?.trim() || null,
+        site_country: body.details.siteCountry?.trim() || null,
+        required_date: body.details.requiredDate || null,
+        project_description: body.details.projectDescription?.trim() || null,
+      });
+    }
+  }
+
+  // 7. Send emails (non-blocking failure — quote is already committed).
   const magicUrl = buildMagicUrl(ref, magicToken);
   await sendQuoteEmails(
     {

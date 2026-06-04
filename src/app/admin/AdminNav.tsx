@@ -11,6 +11,7 @@ interface Props {
 
 const NAV_LINKS = [
   { href: "/admin/orders", label: "Orders" },
+  { href: "/admin/installation-quotes", label: "Install Quotes" },
   { href: "/admin/products", label: "Products" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/redzone-pms", label: "Redzone PMs" },

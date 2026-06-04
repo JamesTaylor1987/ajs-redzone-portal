@@ -638,3 +638,92 @@ export async function sendStatusUpdateEmail(
     console.error("[email] status update unexpected error:", err);
   }
 }
+
+// ─── Installation budget email ────────────────────────────────────────────────
+
+interface InstallBudgetEmailParams {
+  quoteRef: string;
+  hardwareRef: string | null;
+  customerEmail: string;
+  customerName: string;
+  companyName: string | null;
+  budgetFromPence: number;
+  budgetToPence: number;
+  notes: string | null;
+}
+
+function installBudgetHtml(p: InstallBudgetEmailParams): string {
+  const first = p.customerName.trim().split(" ")[0] ?? "there";
+  const fmt = (pence: number) =>
+    "£" + (pence / 100).toLocaleString("en-GB", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
+<div style="max-width:600px;margin:0 auto;padding:24px 16px">
+
+  ${emailHeader("Installation Budget Estimate", p.quoteRef)}
+
+  <div style="background:#fff;border-radius:0 0 12px 12px;padding:32px;border:1px solid #e6ebed;border-top:none">
+    <p style="color:#1e293b;font-size:15px;margin:0 0 12px">Hi ${first},</p>
+    <p style="color:#475569;font-size:14px;margin:0 0 24px;line-height:1.6">
+      Thank you for your interest in AJS Redzone installation services${p.hardwareRef ? ` alongside your hardware order <strong>${p.hardwareRef}</strong>` : ""}.
+      Based on the details you provided, we have prepared the following budget estimate for installation.
+    </p>
+
+    <div style="background:#f0f9ff;border:2px solid #1886a1;border-radius:10px;padding:24px;text-align:center;margin-bottom:24px">
+      <div style="color:#64748b;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Budget Estimate (ex-VAT)</div>
+      <div style="color:#05618e;font-size:32px;font-weight:900">${fmt(p.budgetFromPence)} – ${fmt(p.budgetToPence)}</div>
+    </div>
+
+    ${p.notes ? `
+    <div style="background:#f8fafc;border:1px solid #e6ebed;border-radius:8px;padding:16px;margin-bottom:24px">
+      <p style="color:#475569;font-size:13px;line-height:1.6;margin:0">${p.notes.replace(/\n/g, "<br>")}</p>
+    </div>` : ""}
+
+    <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0 0 16px">
+      This is a <strong>budget estimate only</strong>. A detailed quotation will follow a site survey.
+      The final price may vary based on site conditions, access requirements, and confirmed scope of work.
+    </p>
+    <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0 0 24px">
+      If you&apos;d like to discuss this further or arrange a site survey, please get in touch:
+    </p>
+
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:24px">
+      <tr>
+        <td style="padding:4px 12px 4px 0;font-size:13px;color:#64748b">Phone:</td>
+        <td style="padding:4px 0;font-size:13px;font-weight:bold;color:#1e293b">01406 424954</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 12px 4px 0;font-size:13px;color:#64748b">Email:</td>
+        <td style="padding:4px 0;font-size:13px"><a href="mailto:rz@ajsspalding.co.uk" style="color:#1886a1;font-weight:bold">rz@ajsspalding.co.uk</a></td>
+      </tr>
+    </table>
+
+    <p style="color:#94a3b8;font-size:11px;margin:0">
+      All prices ex-VAT &middot; Budget estimate only &middot; Subject to site survey &middot; ${p.quoteRef}
+    </p>
+  </div>
+</div>
+</body></html>`;
+}
+
+export async function sendInstallationBudgetEmail(p: InstallBudgetEmailParams): Promise<void> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set — skipping installation budget email");
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to: recipients(p.customerEmail),
+      subject: `Your Redzone Installation Budget Estimate — ${p.quoteRef}`,
+      html: installBudgetHtml(p),
+    });
+    if (error) console.error("[email] installation budget email failed:", error);
+    else console.log(`[email] installation budget sent → ${p.customerEmail}`);
+  } catch (err) {
+    console.error("[email] installation budget unexpected error:", err);
+  }
+}
