@@ -198,7 +198,7 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
             <span>
               Request an installation quote alongside this order.
               <span className="text-ajs-muted block text-xs mt-0.5">
-                Standard installation covers M12 connections and 230V systems. We&apos;ll come back with a quote separately.
+                Covers installation of all control panels, sensors, sensor cabling and commissioning, plus project management of Visual Factory items. Does not include physical installation of Visual Factory hardware itself.
               </span>
             </span>
           </label>
