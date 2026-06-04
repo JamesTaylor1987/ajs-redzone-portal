@@ -127,8 +127,44 @@ export default async function RedzoneQuoteDetailPage({ params }: PageProps) {
         <div className="px-5 py-3 border-b border-ajs-light">
           <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">Items</h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[480px]">
+
+        {/* Mobile: stacked cards */}
+        <div className="sm:hidden divide-y divide-ajs-light">
+          {(items ?? []).map((i) => (
+            <div key={i.id} className="px-4 py-3">
+              <div className="flex justify-between items-start gap-2">
+                <div>
+                  <span className="font-mono text-xs font-bold text-ajs-dark">{i.sku}</span>
+                  <p className="text-sm mt-0.5">{i.name}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="font-semibold text-sm">{gbp(i.line_total_gbp_pence)}</p>
+                  <p className="text-xs text-ajs-muted">×{i.qty} @ {gbp(i.unit_price_gbp_pence)}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+          <div className="px-4 py-3 bg-slate-50 space-y-1.5 text-sm">
+            <div className="flex justify-between text-ajs-muted">
+              <span>Subtotal (ex-VAT)</span>
+              <span className="font-semibold text-ajs-dark">{gbp(subtotalPence)}</span>
+            </div>
+            <div className="flex justify-between text-ajs-muted">
+              <span>Shipping{quote.shipping_pallets ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})` : ""}</span>
+              <span className={`font-semibold ${shippingPence === null ? "text-amber-600" : "text-ajs-dark"}`}>
+                {shippingPence !== null ? gbp(shippingPence) : "EXW"}
+              </span>
+            </div>
+            <div className="flex justify-between font-bold border-t border-ajs-light pt-1.5">
+              <span>Total (ex-VAT)</span>
+              <span className="text-ajs-primary">{gbp(grandTotalPence)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop: table */}
+        <div className="hidden sm:block overflow-x-auto">
+          <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-ajs-light text-ajs-dark">
               <tr>
                 <Th>SKU</Th>
