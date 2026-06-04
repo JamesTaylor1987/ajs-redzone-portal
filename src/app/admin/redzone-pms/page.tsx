@@ -61,7 +61,7 @@ export default async function RedzonePMsPage() {
       {/* Read-only Admins */}
       <div className="bg-white rounded-xl border border-ajs-light overflow-hidden">
         <div className="px-5 py-3 border-b border-ajs-light">
-          <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">Read-only Admins</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">RZ Admins</h2>
         </div>
         {!admins.length ? (
           <p className="px-5 py-6 text-sm text-ajs-muted">No admins added yet.</p>

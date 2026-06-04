@@ -6,9 +6,12 @@ export const dynamic = "force-dynamic";
 export default async function AdminUsersPage() {
   const supabase = getServiceClient();
   const { data } = await supabase.auth.admin.listUsers({ perPage: 200 });
-  const users = (data?.users ?? []).sort((a, b) =>
-    (a.email ?? "").localeCompare(b.email ?? ""),
-  );
+  const users = (data?.users ?? [])
+    .filter((u) => {
+      const role = u.app_metadata?.role as string | undefined;
+      return role !== "rz_pm" && role !== "rz_admin";
+    })
+    .sort((a, b) => (a.email ?? "").localeCompare(b.email ?? ""));
 
   return (
     <div className="space-y-6 max-w-3xl">

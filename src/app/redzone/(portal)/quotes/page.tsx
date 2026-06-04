@@ -36,22 +36,30 @@ export default async function RedzoneQuotesPage() {
   const role = (session.user.app_metadata?.role as string) ?? "";
   const isRZAdmin = role === "rz_admin";
 
-  let quotesQuery = serviceClient
-    .from("quotes")
-    .select("id, ref, status, contact_name, contact_company, required_date, submitted_at")
-    .order("submitted_at", { ascending: false });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let quotes: any[] | null = null;
 
-  if (!isRZAdmin) {
+  if (isRZAdmin) {
+    const { data } = await serviceClient
+      .from("quotes")
+      .select("id, ref, status, contact_name, contact_company, required_date, submitted_at")
+      .not("rz_pm_id", "is", null)
+      .order("submitted_at", { ascending: false });
+    quotes = data;
+  } else {
     const { data: pm } = await serviceClient
       .from("rz_pms")
       .select("id")
       .eq("auth_user_id", session.user.id)
       .single();
     if (!pm) redirect("/redzone/login");
-    quotesQuery = quotesQuery.eq("rz_pm_id", pm.id) as typeof quotesQuery;
+    const { data } = await serviceClient
+      .from("quotes")
+      .select("id, ref, status, contact_name, contact_company, required_date, submitted_at")
+      .eq("rz_pm_id", pm.id)
+      .order("submitted_at", { ascending: false });
+    quotes = data;
   }
-
-  const { data: quotes } = await quotesQuery;
 
   return (
     <div className="space-y-4">
