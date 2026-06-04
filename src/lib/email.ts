@@ -681,8 +681,8 @@ function installBudgetHtml(p: InstallBudgetEmailParams): string {
     </p>
 
     <div style="background:#f0f9ff;border:2px solid #1886a1;border-radius:10px;padding:24px;text-align:center;margin-bottom:24px">
-      <div style="color:#64748b;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">${p.budgetFromPence === p.budgetToPence ? "Fixed Price (ex-VAT)" : "Budget Estimate (ex-VAT)"}</div>
-      <div style="color:#05618e;font-size:32px;font-weight:900">${p.budgetFromPence === p.budgetToPence ? fmt(p.budgetFromPence) : `${fmt(p.budgetFromPence)} – ${fmt(p.budgetToPence)}`}</div>
+      <div style="color:#64748b;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">${p.budgetFromPence >= p.budgetToPence ? "Fixed Price (ex-VAT)" : "Budget Estimate (ex-VAT)"}</div>
+      <div style="color:#05618e;font-size:32px;font-weight:900">${p.budgetFromPence >= p.budgetToPence ? fmt(p.budgetFromPence) : `${fmt(p.budgetFromPence)} – ${fmt(p.budgetToPence)}`}</div>
     </div>
 
     ${p.notes ? `
