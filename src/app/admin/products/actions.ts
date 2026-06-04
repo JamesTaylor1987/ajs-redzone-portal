@@ -80,6 +80,86 @@ export async function upsertProductAction(formData: FormData) {
   redirect("/admin/products");
 }
 
+export async function addProductImageAction(formData: FormData) {
+  const productId = formData.get("productId") as string;
+  const imageFile = formData.get("image") as File | null;
+
+  if (!productId || !imageFile || imageFile.size === 0) {
+    return { error: "No image provided." };
+  }
+
+  const supabase = getServiceClient();
+
+  const { count } = await supabase
+    .from("product_images")
+    .select("*", { count: "exact", head: true })
+    .eq("product_id", productId);
+
+  const sortOrder = count ?? 0;
+
+  const ext = imageFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const path = `products/${productId}/${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("product-images")
+    .upload(path, imageFile, { upsert: false, contentType: imageFile.type });
+
+  if (uploadError) return { error: `Upload failed: ${uploadError.message}` };
+
+  const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
+  const url = urlData.publicUrl;
+
+  const { error: insertError } = await supabase
+    .from("product_images")
+    .insert({ product_id: productId, url, sort_order: sortOrder });
+
+  if (insertError) return { error: insertError.message };
+
+  if (sortOrder === 0) {
+    await supabase.from("products").update({ image_url: url }).eq("id", productId);
+  }
+
+  revalidatePath(`/admin/products/${productId}/edit`);
+  revalidatePath("/admin/products");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export async function deleteProductImageAction(formData: FormData) {
+  const imageId = formData.get("imageId") as string;
+  const productId = formData.get("productId") as string;
+  const url = formData.get("url") as string;
+
+  if (!imageId || !productId) return { error: "Missing params." };
+
+  const supabase = getServiceClient();
+
+  try {
+    const urlObj = new URL(url);
+    const match = urlObj.pathname.match(/\/storage\/v1\/object\/public\/product-images\/(.+)/);
+    if (match) await supabase.storage.from("product-images").remove([match[1]]);
+  } catch { /* ignore bad url */ }
+
+  await supabase.from("product_images").delete().eq("id", imageId);
+
+  const { data: remaining } = await supabase
+    .from("product_images")
+    .select("url")
+    .eq("product_id", productId)
+    .order("sort_order", { ascending: true })
+    .limit(1);
+
+  await supabase
+    .from("products")
+    .update({ image_url: remaining?.[0]?.url ?? null })
+    .eq("id", productId);
+
+  revalidatePath(`/admin/products/${productId}/edit`);
+  revalidatePath("/admin/products");
+  revalidatePath("/");
+  return { success: true };
+}
+
 export async function deleteProductAction(formData: FormData) {
   const id = (formData.get("id") as string) ?? "";
   const supabase = getServiceClient();

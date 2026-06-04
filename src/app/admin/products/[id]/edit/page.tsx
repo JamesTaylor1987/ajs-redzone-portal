@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase-server";
 import { ProductForm } from "../../ProductForm";
+import { ProductImageGallery } from "../../ProductImageGallery";
 import type { Product } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -12,11 +13,14 @@ interface PageProps {
 
 export default async function EditProductPage({ params }: PageProps) {
   const supabase = getServiceClient();
-  const { data } = await supabase
-    .from("products")
-    .select("*")
-    .eq("id", params.id)
-    .single();
+  const [{ data }, { data: images }] = await Promise.all([
+    supabase.from("products").select("*").eq("id", params.id).single(),
+    supabase
+      .from("product_images")
+      .select("id, url, sort_order")
+      .eq("product_id", params.id)
+      .order("sort_order", { ascending: true }),
+  ]);
 
   if (!data) notFound();
 
@@ -36,6 +40,9 @@ export default async function EditProductPage({ params }: PageProps) {
       </div>
       <h1 className="text-xl font-extrabold text-ajs-dark">Edit product</h1>
       <ProductForm product={product} />
+      <div className="bg-white rounded-xl border border-ajs-light p-4">
+        <ProductImageGallery productId={product.id} images={images ?? []} />
+      </div>
     </div>
   );
 }

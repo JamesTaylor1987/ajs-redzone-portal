@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import type { Product, Currency, CartLine, StockColourSettings } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
 import { getClasses } from "@/lib/stock-colours";
@@ -199,8 +200,18 @@ function Card({
         active ? "border-ajs-primary bg-ajs-primary/5 shadow" : "border-ajs-light bg-white"
       }`}
     >
-      <div className="aspect-square bg-gradient-to-br from-slate-200 to-slate-100 flex items-center justify-center text-ajs-dark/30 text-xs font-mono p-3">
-        {product.sku}
+      <div className="aspect-square bg-gradient-to-br from-slate-200 to-slate-100 flex items-center justify-center text-ajs-dark/30 text-xs font-mono p-3 relative overflow-hidden">
+        {product.image_url ? (
+          <Image
+            src={product.image_url}
+            alt={product.name}
+            fill
+            className="object-cover"
+            sizes="200px"
+          />
+        ) : (
+          product.sku
+        )}
       </div>
       <div className="p-3 space-y-1.5">
         <div className="text-xs font-mono font-bold text-ajs-dark">{product.sku}</div>
