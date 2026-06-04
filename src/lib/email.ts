@@ -168,6 +168,10 @@ function customerHtml(quote: EmailQuoteRow, items: EmailItemRow[], magicUrl: str
 }
 
 function ajsNotifyHtml(quote: EmailQuoteRow, items: EmailItemRow[]): string {
+  const ccy = quote.currency ?? "GBP";
+  const fx  = quote.fx_rate_used ?? null;
+  const subtotalPence = Number(quote.subtotal_gbp_pence);
+  const shippingPence = quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : null;
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
 <body style="font-family:Arial,sans-serif;color:#1e293b;max-width:600px;margin:0 auto;padding:24px">
@@ -180,11 +184,11 @@ function ajsNotifyHtml(quote: EmailQuoteRow, items: EmailItemRow[]): string {
     <tr><td style="padding:6px 0;font-size:13px;color:#64748b">Email</td>
         <td style="padding:6px 0;font-size:13px">${quote.contact_email}</td></tr>
     <tr><td style="padding:6px 0;font-size:13px;color:#64748b">Subtotal</td>
-        <td style="padding:6px 0;font-size:13px;font-weight:bold">${gbp(quote.subtotal_gbp_pence)}</td></tr>
+        <td style="padding:6px 0;font-size:13px;font-weight:bold">${money(subtotalPence, ccy, fx)}</td></tr>
     <tr><td style="padding:6px 0;font-size:13px;color:#64748b">Shipping${quote.shipping_pallets ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})` : ""}</td>
-        <td style="padding:6px 0;font-size:13px;font-weight:bold">${quote.shipping_gbp_pence != null ? gbp(quote.shipping_gbp_pence) : "EXW"}</td></tr>
+        <td style="padding:6px 0;font-size:13px;font-weight:bold">${shippingPence !== null ? money(shippingPence, ccy, fx) : "EXW"}</td></tr>
     <tr><td style="padding:6px 0;font-size:13px;color:#64748b">Total (ex-VAT)</td>
-        <td style="padding:6px 0;font-size:14px;font-weight:bold;color:#1886a1">${gbp(Number(quote.subtotal_gbp_pence) + (quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : 0))}</td></tr>
+        <td style="padding:6px 0;font-size:14px;font-weight:bold;color:#1886a1">${money(subtotalPence + (shippingPence ?? 0), ccy, fx)}</td></tr>
   </table>
   <h2 style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin:0 0 8px">Items</h2>
   <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:16px">
@@ -385,8 +389,10 @@ function workOrderHtml(quote: OrderQuoteRow, items: EmailItemRow[]): string {
     ${(() => {
       const sp = quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : null;
       const pl = quote.shipping_pallets;
+      const ccy = quote.currency ?? "GBP";
+      const fx  = quote.fx_rate_used ?? null;
       const label = `Shipping${pl ? ` — ${pl} pallet${pl !== 1 ? "s" : ""}` : ""}`;
-      const value = sp !== null ? gbp(sp) : "EXW (customer arranges)";
+      const value = sp !== null ? money(sp, ccy, fx) : "EXW (customer arranges)";
       return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px 16px;margin-bottom:20px">
       <span style="font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#64748b">${label}:</span>
       <span style="font-size:14px;font-weight:bold;color:#1e293b;margin-left:8px">${value}</span>
