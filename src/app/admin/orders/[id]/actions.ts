@@ -12,6 +12,7 @@ const VALID_STATUSES = [
   "shipped",
   "complete",
   "cancelled",
+  "expired",
 ] as const;
 
 export interface StatusUpdateState {

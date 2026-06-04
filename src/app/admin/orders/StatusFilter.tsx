@@ -11,7 +11,8 @@ const STATUSES = [
   { value: "shipped", label: "Shipped" },
   { value: "complete", label: "Complete" },
   { value: "cancelled", label: "Cancelled" },
-  { value: "revised", label: "Superseded" },
+  { value: "expired",  label: "Expired" },
+  { value: "revised",  label: "Superseded" },
 ];
 
 export function StatusFilter() {

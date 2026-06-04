@@ -33,20 +33,25 @@ export default async function RedzoneQuotesPage() {
   if (!session) redirect("/redzone/login");
 
   const serviceClient = getServiceClient();
+  const role = (session.user.app_metadata?.role as string) ?? "";
+  const isRZAdmin = role === "rz_admin";
 
-  const { data: pm } = await serviceClient
-    .from("rz_pms")
-    .select("id")
-    .eq("auth_user_id", session.user.id)
-    .single();
-
-  if (!pm) redirect("/redzone/login");
-
-  const { data: quotes } = await serviceClient
+  let quotesQuery = serviceClient
     .from("quotes")
     .select("id, ref, status, contact_name, contact_company, required_date, submitted_at")
-    .eq("rz_pm_id", pm.id)
     .order("submitted_at", { ascending: false });
+
+  if (!isRZAdmin) {
+    const { data: pm } = await serviceClient
+      .from("rz_pms")
+      .select("id")
+      .eq("auth_user_id", session.user.id)
+      .single();
+    if (!pm) redirect("/redzone/login");
+    quotesQuery = quotesQuery.eq("rz_pm_id", pm.id) as typeof quotesQuery;
+  }
+
+  const { data: quotes } = await quotesQuery;
 
   return (
     <div className="space-y-4">

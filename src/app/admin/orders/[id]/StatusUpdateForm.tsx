@@ -12,6 +12,7 @@ const STATUSES = [
   { value: "shipped",         label: "Shipped" },
   { value: "complete",        label: "Complete" },
   { value: "cancelled",       label: "Cancelled" },
+  { value: "expired",         label: "Expired" },
 ];
 
 function SubmitButton() {

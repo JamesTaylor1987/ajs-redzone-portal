@@ -7,12 +7,15 @@ const ROLES = [
   { value: "admin",    label: "Admin" },
   { value: "manager",  label: "Manager" },
   { value: "standard", label: "Standard" },
+  { value: "rz_admin", label: "Redzone Admin" },
 ];
 
 const ROLE_COLOUR: Record<string, string> = {
   admin:    "bg-red-100 text-red-700",
   manager:  "bg-purple-100 text-purple-700",
   standard: "bg-slate-100 text-slate-600",
+  rz_admin: "bg-orange-100 text-orange-700",
+  rz_pm:    "bg-yellow-100 text-yellow-700",
 };
 
 function SaveButton({ label = "Save" }: { label?: string }) {
@@ -119,6 +122,7 @@ export function InviteForm() {
       <div className="mt-4 text-xs text-ajs-muted space-y-0.5">
         <p><strong>Admin / Manager</strong> — full access to admin and manufacturing</p>
         <p><strong>Standard</strong> — manufacturing only (work orders, stock)</p>
+        <p><strong>Redzone Admin</strong> — read-only view of all orders in the Redzone portal</p>
       </div>
     </div>
   );

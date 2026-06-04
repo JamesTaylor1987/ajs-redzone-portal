@@ -49,28 +49,29 @@ export async function middleware(request: NextRequest) {
     const role = (session.user.app_metadata?.role as string) ?? "standard";
     const isElevated = role === "admin" || role === "manager";
     const isRZPM = role === "rz_pm";
+    const isRZAdmin = role === "rz_admin";
+    const isRZUser = isRZPM || isRZAdmin;
 
     if (isAdminLoginPage) {
-      return NextResponse.redirect(new URL(isRZPM ? "/redzone/quotes" : "/portal", request.url));
+      return NextResponse.redirect(new URL(isRZUser ? "/redzone/quotes" : "/portal", request.url));
     }
-    // RZ login page: only skip if already logged in as a PM — let other roles through
-    // so admins using the portal can still reach the RZ PM login independently
-    if (isRZLoginPage && isRZPM) {
+    // RZ login page: only skip if already logged in as an RZ user
+    if (isRZLoginPage && isRZUser) {
       return NextResponse.redirect(new URL("/redzone/quotes", request.url));
     }
 
     // Standard users can only access /manufacturing and /portal
-    if (!isElevated && !isRZPM && isAdminPage && !isAdminLoginPage) {
+    if (!isElevated && !isRZUser && isAdminPage && !isAdminLoginPage) {
       return NextResponse.redirect(new URL("/manufacturing", request.url));
     }
 
-    // RZ PMs can only access /redzone — not admin or manufacturing
-    if (isRZPM && (isAdminPage || isMfgPage)) {
+    // RZ users can only access /redzone — not admin or manufacturing
+    if (isRZUser && (isAdminPage || isMfgPage)) {
       return NextResponse.redirect(new URL("/redzone/quotes", request.url));
     }
 
-    // Non-RZ PMs cannot access /redzone portal pages
-    if (!isRZPM && isRZPage) {
+    // Non-RZ users cannot access /redzone portal pages
+    if (!isRZUser && isRZPage) {
       return NextResponse.redirect(new URL("/portal", request.url));
     }
   }

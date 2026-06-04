@@ -37,21 +37,22 @@ export default async function RedzoneQuoteDetailPage({ params }: PageProps) {
   if (!session) redirect("/redzone/login");
 
   const serviceClient = getServiceClient();
+  const role = (session.user.app_metadata?.role as string) ?? "";
+  const isRZAdmin = role === "rz_admin";
 
-  const { data: pm } = await serviceClient
-    .from("rz_pms")
-    .select("id")
-    .eq("auth_user_id", session.user.id)
-    .single();
+  let quoteQuery = serviceClient.from("quotes").select("*").eq("id", params.id);
 
-  if (!pm) redirect("/redzone/login");
+  if (!isRZAdmin) {
+    const { data: pm } = await serviceClient
+      .from("rz_pms")
+      .select("id")
+      .eq("auth_user_id", session.user.id)
+      .single();
+    if (!pm) redirect("/redzone/login");
+    quoteQuery = quoteQuery.eq("rz_pm_id", pm.id) as typeof quoteQuery;
+  }
 
-  const { data: quote } = await serviceClient
-    .from("quotes")
-    .select("*")
-    .eq("id", params.id)
-    .eq("rz_pm_id", pm.id)
-    .single();
+  const { data: quote } = await quoteQuery.single();
 
   if (!quote) notFound();
 

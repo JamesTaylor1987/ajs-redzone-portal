@@ -15,9 +15,9 @@ export async function rzLoginAction(formData: FormData) {
   }
 
   const role = (data.user?.app_metadata?.role as string) ?? "";
-  if (role !== "rz_pm") {
+  if (role !== "rz_pm" && role !== "rz_admin") {
     await supabase.auth.signOut();
-    redirect(`/redzone/login?error=${encodeURIComponent("Access denied — Redzone PM accounts only.")}`);
+    redirect(`/redzone/login?error=${encodeURIComponent("Access denied — Redzone accounts only.")}`);
   }
 
   redirect("/redzone/quotes");

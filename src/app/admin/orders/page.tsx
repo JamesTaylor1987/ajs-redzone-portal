@@ -12,7 +12,8 @@ const STATUS_LABEL: Record<string, string> = {
   shipped: "Shipped",
   complete: "Complete",
   cancelled: "Cancelled",
-  revised: "Superseded",
+  expired:  "Expired",
+  revised:  "Superseded",
 };
 
 const STATUS_COLOUR: Record<string, string> = {
@@ -23,7 +24,8 @@ const STATUS_COLOUR: Record<string, string> = {
   shipped: "bg-green-100 text-green-700",
   complete: "bg-slate-100 text-slate-600",
   cancelled: "bg-rose-100 text-rose-600",
-  revised: "bg-slate-100 text-slate-400",
+  expired:  "bg-orange-100 text-orange-600",
+  revised:  "bg-slate-100 text-slate-400",
 };
 
 interface PageProps {
