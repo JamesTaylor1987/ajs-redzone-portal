@@ -15,7 +15,6 @@ export async function saveAssessmentAction(formData: FormData) {
     travel_days_one_way: parseInt(g("travel_days_one_way") || "0", 10) as 0 | 1 | 2,
     engineer_count: parseInt(g("engineer_count") || "1", 10),
     sensor_count: parseInt(g("sensor_count") || "1", 10),
-    scope: g("scope") as AssessmentInputs["scope"],
     working_hours: g("working_hours") as AssessmentInputs["working_hours"],
     site_infrastructure: g("site_infrastructure") as AssessmentInputs["site_infrastructure"],
     long_haul: formData.get("long_haul") === "on",

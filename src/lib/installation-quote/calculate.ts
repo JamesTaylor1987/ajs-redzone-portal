@@ -6,7 +6,6 @@ export interface AssessmentInputs {
   travel_days_one_way: 0 | 1 | 2;
   engineer_count: number;
   sensor_count: number;
-  scope: "hardware_only" | "hardware_and_commissioning" | "not_sure";
   working_hours: "standard" | "out_of_hours" | "mixed";
   site_infrastructure: "full" | "partial" | "none";
   long_haul: boolean;            // for fly — true = long haul, false = Europe
@@ -28,12 +27,9 @@ export interface CalcResult {
 export function calculateInstallationQuote(a: AssessmentInputs): CalcResult {
   const { engineer_count, sensor_count } = a;
 
-  const raw_install_days = Math.ceil(
+  const install_days = Math.ceil(
     sensor_count / (C.sensors_per_engineer_per_day * engineer_count),
   );
-  const commissioning_days =
-    a.scope === "hardware_and_commissioning" ? C.commissioning_days_per_engineer : 0;
-  const install_days = raw_install_days + commissioning_days;
 
   const travel_days_total = a.travel_days_one_way * 2;
   const total_days = travel_days_total + install_days;

@@ -28,10 +28,25 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
 
   if (!iq) notFound();
 
-  // Fetch hardware quote items
+  // Fetch hardware quote items + auto-count sensors
   const { data: items } = iq.hardware_quote_id
-    ? await supabase.from("quote_items").select("sku, name, qty").eq("quote_id", iq.hardware_quote_id)
+    ? await supabase.from("quote_items").select("sku, name, qty, product_id").eq("quote_id", iq.hardware_quote_id)
     : { data: [] };
+
+  let autoSensorCount = 0;
+  if (items && items.length > 0) {
+    const productIds = items.map((i: { product_id: string }) => i.product_id).filter(Boolean);
+    if (productIds.length > 0) {
+      const { data: productRows } = await supabase
+        .from("products")
+        .select("id, category")
+        .in("id", productIds);
+      const sensorIds = new Set((productRows ?? []).filter((p: { category: string }) => p.category === "sensor").map((p: { id: string }) => p.id));
+      autoSensorCount = (items as Array<{ product_id: string; qty: number }>).reduce(
+        (sum, item) => sensorIds.has(item.product_id) ? sum + item.qty : sum, 0
+      );
+    }
+  }
 
   const a = iq.assessment as AssessmentInputs | null;
   const hasCalc = iq.calc_subtotal_pence != null;
@@ -131,13 +146,8 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
               <option value="4">4</option>
             </SelectField>
 
-            <NumberField name="sensor_count" label="Sensor / unit count" defaultValue={a?.sensor_count ?? 1} min={1} />
-
-            <SelectField name="scope" label="Scope of work" defaultValue={a?.scope ?? "hardware_only"}>
-              <option value="hardware_only">Hardware installation only</option>
-              <option value="hardware_and_commissioning">Hardware + software commissioning</option>
-              <option value="not_sure">Not sure</option>
-            </SelectField>
+            <NumberField name="sensor_count" label="Sensor / unit count" defaultValue={a?.sensor_count ?? autoSensorCount ?? 1} min={1}
+              hint={autoSensorCount > 0 && !a ? `Auto-counted ${autoSensorCount} from this order` : undefined} />
 
             <SelectField name="working_hours" label="Working hours" defaultValue={a?.working_hours ?? "standard"}>
               <option value="standard">Standard daytime</option>
@@ -171,83 +181,84 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
         </form>
       </div>
 
-      {/* Calculation results */}
+      {/* Calculation results + send */}
       {hasCalc && (
-        <div className="bg-white rounded-xl border border-ajs-light p-5 space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">Calculated budget</h2>
+        <div className="bg-white rounded-xl border border-ajs-light p-5 space-y-5">
+          <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">Budget calculation</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-            <Stat label="Install days"   value={String(iq.calc_install_days ?? "—")} />
-            <Stat label="Total days"     value={String(iq.calc_total_days ?? "—")} />
-            <Stat label="Labour"         value={gbp(iq.calc_labour_pence)} />
-            <Stat label="Travel"         value={gbp(iq.calc_travel_pence)} />
-            <Stat label="Hotels"         value={gbp(iq.calc_hotels_pence)} />
-            <Stat label="Infra uplift"   value={gbp(iq.calc_infra_uplift_pence)} />
-            <Stat label="Subtotal"       value={gbp(iq.calc_subtotal_pence)} />
+            <Stat label="Install days"  value={String(iq.calc_install_days ?? "—")} />
+            <Stat label="Total days"    value={String(iq.calc_total_days ?? "—")} />
+            <Stat label="Labour"        value={gbp(iq.calc_labour_pence)} />
+            <Stat label="Travel"        value={gbp(iq.calc_travel_pence)} />
+            <Stat label="Hotels"        value={gbp(iq.calc_hotels_pence)} />
+            <Stat label="Infra uplift"  value={gbp(iq.calc_infra_uplift_pence)} />
+            <Stat label="Subtotal"      value={gbp(iq.calc_subtotal_pence)} />
           </div>
-          <div className="border-t border-ajs-light pt-3 flex items-center gap-6">
-            <div>
-              <div className="text-xs text-ajs-muted uppercase tracking-wide mb-0.5">Budget range (ex-VAT)</div>
-              <div className="text-2xl font-extrabold text-ajs-primary">
-                {gbp(iq.calc_low_pence)} – {gbp(iq.calc_high_pence)}
-              </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="text-xs text-ajs-muted uppercase tracking-wide mb-1">Calculated range (ex-VAT)</div>
+            <div className="text-2xl font-extrabold text-ajs-primary">
+              {gbp(iq.calc_low_pence)} – {gbp(iq.calc_high_pence)}
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Send quote */}
-      {hasCalc && !isQuoted && (
-        <div className="bg-white rounded-xl border border-ajs-light p-5">
-          <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark mb-4">Send budget to customer</h2>
-          <form action={sendInstallQuoteAction} className="space-y-4">
-            <input type="hidden" name="id" value={iq.id} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
-                  Budget from (£, ex-VAT)
-                </label>
-                <input
-                  type="number"
-                  name="budget_from"
-                  step="0.01"
-                  min="0"
-                  defaultValue={iq.budget_from_pence != null ? (Number(iq.budget_from_pence) / 100).toFixed(0) : ""}
-                  className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
-                />
+          {!isQuoted && (
+            <>
+              <div className="border-t border-ajs-light pt-4">
+                <p className="text-xs text-ajs-muted mb-4">
+                  Adjust the figures below before sending — these are what the customer will see.
+                </p>
+                <form action={sendInstallQuoteAction} className="space-y-4">
+                  <input type="hidden" name="id" value={iq.id} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
+                        Quote from (£, ex-VAT)
+                      </label>
+                      <input
+                        type="number"
+                        name="budget_from"
+                        step="1"
+                        min="0"
+                        defaultValue={iq.budget_from_pence != null ? (Number(iq.budget_from_pence) / 100).toFixed(0) : ""}
+                        className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
+                        Quote to (£, ex-VAT)
+                      </label>
+                      <input
+                        type="number"
+                        name="budget_to"
+                        step="1"
+                        min="0"
+                        defaultValue={iq.budget_to_pence != null ? (Number(iq.budget_to_pence) / 100).toFixed(0) : ""}
+                        className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
+                        Notes to customer (optional)
+                      </label>
+                      <textarea
+                        name="notes"
+                        rows={3}
+                        defaultValue={iq.ajs_notes ?? ""}
+                        placeholder="Any caveats, assumptions, or additional information…"
+                        className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40 resize-none"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-6 py-3 rounded-lg font-bold text-white bg-ajs-primary hover:bg-ajs-dark text-sm"
+                  >
+                    Send quote to {iq.customer_email}
+                  </button>
+                </form>
               </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
-                  Budget to (£, ex-VAT)
-                </label>
-                <input
-                  type="number"
-                  name="budget_to"
-                  step="0.01"
-                  min="0"
-                  defaultValue={iq.budget_to_pence != null ? (Number(iq.budget_to_pence) / 100).toFixed(0) : ""}
-                  className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
-                  Notes to customer (optional)
-                </label>
-                <textarea
-                  name="notes"
-                  rows={3}
-                  defaultValue={iq.ajs_notes ?? ""}
-                  placeholder="Any caveats, assumptions, or additional information to include in the email…"
-                  className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40 resize-none"
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              className="px-6 py-3 rounded-lg font-bold text-white bg-ajs-primary hover:bg-ajs-dark text-sm"
-            >
-              Send budget email to {iq.customer_email}
-            </button>
-          </form>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -319,8 +330,8 @@ function SelectField({ name, label, defaultValue, children }: {
   );
 }
 
-function NumberField({ name, label, defaultValue, min }: {
-  name: string; label: string; defaultValue: number; min?: number;
+function NumberField({ name, label, defaultValue, min, hint }: {
+  name: string; label: string; defaultValue: number; min?: number; hint?: string;
 }) {
   return (
     <div>
@@ -332,6 +343,7 @@ function NumberField({ name, label, defaultValue, min }: {
         min={min}
         className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
       />
+      {hint && <p className="text-xs text-ajs-primary mt-1">{hint}</p>}
     </div>
   );
 }
