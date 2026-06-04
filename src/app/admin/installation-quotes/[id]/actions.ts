@@ -98,9 +98,3 @@ export async function sendInstallQuoteAction(formData: FormData) {
   revalidatePath(`/admin/installation-quotes/${id}`);
 }
 
-export async function reviseInstallQuoteAction(formData: FormData) {
-  const id = formData.get("id") as string;
-  const supabase = getServiceClient();
-  await supabase.from("installation_quotes").update({ status: "assessed" }).eq("id", id);
-  revalidatePath(`/admin/installation-quotes/${id}`);
-}

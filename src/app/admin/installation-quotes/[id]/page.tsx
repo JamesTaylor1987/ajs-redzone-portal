@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getAuthClient } from "@/lib/supabase-auth";
 import { getServiceClient } from "@/lib/supabase-server";
-import { saveAssessmentAction, sendInstallQuoteAction, reviseInstallQuoteAction } from "./actions";
+import { saveAssessmentAction, sendInstallQuoteAction } from "./actions";
 import type { AssessmentInputs } from "@/lib/installation-quote/calculate";
 
 export const dynamic = "force-dynamic";
@@ -64,18 +64,11 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
       </div>
 
       {isQuoted && (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-green-800 flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <strong>Budget sent</strong> — emailed to {iq.customer_email} on{" "}
-            {iq.email_sent_at ? new Date(iq.email_sent_at).toLocaleString("en-GB") : "—"}.
-            Budget: {gbp(iq.budget_from_pence)} – {gbp(iq.budget_to_pence)}.
-          </div>
-          <form action={reviseInstallQuoteAction}>
-            <input type="hidden" name="id" value={iq.id} />
-            <button type="submit" className="text-xs font-semibold text-ajs-primary hover:underline whitespace-nowrap">
-              Revise quote →
-            </button>
-          </form>
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-green-800">
+          <strong>Last sent</strong> — emailed to {iq.customer_email} on{" "}
+          {iq.email_sent_at ? new Date(iq.email_sent_at).toLocaleString("en-GB") : "—"}.
+          Budget: {gbp(iq.budget_from_pence)} – {gbp(iq.budget_to_pence)}.
+          Update the figures below and resend at any time.
         </div>
       )}
 
@@ -209,9 +202,7 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
             </div>
           </div>
 
-          {!isQuoted && (
-            <>
-              <div className="border-t border-ajs-light pt-4">
+          <div className="border-t border-ajs-light pt-4">
                 <p className="text-xs text-ajs-muted mb-4">
                   Adjust the figures below before sending — these are what the customer will see.
                 </p>
@@ -261,12 +252,10 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
                     type="submit"
                     className="px-6 py-3 rounded-lg font-bold text-white bg-ajs-primary hover:bg-ajs-dark text-sm"
                   >
-                    Send quote to {iq.customer_email}
-                  </button>
-                </form>
-              </div>
-            </>
-          )}
+                    {isQuoted ? "Resend updated quote" : "Send quote"} to {iq.customer_email}
+                </button>
+              </form>
+            </div>
         </div>
       )}
     </div>
