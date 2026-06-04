@@ -7,7 +7,6 @@ const ROLES = [
   { value: "admin",    label: "Admin" },
   { value: "manager",  label: "Manager" },
   { value: "standard", label: "Standard" },
-  { value: "rz_admin", label: "Redzone Admin" },
 ];
 
 const ROLE_COLOUR: Record<string, string> = {
@@ -122,7 +121,6 @@ export function InviteForm() {
       <div className="mt-4 text-xs text-ajs-muted space-y-0.5">
         <p><strong>Admin / Manager</strong> — full access to admin and manufacturing</p>
         <p><strong>Standard</strong> — manufacturing only (work orders, stock)</p>
-        <p><strong>Redzone Admin</strong> — read-only view of all orders in the Redzone portal</p>
       </div>
     </div>
   );

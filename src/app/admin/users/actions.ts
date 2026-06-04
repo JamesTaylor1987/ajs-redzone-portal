@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getServiceClient } from "@/lib/supabase-server";
 
-const VALID_ROLES = ["admin", "manager", "standard", "rz_admin"] as const;
+const VALID_ROLES = ["admin", "manager", "standard"] as const;
 
 export interface UserActionState {
   success?: boolean;

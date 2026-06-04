@@ -7,6 +7,7 @@ import { Header } from "./Header";
 import { ProductGrid } from "./ProductGrid";
 import { CartDrawer } from "./CartDrawer";
 import { CheckoutForm } from "./CheckoutForm";
+import { SupportBanner } from "./SupportBanner";
 
 interface PortalAppProps {
   products: Product[];
@@ -109,6 +110,9 @@ export function PortalApp({ products, stockColours }: PortalAppProps) {
             onSuccess={handleSubmissionSuccess}
           />
         )}
+        <div className="mt-8">
+          <SupportBanner />
+        </div>
       </main>
 
       <CartDrawer

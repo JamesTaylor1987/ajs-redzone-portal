@@ -13,7 +13,7 @@ export function SupportBanner() {
           📞 01406 424954
         </a>
         <a
-          href="mailto:rz@ajsspalding.co.uk"
+          href="mailto:RZ@ajsspalding.co.uk?subject=AJS%20RZ%20Portal%20Support"
           className="px-4 py-2 rounded-lg bg-ajs-primary text-white text-xs font-semibold hover:bg-ajs-dark transition-colors"
         >
           Email us →

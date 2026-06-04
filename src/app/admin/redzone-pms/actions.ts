@@ -14,36 +14,39 @@ export async function invitePMAction(
 ): Promise<PMActionState> {
   const name = ((formData.get("name") as string) ?? "").trim();
   const email = ((formData.get("email") as string) ?? "").trim().toLowerCase();
+  const type = (formData.get("type") as string) ?? "pm";
 
   if (!name) return { error: "Name is required" };
   if (!email) return { error: "Email is required" };
+  if (type !== "pm" && type !== "admin") return { error: "Invalid type" };
 
   const supabase = getServiceClient();
 
-  // Check for duplicate
-  const { data: existing } = await supabase.from("rz_pms").select("id").eq("email", email).maybeSingle();
-  if (existing) return { error: "A PM with this email already exists" };
+  if (type === "pm") {
+    const { data: existing } = await supabase.from("rz_pms").select("id").eq("email", email).maybeSingle();
+    if (existing) return { error: "A PM with this email already exists" };
+  }
 
-  // Invite via Supabase auth
   const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
     data: { full_name: name },
     redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/redzone/login`,
   });
   if (inviteError) return { error: inviteError.message };
 
-  // Set role in app_metadata
   if (inviteData?.user) {
+    const role = type === "admin" ? "rz_admin" : "rz_pm";
     await supabase.auth.admin.updateUserById(inviteData.user.id, {
-      app_metadata: { role: "rz_pm" },
+      app_metadata: { role },
     });
 
-    // Insert into rz_pms
-    const { error: insertError } = await supabase.from("rz_pms").insert({
-      name,
-      email,
-      auth_user_id: inviteData.user.id,
-    });
-    if (insertError) return { error: insertError.message };
+    if (type === "pm") {
+      const { error: insertError } = await supabase.from("rz_pms").insert({
+        name,
+        email,
+        auth_user_id: inviteData.user.id,
+      });
+      if (insertError) return { error: insertError.message };
+    }
   }
 
   revalidatePath("/admin/redzone-pms");
@@ -67,6 +70,21 @@ export async function removePMAction(
   if (pm?.auth_user_id) {
     await supabase.auth.admin.deleteUser(pm.auth_user_id);
   }
+
+  revalidatePath("/admin/redzone-pms");
+  return { success: true };
+}
+
+export async function removeAdminAction(
+  _prev: PMActionState,
+  formData: FormData,
+): Promise<PMActionState> {
+  const userId = (formData.get("user_id") as string) ?? "";
+  if (!userId) return { error: "Missing user id" };
+
+  const supabase = getServiceClient();
+  const { error } = await supabase.auth.admin.deleteUser(userId);
+  if (error) return { error: error.message };
 
   revalidatePath("/admin/redzone-pms");
   return { success: true };
