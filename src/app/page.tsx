@@ -1,4 +1,4 @@
-import { getPublicServerClient } from "@/lib/supabase-server";
+import { getPublicServerClient, getServiceClient } from "@/lib/supabase-server";
 import type { Product } from "@/lib/types";
 import { PortalApp } from "@/components/PortalApp";
 import { DEFAULT_STOCK_COLOURS, type StockColours } from "@/lib/stock-colours";
@@ -7,11 +7,12 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const supabase = getPublicServerClient();
+  const serviceClient = getServiceClient();
 
   const [{ data, error }, { data: settings }, { data: imageRows }] = await Promise.all([
     supabase.from("products").select("*").eq("active", true).order("sort_order", { ascending: true }),
     supabase.from("settings").select("key, value").in("key", ["stock_color_in_stock", "stock_color_low_stock", "stock_color_out_of_stock"]),
-    supabase.from("product_images").select("product_id, url").order("sort_order", { ascending: true }),
+    serviceClient.from("product_images").select("product_id, url").order("sort_order", { ascending: true }),
   ]);
 
   if (error) {
