@@ -658,6 +658,7 @@ interface InstallBudgetEmailParams {
   budgetFromPence: number;
   budgetToPence: number;
   notes: string | null;
+  containmentNotes: string | null;
   items: InstallPDFItem[];
 }
 
@@ -685,8 +686,15 @@ function installBudgetHtml(p: InstallBudgetEmailParams): string {
       <div style="color:#05618e;font-size:32px;font-weight:900">${p.budgetFromPence >= p.budgetToPence ? fmt(p.budgetFromPence) : `${fmt(p.budgetFromPence)} – ${fmt(p.budgetToPence)}`}</div>
     </div>
 
+    ${p.containmentNotes ? `
+    <div style="background:#f8fafc;border:1px solid #e6ebed;border-radius:8px;padding:16px;margin-bottom:16px">
+      <p style="color:#64748b;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin:0 0 6px">Containment</p>
+      <p style="color:#475569;font-size:13px;line-height:1.6;margin:0">${p.containmentNotes.replace(/\n/g, "<br>")}</p>
+    </div>` : ""}
+
     ${p.notes ? `
     <div style="background:#f8fafc;border:1px solid #e6ebed;border-radius:8px;padding:16px;margin-bottom:24px">
+      <p style="color:#64748b;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin:0 0 6px">Notes</p>
       <p style="color:#475569;font-size:13px;line-height:1.6;margin:0">${p.notes.replace(/\n/g, "<br>")}</p>
     </div>` : ""}
 
@@ -744,6 +752,7 @@ export async function sendInstallationBudgetEmail(p: InstallBudgetEmailParams): 
           budget_from_pence: p.budgetFromPence,
           budget_to_pence: p.budgetToPence,
           ajs_notes: p.notes,
+          containment_notes: p.containmentNotes,
         },
         p.items,
       ),

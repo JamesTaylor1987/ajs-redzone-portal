@@ -334,6 +334,7 @@ export interface InstallPDFQuote {
   budget_from_pence: number;
   budget_to_pence: number;
   ajs_notes?: string | null;
+  containment_notes?: string | null;
 }
 
 export interface InstallPDFItem {
@@ -626,6 +627,9 @@ export async function renderInstallationQuotePDF(
               margin: [0, 0, 0, 14],
             } as any,
             buildDivider(),
+          ] : []),
+          ...(quote.containment_notes ? [
+            buildNoticeBox(quote.containment_notes, "#f0fdf4", "#166534", "CONTAINMENT"),
           ] : []),
           {
             table: {

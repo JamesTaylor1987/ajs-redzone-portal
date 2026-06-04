@@ -173,6 +173,19 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
             </label>
           </div>
 
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
+              Containment notes (optional)
+            </label>
+            <textarea
+              name="containment_notes"
+              rows={3}
+              defaultValue={iq.containment_notes ?? ""}
+              placeholder="e.g. AJS to supply and fit 20m of 50×50 steel trunking along the main conveyor line…"
+              className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40 resize-none"
+            />
+          </div>
+
           <button
             type="submit"
             className="px-5 py-2.5 rounded-lg font-bold text-white bg-ajs-primary hover:bg-ajs-dark text-sm"

@@ -44,9 +44,12 @@ export async function saveAssessmentAction(formData: FormData) {
     flight_estimate_long_haul_pence: rn("install_flight_long_haul",       INSTALL_CONFIG.flight_estimate_long_haul_pence),
   };
 
+  const containment_notes = (formData.get("containment_notes") as string ?? "").trim() || null;
+
   const calc = calculateInstallationQuote(assessment, config);
   await supabase.from("installation_quotes").update({
     assessment,
+    containment_notes,
     calc_install_days:       calc.install_days,
     calc_total_days:         calc.total_days,
     calc_labour_pence:       calc.labour_pence,
@@ -77,7 +80,7 @@ export async function sendInstallQuoteAction(formData: FormData) {
   const supabase = getServiceClient();
   const { data: iq } = await supabase
     .from("installation_quotes")
-    .select("quote_ref, customer_email, customer_name, company_name, hardware_quote_id, hardware_quote_ref, site_name, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, required_date")
+    .select("quote_ref, customer_email, customer_name, company_name, hardware_quote_id, hardware_quote_ref, site_name, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, required_date, containment_notes")
     .eq("id", id)
     .single();
 
@@ -104,6 +107,7 @@ export async function sendInstallQuoteAction(formData: FormData) {
     budgetFromPence: budgetFrom,
     budgetToPence: budgetTo,
     notes,
+    containmentNotes: iq.containment_notes ?? null,
     items: (itemRows ?? []).map((i: { sku: string; name: string; qty: number }) => ({
       sku: i.sku, name: i.name, qty: i.qty,
     })),
