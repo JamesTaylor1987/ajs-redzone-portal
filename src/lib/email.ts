@@ -754,9 +754,11 @@ export async function sendInstallationBudgetEmail(p: InstallBudgetEmailParams): 
   }
 
   try {
+    const override = process.env.RESEND_TEST_TO?.trim();
     const { error } = await resend.emails.send({
       from: FROM,
       to: recipients(p.customerEmail),
+      cc: override ? undefined : [AJS_NOTIFY],
       subject: `Your Redzone Installation Budget Estimate — ${p.quoteRef}`,
       html: installBudgetHtml(p),
       attachments: pdfBuf ? [{ filename: `Install-Quote-${p.quoteRef}.pdf`, content: pdfBuf }] : undefined,
