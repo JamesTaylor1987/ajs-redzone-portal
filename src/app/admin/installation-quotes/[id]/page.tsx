@@ -231,9 +231,11 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
                         name="budget_to"
                         step="1"
                         min="0"
-                        defaultValue={iq.budget_to_pence != null ? (Number(iq.budget_to_pence) / 100).toFixed(0) : ""}
+                        defaultValue={iq.budget_to_pence != null && Number(iq.budget_to_pence) !== Number(iq.budget_from_pence) ? (Number(iq.budget_to_pence) / 100).toFixed(0) : ""}
+                        placeholder="Leave blank for fixed price"
                         className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
                       />
+                      <p className="text-xs text-ajs-muted mt-1">Leave blank for a fixed price</p>
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">

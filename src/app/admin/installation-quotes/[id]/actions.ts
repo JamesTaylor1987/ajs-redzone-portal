@@ -48,7 +48,8 @@ export async function sendInstallQuoteAction(formData: FormData) {
   const g = (k: string) => (formData.get(k) as string ?? "").trim();
 
   const budgetFrom = Math.round(parseFloat(g("budget_from") || "0") * 100);
-  const budgetTo   = Math.round(parseFloat(g("budget_to")   || "0") * 100);
+  const budgetToRaw = g("budget_to");
+  const budgetTo = budgetToRaw ? Math.round(parseFloat(budgetToRaw) * 100) : budgetFrom;
   const notes      = g("notes") || null;
 
   const supabase = getServiceClient();

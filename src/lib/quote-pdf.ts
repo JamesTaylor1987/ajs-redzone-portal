@@ -632,8 +632,8 @@ export async function renderInstallationQuotePDF(
               widths: ["*"],
               body: [[{
                 stack: [
-                  { text: "INSTALLATION BUDGET ESTIMATE (EX-VAT)", bold: true, color: HEADER_MUTED, fontSize: 8, margin: [0, 0, 0, 8] },
-                  { text: `${gbpRound(quote.budget_from_pence)} – ${gbpRound(quote.budget_to_pence)}`, bold: true, color: "#ffffff", fontSize: 28 },
+                  { text: quote.budget_from_pence === quote.budget_to_pence ? "FIXED PRICE (EX-VAT)" : "INSTALLATION BUDGET ESTIMATE (EX-VAT)", bold: true, color: HEADER_MUTED, fontSize: 8, margin: [0, 0, 0, 8] },
+                  { text: quote.budget_from_pence === quote.budget_to_pence ? gbpRound(quote.budget_from_pence) : `${gbpRound(quote.budget_from_pence)} – ${gbpRound(quote.budget_to_pence)}`, bold: true, color: "#ffffff", fontSize: 28 },
                 ],
               }]],
             },
