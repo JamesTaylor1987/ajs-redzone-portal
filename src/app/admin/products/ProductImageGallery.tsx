@@ -2,7 +2,7 @@
 
 import { useRef, useTransition } from "react";
 import Image from "next/image";
-import { addProductImageAction, deleteProductImageAction } from "./actions";
+import { addProductImageAction, deleteProductImageAction, moveProductImageAction } from "./actions";
 
 interface ProductImage {
   id: string;
@@ -19,6 +19,7 @@ export function ProductImageGallery({ productId, images }: ProductImageGalleryPr
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, startUpload] = useTransition();
   const [deleting, startDelete] = useTransition();
+  const [moving, startMove] = useTransition();
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -30,6 +31,17 @@ export function ProductImageGallery({ productId, images }: ProductImageGalleryPr
       const res = await addProductImageAction(fd);
       if (res?.error) alert(res.error);
       if (fileRef.current) fileRef.current.value = "";
+    });
+  }
+
+  function handleMove(img: ProductImage, direction: "left" | "right") {
+    const fd = new FormData();
+    fd.append("productId", productId);
+    fd.append("imageId", img.id);
+    fd.append("direction", direction);
+    startMove(async () => {
+      const res = await moveProductImageAction(fd);
+      if (res?.error) alert(res.error);
     });
   }
 
@@ -89,6 +101,7 @@ export function ProductImageGallery({ productId, images }: ProductImageGalleryPr
                 Primary
               </span>
             )}
+            {/* Delete */}
             <button
               type="button"
               onClick={() => handleDelete(img)}
@@ -98,6 +111,31 @@ export function ProductImageGallery({ productId, images }: ProductImageGalleryPr
             >
               ×
             </button>
+            {/* Move left/right */}
+            <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {i > 0 && (
+                <button
+                  type="button"
+                  onClick={() => handleMove(img, "left")}
+                  disabled={moving}
+                  className="w-6 h-6 bg-black/60 text-white rounded text-xs flex items-center justify-center"
+                  aria-label="Move left"
+                >
+                  ←
+                </button>
+              )}
+              {i < images.length - 1 && (
+                <button
+                  type="button"
+                  onClick={() => handleMove(img, "right")}
+                  disabled={moving}
+                  className="w-6 h-6 bg-black/60 text-white rounded text-xs flex items-center justify-center"
+                  aria-label="Move right"
+                >
+                  →
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>

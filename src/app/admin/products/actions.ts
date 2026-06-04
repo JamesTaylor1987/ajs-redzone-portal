@@ -125,6 +125,51 @@ export async function addProductImageAction(formData: FormData) {
   return { success: true };
 }
 
+export async function moveProductImageAction(formData: FormData) {
+  const productId = formData.get("productId") as string;
+  const imageId = formData.get("imageId") as string;
+  const direction = formData.get("direction") as "left" | "right";
+
+  if (!productId || !imageId) return { error: "Missing params." };
+
+  const supabase = getServiceClient();
+
+  const { data: images } = await supabase
+    .from("product_images")
+    .select("id, sort_order")
+    .eq("product_id", productId)
+    .order("sort_order", { ascending: true });
+
+  if (!images) return { error: "Could not fetch images." };
+
+  const idx = images.findIndex((i) => i.id === imageId);
+  if (idx === -1) return { error: "Image not found." };
+
+  const swapIdx = direction === "left" ? idx - 1 : idx + 1;
+  if (swapIdx < 0 || swapIdx >= images.length) return {};
+
+  const a = images[idx];
+  const b = images[swapIdx];
+
+  await supabase.from("product_images").update({ sort_order: b.sort_order }).eq("id", a.id);
+  await supabase.from("product_images").update({ sort_order: a.sort_order }).eq("id", b.id);
+
+  // Re-sync product.image_url to whichever image is now first
+  const { data: first } = await supabase
+    .from("product_images")
+    .select("url")
+    .eq("product_id", productId)
+    .order("sort_order", { ascending: true })
+    .limit(1)
+    .single();
+  await supabase.from("products").update({ image_url: first?.url ?? null }).eq("id", productId);
+
+  revalidatePath(`/admin/products/${productId}/edit`);
+  revalidatePath("/admin/products");
+  revalidatePath("/");
+  return { success: true };
+}
+
 export async function deleteProductImageAction(formData: FormData) {
   const imageId = formData.get("imageId") as string;
   const productId = formData.get("productId") as string;
