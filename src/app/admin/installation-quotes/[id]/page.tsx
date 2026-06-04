@@ -191,7 +191,7 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
             <Stat label="Total days"    value={String(iq.calc_total_days ?? "—")} />
             <Stat label="Labour"        value={gbp(iq.calc_labour_pence)} />
             <Stat label="Travel"        value={gbp(iq.calc_travel_pence)} />
-            <Stat label="Hotels"        value={gbp(iq.calc_hotels_pence)} />
+            <Stat label="Hotel &amp; stop out" value={gbp(iq.calc_hotels_pence)} />
             <Stat label="Infra uplift"  value={gbp(iq.calc_infra_uplift_pence)} />
             <Stat label="Subtotal"      value={gbp(iq.calc_subtotal_pence)} />
           </div>

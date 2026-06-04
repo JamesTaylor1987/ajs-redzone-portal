@@ -62,7 +62,7 @@ export function InstallRatesPicker({ current }: Props) {
 
         <Section label="Travel & accommodation">
           <RateField name="mileage_rate" label="Mileage rate" unit="p / mile" defaultValue={current.mileage_rate} />
-          <RateField name="hotel_rate" label="Hotel rate per night" unit="£ / night" defaultValue={current.hotel_rate} />
+          <RateField name="hotel_rate" label="Hotel &amp; stop out per night" unit="£ / night" defaultValue={current.hotel_rate} />
           <RateField name="flight_europe" label="EU / domestic flight (per engineer)" unit="£" defaultValue={current.flight_europe} />
           <RateField name="flight_long_haul" label="Long-haul flight (per engineer)" unit="£" defaultValue={current.flight_long_haul} />
         </Section>
