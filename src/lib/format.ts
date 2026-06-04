@@ -23,6 +23,14 @@ export function formatMoney(pence: number, currency: Currency = "GBP"): string {
   })}`;
 }
 
+// Use when you have the snapshotted fx rate from the quote (preserves original quoted amount)
+export function formatMoneyAtRate(pence: number, currency: string = "GBP", fxRate: number | null = null): string {
+  if (currency === "EUR" && fxRate && fxRate > 1) {
+    return "€" + ((pence * fxRate) / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  return "£" + (pence / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export function formatMoneyExact(pence: number, currency: Currency = "GBP"): string {
   const converted = convertPence(pence, currency);
   const major = converted / 100;

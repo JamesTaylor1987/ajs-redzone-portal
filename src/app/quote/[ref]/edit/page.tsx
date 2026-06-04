@@ -4,6 +4,7 @@ import { getServiceClient } from "@/lib/supabase-server";
 import { verificationHash } from "@/lib/magic-link";
 import { VerifyForm } from "./VerifyForm";
 import { SupportBanner } from "@/components/SupportBanner";
+import { formatMoneyAtRate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
   const supabase = getServiceClient();
   const { data: quote } = await supabase
     .from("quotes")
-    .select("id, ref, status, contact_name, contact_email, contact_company, contact_phone, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, required_date, project_description, install_requested, subtotal_gbp_pence, shipping_gbp_pence, shipping_pallets, magic_token, magic_expires_at, currency, created_at")
+    .select("id, ref, status, contact_name, contact_email, contact_company, contact_phone, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, required_date, project_description, install_requested, subtotal_gbp_pence, shipping_gbp_pence, shipping_pallets, magic_token, magic_expires_at, currency, fx_rate_used, created_at")
     .eq("ref", ref)
     .single();
 
@@ -85,15 +86,9 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
 
   const totalPence = (items ?? []).reduce((s, i) => s + Number(i.line_total_gbp_pence), 0);
 
-  function gbp(pence: number | string) {
-    return (
-      "£" +
-      (Number(pence) / 100).toLocaleString("en-GB", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
-    );
-  }
+  const ccy = quote.currency ?? "GBP";
+  const fx = quote.fx_rate_used ?? null;
+  const fmt = (pence: number | string) => formatMoneyAtRate(Number(pence), ccy, fx);
 
   const statusLabel: Record<string, string> = {
     quote_submitted: "Quote submitted — under review",
@@ -138,24 +133,24 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
                       {i.name} &times; {i.qty}
                     </span>
                     <span className="font-semibold whitespace-nowrap">
-                      {gbp(i.line_total_gbp_pence)}
+                      {fmt(i.line_total_gbp_pence)}
                     </span>
                   </li>
                 ))}
               </ul>
               <div className="flex justify-between text-sm pt-3 mt-1 border-t border-ajs-light text-ajs-muted">
                 <span>Subtotal</span>
-                <span className="font-semibold text-ajs-dark">{gbp(totalPence)}</span>
+                <span className="font-semibold text-ajs-dark">{fmt(totalPence)}</span>
               </div>
               <div className="flex justify-between text-sm pt-1 text-ajs-muted">
                 <span>Shipping{quote.shipping_pallets ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})` : ""}</span>
                 <span className={`font-semibold ${quote.shipping_gbp_pence == null ? "text-amber-600" : "text-ajs-dark"}`}>
-                  {quote.shipping_gbp_pence != null ? gbp(Number(quote.shipping_gbp_pence)) : "EXW"}
+                  {quote.shipping_gbp_pence != null ? fmt(Number(quote.shipping_gbp_pence)) : "EXW"}
                 </span>
               </div>
               <div className="flex justify-between font-bold text-base pt-2 mt-1 border-t border-ajs-light">
                 <span>Total (ex-VAT)</span>
-                <span>{gbp(totalPence + (quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : 0))}</span>
+                <span>{fmt(totalPence + (quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : 0))}</span>
               </div>
             </div>
 

@@ -5,6 +5,7 @@ import { verificationHash, buildAccountsUrl } from "@/lib/magic-link";
 import { AccountInfoForm } from "./AccountInfoForm";
 import { ForwardToAccounts } from "./ForwardToAccounts";
 import { SupportBanner } from "@/components/SupportBanner";
+import { formatMoneyAtRate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
   const { data: quote } = await supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, shipping_gbp_pence, shipping_pallets, magic_token, magic_expires_at, accounts_token",
+      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, shipping_gbp_pence, shipping_pallets, magic_token, magic_expires_at, accounts_token, currency, fx_rate_used",
     )
     .eq("ref", ref)
     .single();
@@ -81,7 +82,9 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
   const subtotalPence = (items ?? []).reduce((s, i) => s + Number(i.line_total_gbp_pence), 0);
   const shippingPence = quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : null;
   const grandTotalPence = subtotalPence + (shippingPence ?? 0);
-  const fmt = (p: number) => "£" + (p / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const ccy = quote.currency ?? "GBP";
+  const fx = quote.fx_rate_used ?? null;
+  const fmt = (p: number) => formatMoneyAtRate(p, ccy, fx);
 
   return (
     <main className="min-h-screen bg-slate-50">
