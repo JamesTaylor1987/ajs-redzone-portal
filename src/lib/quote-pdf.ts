@@ -398,6 +398,13 @@ export async function renderWorkOrderPDF(quote: PDFQuote, items: PDFItem[]): Pro
     { text: String(item.qty), bold: true, fontSize: 14, color: BLUE, alignment: "center" },
   ]);
 
+  const sp = quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : null;
+  const ccy = quote.currency ?? "GBP";
+  const fx  = quote.fx_rate_used ?? null;
+  const pallets = quote.shipping_pallets ?? null;
+  const shippingLabel = pallets ? `${pallets} pallet${pallets !== 1 ? "s" : ""}` : "";
+  const shippingValue = sp !== null ? `${money(sp, ccy, fx)}${shippingLabel ? ` — ${shippingLabel}` : ""}` : `EXW (customer arranges)${shippingLabel ? ` — ${shippingLabel}` : ""}`;
+
   const def: TDocumentDefinitions = {
     pageSize: "A4",
     pageMargins: [0, 0, 0, 50],
@@ -481,6 +488,7 @@ export async function renderWorkOrderPDF(quote: PDFQuote, items: PDFItem[]): Pro
               paddingRight: () => 4,
             },
           } as any,
+          buildNoticeBox(shippingValue, "#f8fafc", "#1e293b", "SHIPPING"),
           ...(quote.install_requested ? [
             buildNoticeBox(
               "Installation requested — separate installation quote in progress. See portal for details.",
