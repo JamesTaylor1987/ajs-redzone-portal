@@ -22,14 +22,16 @@ export function ProductImageGallery({ productId, images }: ProductImageGalleryPr
   const [moving, startMove] = useTransition();
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const fd = new FormData();
-    fd.append("productId", productId);
-    fd.append("image", file);
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
     startUpload(async () => {
-      const res = await addProductImageAction(fd);
-      if (res?.error) alert(res.error);
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append("productId", productId);
+        fd.append("image", file);
+        const res = await addProductImageAction(fd);
+        if (res?.error) { alert(res.error); break; }
+      }
       if (fileRef.current) fileRef.current.value = "";
     });
   }
@@ -75,6 +77,7 @@ export function ProductImageGallery({ productId, images }: ProductImageGalleryPr
           ref={fileRef}
           type="file"
           accept="image/*"
+          multiple
           className="hidden"
           onChange={handleFileChange}
         />
