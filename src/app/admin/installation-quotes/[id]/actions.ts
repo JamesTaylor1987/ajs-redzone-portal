@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { getServiceClient } from "@/lib/supabase-server";
-import { calculateInstallationQuote, type AssessmentInputs } from "@/lib/installation-quote/calculate";
+import { calculateInstallationQuote, type AssessmentInputs, type InstallConfig } from "@/lib/installation-quote/calculate";
+import { INSTALL_CONFIG } from "@/lib/installation-quote/config";
+import { INSTALL_RATE_KEYS } from "@/app/admin/settings/actions";
 import { sendInstallationBudgetEmail } from "@/lib/email";
 
 export async function saveAssessmentAction(formData: FormData) {
@@ -20,9 +22,29 @@ export async function saveAssessmentAction(formData: FormData) {
     long_haul: formData.get("long_haul") === "on",
   };
 
-  const calc = calculateInstallationQuote(assessment);
-
   const supabase = getServiceClient();
+
+  const { data: rateRows } = await supabase
+    .from("settings").select("key, value").in("key", [...INSTALL_RATE_KEYS]);
+  const r = Object.fromEntries((rateRows ?? []).map((row: { key: string; value: string }) => [row.key, row.value]));
+  const rn = (k: string, def: number) => { const v = parseInt(r[k]); return isNaN(v) ? def : v; };
+
+  const config: InstallConfig = {
+    engineer_day_rate_pence:        rn("install_engineer_day_rate",       INSTALL_CONFIG.engineer_day_rate_pence),
+    hotel_rate_pence:               rn("install_hotel_rate",              INSTALL_CONFIG.hotel_rate_pence),
+    mileage_rate_pence_per_mile:    rn("install_mileage_rate",            INSTALL_CONFIG.mileage_rate_pence_per_mile),
+    sensors_per_engineer_per_day:   rn("install_sensors_per_day",         INSTALL_CONFIG.sensors_per_engineer_per_day),
+    commissioning_days_per_engineer: INSTALL_CONFIG.commissioning_days_per_engineer,
+    contingency_low:                rn("install_contingency_low",         Math.round(INSTALL_CONFIG.contingency_low * 100)) / 100,
+    contingency_high:               rn("install_contingency_high",        Math.round(INSTALL_CONFIG.contingency_high * 100)) / 100,
+    out_of_hours_multiplier:        rn("install_out_of_hours_multiplier", Math.round(INSTALL_CONFIG.out_of_hours_multiplier * 100)) / 100,
+    partial_infra_uplift_pence:     rn("install_partial_infra_uplift",    INSTALL_CONFIG.partial_infra_uplift_pence),
+    no_infra_uplift_pence:          rn("install_no_infra_uplift",         INSTALL_CONFIG.no_infra_uplift_pence),
+    flight_estimate_europe_pence:   rn("install_flight_europe",           INSTALL_CONFIG.flight_estimate_europe_pence),
+    flight_estimate_long_haul_pence: rn("install_flight_long_haul",       INSTALL_CONFIG.flight_estimate_long_haul_pence),
+  };
+
+  const calc = calculateInstallationQuote(assessment, config);
   await supabase.from("installation_quotes").update({
     assessment,
     calc_install_days:       calc.install_days,

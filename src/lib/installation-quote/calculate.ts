@@ -1,4 +1,19 @@
-import { INSTALL_CONFIG as C } from "./config";
+import { INSTALL_CONFIG } from "./config";
+
+export interface InstallConfig {
+  engineer_day_rate_pence: number;
+  hotel_rate_pence: number;
+  mileage_rate_pence_per_mile: number;
+  sensors_per_engineer_per_day: number;
+  commissioning_days_per_engineer: number;
+  contingency_low: number;
+  contingency_high: number;
+  out_of_hours_multiplier: number;
+  partial_infra_uplift_pence: number;
+  no_infra_uplift_pence: number;
+  flight_estimate_europe_pence: number;
+  flight_estimate_long_haul_pence: number;
+}
 
 export interface AssessmentInputs {
   travel_method: "drive" | "fly" | "not_sure";
@@ -24,7 +39,10 @@ export interface CalcResult {
   budget_high_pence: number;
 }
 
-export function calculateInstallationQuote(a: AssessmentInputs): CalcResult {
+export function calculateInstallationQuote(
+  a: AssessmentInputs,
+  C: InstallConfig = INSTALL_CONFIG,
+): CalcResult {
   const { engineer_count, sensor_count } = a;
 
   const install_days = Math.ceil(
