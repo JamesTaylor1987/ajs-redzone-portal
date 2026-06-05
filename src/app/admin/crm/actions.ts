@@ -37,7 +37,7 @@ export async function createProspectAction(formData: FormData) {
   redirect(`/admin/crm/${prospect.id}`);
 }
 
-export async function updateProspectAction(formData: FormData) {
+export async function updateProspectDetailsAction(formData: FormData) {
   const id = formData.get("id") as string;
   const g = (k: string) => (formData.get(k) as string ?? "").trim();
   const supabase = getServiceClient();
@@ -47,6 +47,19 @@ export async function updateProspectAction(formData: FormData) {
     industry: g("industry") || null,
     website: g("website") || null,
     owner_name: g("owner_name") || null,
+    updated_at: new Date().toISOString(),
+  }).eq("id", id);
+
+  revalidatePath(`/admin/crm/${id}`);
+  revalidatePath("/admin/crm");
+}
+
+export async function updateProspectNotesAction(formData: FormData) {
+  const id = formData.get("id") as string;
+  const g = (k: string) => (formData.get(k) as string ?? "").trim();
+  const supabase = getServiceClient();
+
+  await supabase.from("crm_prospects").update({
     notes: g("notes") || null,
     next_action: g("next_action") || null,
     next_action_date: g("next_action_date") || null,

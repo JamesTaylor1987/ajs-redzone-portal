@@ -14,21 +14,29 @@ const INDUSTRIES = [
   "Other",
 ];
 
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-xl border border-ajs-light overflow-hidden">
+      <div className="px-4 py-3 bg-slate-50 border-b border-ajs-light">
+        <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">{title}</h2>
+      </div>
+      <div className="p-4 space-y-3">{children}</div>
+    </div>
+  );
+}
+
 export default function NewProspectPage() {
   return (
     <div className="max-w-lg mx-auto space-y-5">
-      <div className="flex items-center gap-3">
+      <div>
         <Link href="/admin/crm" className="text-ajs-muted hover:text-ajs-primary text-sm">
-          ← Back
+          ← Prospects
         </Link>
-        <h1 className="text-xl font-extrabold text-ajs-dark">Add Lead</h1>
+        <h1 className="text-xl font-extrabold text-ajs-dark mt-1">Add Lead</h1>
       </div>
 
-      <form action={createProspectAction} className="space-y-5">
-        {/* Company */}
-        <div className="bg-white rounded-xl border border-ajs-light p-5 space-y-4">
-          <h2 className="font-bold text-ajs-dark text-sm uppercase tracking-wide">Company</h2>
-
+      <form action={createProspectAction} className="space-y-4">
+        <SectionCard title="Company">
           <div>
             <label className="block text-xs font-semibold text-ajs-dark mb-1">
               Company name <span className="text-rose-500">*</span>
@@ -37,29 +45,26 @@ export default function NewProspectPage() {
               name="company_name"
               required
               autoFocus
-              className="w-full border border-ajs-light rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+              className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
               placeholder="e.g. Acme Foods Ltd"
             />
           </div>
-
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-ajs-dark mb-1">Industry</label>
               <select
                 name="industry"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary bg-white"
+                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary bg-white"
               >
                 <option value="">Select...</option>
-                {INDUSTRIES.map((i) => (
-                  <option key={i} value={i}>{i}</option>
-                ))}
+                {INDUSTRIES.map((i) => <option key={i} value={i}>{i}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-semibold text-ajs-dark mb-1">Stage</label>
               <select
                 name="stage"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary bg-white"
+                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary bg-white"
               >
                 <option value="prospect">Prospect</option>
                 <option value="conversation">Conversation</option>
@@ -67,37 +72,34 @@ export default function NewProspectPage() {
               </select>
             </div>
           </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-ajs-dark mb-1">Website</label>
-            <input
-              name="website"
-              type="url"
-              className="w-full border border-ajs-light rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-              placeholder="https://..."
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-ajs-dark mb-1">Website</label>
+              <input
+                name="website"
+                type="url"
+                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+                placeholder="https://..."
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-ajs-dark mb-1">Owner</label>
+              <input
+                name="owner_name"
+                defaultValue="Noah"
+                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+              />
+            </div>
           </div>
+        </SectionCard>
 
-          <div>
-            <label className="block text-xs font-semibold text-ajs-dark mb-1">Owner</label>
-            <input
-              name="owner_name"
-              defaultValue="Noah"
-              className="w-full border border-ajs-light rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-            />
-          </div>
-        </div>
-
-        {/* Key contact (optional) */}
-        <div className="bg-white rounded-xl border border-ajs-light p-5 space-y-4">
-          <h2 className="font-bold text-ajs-dark text-sm uppercase tracking-wide">Key contact <span className="text-ajs-muted font-normal normal-case text-xs">(optional)</span></h2>
-
+        <SectionCard title="Key contact (optional)">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-ajs-dark mb-1">Name</label>
               <input
                 name="contact_name"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
                 placeholder="e.g. Jane Smith"
               />
             </div>
@@ -105,19 +107,18 @@ export default function NewProspectPage() {
               <label className="block text-xs font-semibold text-ajs-dark mb-1">Role</label>
               <input
                 name="contact_role"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-                placeholder="e.g. Operations Manager"
+                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+                placeholder="e.g. Ops Manager"
               />
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-ajs-dark mb-1">Phone</label>
               <input
                 name="contact_phone"
                 type="tel"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
                 placeholder="07..."
               />
             </div>
@@ -126,23 +127,21 @@ export default function NewProspectPage() {
               <input
                 name="contact_email"
                 type="email"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
                 placeholder="jane@..."
               />
             </div>
           </div>
-        </div>
+        </SectionCard>
 
-        {/* Notes */}
-        <div className="bg-white rounded-xl border border-ajs-light p-5">
-          <label className="block text-xs font-semibold text-ajs-dark mb-1">Notes <span className="text-ajs-muted font-normal">(optional)</span></label>
+        <SectionCard title="Notes (optional)">
           <textarea
             name="notes"
             rows={3}
-            className="w-full border border-ajs-light rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary resize-none"
+            className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary resize-none"
             placeholder="How did we find them? What's the opportunity?"
           />
-        </div>
+        </SectionCard>
 
         <button
           type="submit"
