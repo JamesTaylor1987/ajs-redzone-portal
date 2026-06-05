@@ -659,6 +659,7 @@ interface InstallBudgetEmailParams {
   budgetToPence: number;
   notes: string | null;
   containmentNotes: string | null;
+  paymentTerms: string | null;
   items: InstallPDFItem[];
 }
 
@@ -753,6 +754,7 @@ export async function sendInstallationBudgetEmail(p: InstallBudgetEmailParams): 
           budget_to_pence: p.budgetToPence,
           ajs_notes: p.notes,
           containment_notes: p.containmentNotes,
+          payment_terms: p.paymentTerms,
         },
         p.items,
       ),

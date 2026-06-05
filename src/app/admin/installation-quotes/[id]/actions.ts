@@ -75,7 +75,8 @@ export async function sendInstallQuoteAction(formData: FormData) {
   const budgetFrom = Math.round(parseFloat(g("budget_from") || "0") * 100);
   const budgetToVal = parseFloat(g("budget_to") || "0");
   const budgetTo = budgetToVal > 0 ? Math.round(budgetToVal * 100) : budgetFrom;
-  const notes      = g("notes") || null;
+  const notes         = g("notes") || null;
+  const payment_terms = g("payment_terms") || null;
 
   const supabase = getServiceClient();
   const { data: iq } = await supabase
@@ -108,6 +109,7 @@ export async function sendInstallQuoteAction(formData: FormData) {
     budgetToPence: budgetTo,
     notes,
     containmentNotes: iq.containment_notes ?? null,
+    paymentTerms: payment_terms,
     items: (itemRows ?? []).map((i: { sku: string; name: string; qty: number }) => ({
       sku: i.sku, name: i.name, qty: i.qty,
     })),
@@ -117,6 +119,7 @@ export async function sendInstallQuoteAction(formData: FormData) {
     budget_from_pence: budgetFrom,
     budget_to_pence:   budgetTo,
     ajs_notes:         notes,
+    payment_terms,
     status:            "quoted",
     quoted_at:         new Date().toISOString(),
     email_sent_at:     new Date().toISOString(),

@@ -335,6 +335,7 @@ export interface InstallPDFQuote {
   budget_to_pence: number;
   ajs_notes?: string | null;
   containment_notes?: string | null;
+  payment_terms?: string | null;
 }
 
 export interface InstallPDFItem {
@@ -547,6 +548,93 @@ export async function renderWorkOrderPDF(quote: PDFQuote, items: PDFItem[]): Pro
   return renderDoc(def);
 }
 
+const DEFAULT_PAYMENT_TERMS =
+  "50% upon order placement\n25% upon receipt of hardware\n15% upon completion of installation\n10% upon confirmation that Redzone counts are good";
+
+function buildInstallIntro(): Content {
+  return {
+    text: "AJS Control and Automation Ltd are an official Redzone QAD installation partner. With over 500 successful implementations delivered in the last five years, and with all hardware components held in stock, we provide a seamless, expert-led installation from day one.",
+    fontSize: 10,
+    color: "#475569",
+    lineHeight: 1.6,
+    margin: [0, 0, 0, 14],
+  } as any;
+}
+
+function buildScopeOfWorks(): Content {
+  function scopeSection(title: string, bullets: string[]): any {
+    return {
+      stack: [
+        { text: title, bold: true, color: TEAL, fontSize: 9, margin: [0, 0, 0, 3] },
+        { ul: bullets, fontSize: 9, color: "#475569", lineHeight: 1.4, margin: [0, 0, 0, 10] },
+      ],
+    };
+  }
+  return {
+    stack: [
+      { text: "SCOPE OF WORKS", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 10] } as any,
+      scopeSection("Project Management", [
+        "Travel and accommodation arrangements",
+        "Health & Safety documentation (RAMS)",
+        "Project documentation, scheduling and labour planning",
+      ]),
+      scopeSection("Travel", [
+        "Engineers’ travel time",
+        "Mileage or flight costs",
+        "Ferry and Eurotunnel crossings",
+        "Hotel and stop out",
+        "Subsistence",
+      ]),
+      scopeSection("Site Works", [
+        "Mounting of PLC control panels",
+        "Mounting of sensor brackets and fitting sensors",
+        "Routing and connection of sensor cabling",
+        "Installation of cable identification tags",
+      ]),
+      scopeSection("Commissioning", [
+        "Validation of Redzone signal mapping",
+        "Testing of all sensor inputs and counts",
+        "OPC communications configuration",
+        "Software loading and testing",
+        "Remote support with Redzone during sign-off",
+      ]),
+    ],
+  } as any;
+}
+
+function buildExclusions(): Content {
+  return {
+    stack: [
+      { text: "EXCLUSIONS", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
+      { text: "Unless otherwise stated, the following are excluded from this quotation:", fontSize: 9, color: MUTED, margin: [0, 0, 0, 6] },
+      {
+        ul: [
+          "Mains power supply to control panels (230v, 10 amp)",
+          "Network connectivity to control panels",
+          "Supply, installation and fixing of TVs and iPads",
+          "Out of hours working",
+          "Access equipment beyond standard step ladders",
+        ],
+        fontSize: 9,
+        color: "#475569",
+        lineHeight: 1.4,
+      },
+    ],
+    margin: [0, 14, 0, 0],
+  } as any;
+}
+
+function buildPaymentTerms(terms: string): Content {
+  const lines = terms.split("\n").map((l) => l.trim()).filter(Boolean);
+  return {
+    stack: [
+      { text: "PAYMENT TERMS", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
+      { ul: lines, fontSize: 9, color: "#475569", lineHeight: 1.4 },
+    ],
+    margin: [0, 14, 0, 0],
+  } as any;
+}
+
 export async function renderInstallationQuotePDF(
   quote: InstallPDFQuote,
   items: InstallPDFItem[],
@@ -574,7 +662,6 @@ export async function renderInstallationQuotePDF(
     drow("Site", quote.site_name),
     drow("Address", addrStr || null),
     quote.required_date ? drow("Required by", fmtDate(quote.required_date)) : null,
-    quote.hardware_ref ? drow("Hardware ref", quote.hardware_ref) : null,
   ].filter(Boolean);
 
   const itemRows: any[][] = items.map((i) => [
@@ -582,6 +669,8 @@ export async function renderInstallationQuotePDF(
     { text: i.name },
     { text: String(i.qty), alignment: "center" },
   ]);
+
+  const paymentTerms = (quote.payment_terms ?? "").trim() || DEFAULT_PAYMENT_TERMS;
 
   const def: TDocumentDefinitions = {
     pageSize: "A4",
@@ -591,6 +680,7 @@ export async function renderInstallationQuotePDF(
       buildHeader("Installation Budget Estimate", quote.ref, today(), logoSrc ? "logo" : null),
       {
         stack: [
+          buildInstallIntro(),
           {
             stack: [
               { text: "CUSTOMER & SITE", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
@@ -600,7 +690,20 @@ export async function renderInstallationQuotePDF(
           } as any,
           buildDivider(),
           ...(items.length > 0 ? [
-            { text: "HARDWARE ORDERED", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] } as any,
+            {
+              stack: [
+                { text: "HARDWARE BEING INSTALLED", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 3] },
+                {
+                  text: quote.hardware_ref
+                    ? `Supplied under hardware reference ${quote.hardware_ref} — not included in this installation quotation.`
+                    : "Items listed below are not included in this installation quotation.",
+                  fontSize: 8,
+                  color: MUTED,
+                  italics: true,
+                  margin: [0, 0, 0, 8],
+                },
+              ],
+            } as any,
             {
               table: {
                 widths: [72, "*", 28],
@@ -628,9 +731,8 @@ export async function renderInstallationQuotePDF(
             } as any,
             buildDivider(),
           ] : []),
-          ...(quote.containment_notes ? [
-            buildNoticeBox(quote.containment_notes, "#f0fdf4", "#166534", "CONTAINMENT"),
-          ] : []),
+          buildScopeOfWorks(),
+          buildDivider(),
           {
             table: {
               widths: ["*"],
@@ -650,12 +752,10 @@ export async function renderInstallationQuotePDF(
               paddingBottom: () => 20,
             },
           } as any,
+          ...(quote.containment_notes ? [buildNoticeBox(quote.containment_notes, "#f0fdf4", "#166534", "CONTAINMENT")] : []),
           ...(quote.ajs_notes ? [buildNoticeBox(quote.ajs_notes, FAINT, "#1e293b", "NOTES FROM AJS REDZONE")] : []),
-          buildNoticeBox(
-            "This is a budget estimate only, based on the information provided. A detailed quotation will follow a site survey. Final price may vary based on site conditions, access requirements, and confirmed scope of work.",
-            "#eff6ff",
-            "#1e40af",
-          ),
+          buildExclusions(),
+          buildPaymentTerms(paymentTerms),
           {
             text: "All prices ex-VAT. Subject to survey and final agreement.\nAJS Control and Automation Ltd  ·  rz@ajsspalding.co.uk  ·  01406 424954",
             color: "#94a3b8",

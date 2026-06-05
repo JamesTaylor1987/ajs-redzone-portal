@@ -262,6 +262,18 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
                         className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40 resize-none"
                       />
                     </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
+                        Payment terms
+                      </label>
+                      <textarea
+                        name="payment_terms"
+                        rows={4}
+                        defaultValue={iq.payment_terms ?? "50% upon order placement\n25% upon receipt of hardware\n15% upon completion of installation\n10% upon confirmation that Redzone counts are good"}
+                        className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40 resize-none font-mono"
+                      />
+                      <p className="text-xs text-ajs-muted mt-1">One term per line — each becomes a bullet point on the PDF</p>
+                    </div>
                   </div>
                   <button
                     type="submit"
