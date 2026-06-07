@@ -86,7 +86,7 @@ export async function createDataverseOpportunity(
       cr49c_dealvalue: totalGbp,
       cr49c_docstatus: "Quoted",
       cr49c_probability: 20,
-      cr49c_projecttype: "Red Zone Hardware",
+      cr49c_projecttype: 774710007,
       cr49c_account: "Red Zone Sundry",
       cr49c_opportunitycontact: quote.contact_name ?? "",
       cr49c_siteaddress: siteAddress,
