@@ -21,7 +21,7 @@ export async function GET() {
 
   // Step 1: get token
   const tokenRes = await fetch(
-    `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token`,
+    `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token`, // TENANT_ID should be ajsspalding.co.uk
     {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },

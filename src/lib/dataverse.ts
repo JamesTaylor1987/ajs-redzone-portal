@@ -1,17 +1,12 @@
-const TENANT_ID = process.env.DATAVERSE_TENANT_ID;
+const TENANT = process.env.DATAVERSE_TENANT_ID;
 const CLIENT_ID = process.env.DATAVERSE_CLIENT_ID;
 const CLIENT_SECRET = process.env.DATAVERSE_CLIENT_SECRET;
 const INSTANCE_URL = process.env.DATAVERSE_INSTANCE_URL?.replace(/\/$/, "");
 const NOAH_OWNER_GUID = process.env.DATAVERSE_NOAH_OWNER_GUID;
 
-let cachedToken: string | null = null;
-let tokenExpiresAt = 0;
-
 async function getAccessToken(): Promise<string> {
-  if (cachedToken && Date.now() < tokenExpiresAt - 60_000) return cachedToken;
-
   const res = await fetch(
-    `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token`,
+    `https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/token`,
     {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -26,14 +21,12 @@ async function getAccessToken(): Promise<string> {
 
   if (!res.ok) throw new Error(`Dataverse auth failed: ${res.status}`);
 
-  const data = await res.json() as { access_token: string; expires_in: number };
-  cachedToken = data.access_token;
-  tokenExpiresAt = Date.now() + data.expires_in * 1000;
-  return cachedToken;
+  const data = await res.json() as { access_token: string };
+  return data.access_token;
 }
 
 function isConfigured(): boolean {
-  return !!(TENANT_ID && CLIENT_ID && CLIENT_SECRET && INSTANCE_URL);
+  return !!(TENANT && CLIENT_ID && CLIENT_SECRET && INSTANCE_URL);
 }
 
 export interface QuoteForDataverse {
@@ -66,7 +59,6 @@ const STATUS_MAP: Record<string, string> = {
 export async function createDataverseOpportunity(
   quote: QuoteForDataverse,
 ): Promise<string | null> {
-  console.log("[dataverse] env:", { tenant: !!TENANT_ID, client: !!CLIENT_ID, secret: !!CLIENT_SECRET, url: !!INSTANCE_URL });
   if (!isConfigured()) return null;
 
   try {
