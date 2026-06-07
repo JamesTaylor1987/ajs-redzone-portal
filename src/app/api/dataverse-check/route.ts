@@ -41,7 +41,20 @@ export async function GET() {
 
   const token = tokenBody.access_token as string;
 
-  // Step 2: try creating a test opportunity
+  // Step 2: WhoAmI — confirms app can make any Dataverse call
+  const whoRes = await fetch(`${INSTANCE_URL}/api/data/v9.2/WhoAmI`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "OData-MaxVersion": "4.0",
+      "OData-Version": "4.0",
+    },
+  });
+  const whoBody = await whoRes.json();
+  if (!whoRes.ok) {
+    return NextResponse.json({ envCheck, tokenTest: "success", whoAmI: "failed", status: whoRes.status, error: whoBody });
+  }
+
+  // Step 3: try creating a test opportunity
   const oppUrl = `${INSTANCE_URL}/api/data/v9.2/opportunities`;
   const oppRes = await fetch(oppUrl, {
     method: "POST",
@@ -66,12 +79,12 @@ export async function GET() {
 
   if (!oppRes.ok) {
     const errText = await oppRes.text();
-    return NextResponse.json({ envCheck, tokenTest: "success", opportunityTest: "failed", status: oppRes.status, urlUsed: oppUrl, error: errText });
+    return NextResponse.json({ envCheck, tokenTest: "success", whoAmI: whoBody, opportunityTest: "failed", status: oppRes.status, urlUsed: oppUrl, error: errText });
   }
 
   const entityId = oppRes.headers.get("OData-EntityId") ?? oppRes.headers.get("odata-entityid") ?? "";
   const match = entityId.match(/\(([^)]+)\)/);
   const guid = match?.[1] ?? null;
 
-  return NextResponse.json({ envCheck, tokenTest: "success", opportunityTest: "success", guid });
+  return NextResponse.json({ envCheck, tokenTest: "success", whoAmI: whoBody, opportunityTest: "success", guid });
 }
