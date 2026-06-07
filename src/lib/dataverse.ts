@@ -79,16 +79,20 @@ export async function createDataverseOpportunity(
       .join(", ");
 
     const body: Record<string, unknown> = {
+      cr49c_opportunityname: `${quote.contact_company ?? quote.contact_name ?? "Unknown"} — ${quote.ref}`,
       cr49c_leaddescription:
         quote.project_description ??
         `${quote.contact_company ?? quote.contact_name ?? "Unknown"} — Red Zone Hardware`,
+      cr49c_opportunitysummary: [
+        quote.contact_name ? `Contact: ${quote.contact_name}` : null,
+        quote.contact_company ? `Company: ${quote.contact_company}` : null,
+        siteAddress ? `Site: ${siteAddress}` : null,
+      ].filter(Boolean).join("\n"),
       cr49c_quoteref: quote.ref,
       cr49c_dealvalue: totalGbp,
       cr49c_docstatus: "Quoted",
       cr49c_probability: 20,
       cr49c_projecttype: 774710007,
-      cr49c_opportunitycontact: quote.contact_name ?? "",
-      cr49c_siteaddress: siteAddress,
       cr49c_closedate: (quote.submitted_at ?? new Date().toISOString()).split("T")[0],
       new_estimatedprojectdurationmonths: 1,
     };

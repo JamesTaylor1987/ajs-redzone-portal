@@ -86,13 +86,14 @@ export async function GET() {
       "OData-Version": "4.0",
     },
     body: JSON.stringify({
+      cr49c_opportunityname: "TEST — diagnostics check, safe to delete",
       cr49c_leaddescription: "TEST — diagnostics check, safe to delete",
       cr49c_quoteref: "TEST-001",
       cr49c_dealvalue: 1.00,
       cr49c_docstatus: "Quoted",
       cr49c_probability: 20,
       cr49c_projecttype: 774710007,
-      cr49c_opportunitycontact: "Test Contact",
+      cr49c_closedate: new Date().toISOString().split("T")[0],
       new_estimatedprojectdurationmonths: 1,
     }),
   });
