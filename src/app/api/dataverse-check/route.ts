@@ -42,7 +42,8 @@ export async function GET() {
   const token = tokenBody.access_token as string;
 
   // Step 2: try creating a test opportunity
-  const oppRes = await fetch(`${INSTANCE_URL}/api/data/v9.2/opportunities`, {
+  const oppUrl = `${INSTANCE_URL}/api/data/v9.2/opportunities`;
+  const oppRes = await fetch(oppUrl, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -65,7 +66,7 @@ export async function GET() {
 
   if (!oppRes.ok) {
     const errText = await oppRes.text();
-    return NextResponse.json({ envCheck, tokenTest: "success", opportunityTest: "failed", status: oppRes.status, error: errText });
+    return NextResponse.json({ envCheck, tokenTest: "success", opportunityTest: "failed", status: oppRes.status, urlUsed: oppUrl, error: errText });
   }
 
   const entityId = oppRes.headers.get("OData-EntityId") ?? oppRes.headers.get("odata-entityid") ?? "";
