@@ -127,7 +127,7 @@ export default async function RZContactDetailPage({ params }: Props) {
                 name="occurred_at"
                 type="date"
                 defaultValue={new Date().toISOString().split("T")[0]}
-                className="w-full max-w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+                className="w-full appearance-none border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
               />
             </div>
           </div>
@@ -137,7 +137,7 @@ export default async function RZContactDetailPage({ params }: Props) {
               name="follow_up_date"
               type="date"
               defaultValue={contact.follow_up_date ?? ""}
-              className="w-full max-w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+              className="w-full appearance-none border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
             />
           </div>
           <div>
