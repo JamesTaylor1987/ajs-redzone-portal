@@ -40,18 +40,20 @@ export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: H
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="hidden sm:flex bg-white/10 rounded-lg overflow-hidden border border-white/20 text-xs font-semibold">
+          <div className="flex bg-white/10 rounded-lg overflow-hidden border border-white/20 text-xs font-semibold">
             <button
               onClick={() => onCurrencyChange("GBP")}
-              className={`px-3 py-1.5 ${currency === "GBP" ? "bg-white text-ajs-dark" : "text-white/80 hover:bg-white/10"}`}
+              className={`px-2.5 py-1.5 sm:px-3 ${currency === "GBP" ? "bg-white text-ajs-dark" : "text-white/80 hover:bg-white/10"}`}
             >
-              £ GBP
+              <span className="sm:hidden">£</span>
+              <span className="hidden sm:inline">£ GBP</span>
             </button>
             <button
               onClick={() => onCurrencyChange("EUR")}
-              className={`px-3 py-1.5 ${currency === "EUR" ? "bg-white text-ajs-dark" : "text-white/80 hover:bg-white/10"}`}
+              className={`px-2.5 py-1.5 sm:px-3 ${currency === "EUR" ? "bg-white text-ajs-dark" : "text-white/80 hover:bg-white/10"}`}
             >
-              € EUR
+              <span className="sm:hidden">€</span>
+              <span className="hidden sm:inline">€ EUR</span>
             </button>
           </div>
 
