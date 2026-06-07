@@ -54,7 +54,24 @@ export async function GET() {
     return NextResponse.json({ envCheck, tokenTest: "success", whoAmI: "failed", status: whoRes.status, error: whoBody });
   }
 
-  // Step 3: try creating a test opportunity
+  // Step 3: check if standard opportunity entity exists + find cr49c_ custom entities
+  const entityRes = await fetch(
+    `${INSTANCE_URL}/api/data/v9.2/EntityDefinitions?$select=LogicalName,EntitySetName&$filter=contains(LogicalName,'opportunit') or startswith(LogicalName,'cr49c_')`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "OData-MaxVersion": "4.0",
+        "OData-Version": "4.0",
+      },
+    },
+  );
+  const entityBody = await entityRes.json();
+  const entities = (entityBody.value ?? []).map((e: { LogicalName: string; EntitySetName: string }) => ({
+    logicalName: e.LogicalName,
+    entitySetName: e.EntitySetName,
+  }));
+
+  // Step 4: try creating a test opportunity
   const oppUrl = `${INSTANCE_URL}/api/data/v9.2/opportunities`;
   const oppRes = await fetch(oppUrl, {
     method: "POST",
@@ -79,12 +96,12 @@ export async function GET() {
 
   if (!oppRes.ok) {
     const errText = await oppRes.text();
-    return NextResponse.json({ envCheck, tokenTest: "success", whoAmI: whoBody, opportunityTest: "failed", status: oppRes.status, urlUsed: oppUrl, error: errText });
+    return NextResponse.json({ envCheck, tokenTest: "success", whoAmI: whoBody, entities, opportunityTest: "failed", status: oppRes.status, urlUsed: oppUrl, error: errText });
   }
 
   const entityId = oppRes.headers.get("OData-EntityId") ?? oppRes.headers.get("odata-entityid") ?? "";
   const match = entityId.match(/\(([^)]+)\)/);
   const guid = match?.[1] ?? null;
 
-  return NextResponse.json({ envCheck, tokenTest: "success", whoAmI: whoBody, opportunityTest: "success", guid });
+  return NextResponse.json({ envCheck, tokenTest: "success", whoAmI: whoBody, entities, opportunityTest: "success", guid });
 }
