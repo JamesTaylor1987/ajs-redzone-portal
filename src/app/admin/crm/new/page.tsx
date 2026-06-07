@@ -1,147 +1,80 @@
 import Link from "next/link";
-import { createProspectAction } from "../actions";
+import { getServiceClient } from "@/lib/supabase-server";
+import { createLeadAction } from "../actions";
 
-const INDUSTRIES = [
-  "Food & Beverage",
-  "Pharmaceuticals",
-  "Chemical",
-  "Manufacturing",
-  "Logistics & Warehousing",
-  "Healthcare",
-  "Energy & Utilities",
-  "Automotive",
-  "Electronics",
-  "Other",
-];
+export const dynamic = "force-dynamic";
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="bg-white rounded-xl border border-ajs-light overflow-hidden">
-      <div className="px-4 py-3 bg-slate-50 border-b border-ajs-light">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">{title}</h2>
-      </div>
-      <div className="p-4 space-y-3">{children}</div>
-    </div>
-  );
-}
+export default async function NewLeadPage() {
+  const supabase = getServiceClient();
+  const { data: contacts } = await supabase
+    .from("crm_rz_contacts")
+    .select("id, name, region")
+    .order("name", { ascending: true });
 
-export default function NewProspectPage() {
   return (
     <div className="max-w-lg mx-auto space-y-5">
       <div>
         <Link href="/admin/crm" className="text-ajs-muted hover:text-ajs-primary text-sm">
-          ← Prospects
+          ← Leads
         </Link>
         <h1 className="text-xl font-extrabold text-ajs-dark mt-1">Add Lead</h1>
+        <p className="text-xs text-ajs-muted mt-0.5">A tip that came through a Redzone rep.</p>
       </div>
 
-      <form action={createProspectAction} className="space-y-4">
-        <SectionCard title="Company">
-          <div>
-            <label className="block text-xs font-semibold text-ajs-dark mb-1">
-              Company name <span className="text-rose-500">*</span>
-            </label>
-            <input
-              name="company_name"
-              required
-              autoFocus
-              className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-              placeholder="e.g. Acme Foods Ltd"
-            />
+      <form action={createLeadAction} className="space-y-4">
+        <div className="bg-white rounded-xl border border-ajs-light overflow-hidden">
+          <div className="px-4 py-3 bg-slate-50 border-b border-ajs-light">
+            <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">The opportunity</h2>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="p-4 space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Industry</label>
+              <label className="block text-xs font-semibold text-ajs-dark mb-1">
+                Company name <span className="text-rose-500">*</span>
+              </label>
+              <input
+                name="company_name"
+                required
+                autoFocus
+                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+                placeholder="e.g. Valeo Foods"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-ajs-dark mb-1">Heard from (RZ rep)</label>
               <select
-                name="industry"
+                name="rz_contact_id"
                 className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary bg-white"
               >
-                <option value="">Select...</option>
-                {INDUSTRIES.map((i) => <option key={i} value={i}>{i}</option>)}
+                <option value="">Select rep...</option>
+                {(contacts ?? []).map((c: { id: string; name: string; region: string | null }) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}{c.region ? ` — ${c.region}` : ""}
+                  </option>
+                ))}
               </select>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Stage</label>
-              <select
-                name="stage"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary bg-white"
-              >
-                <option value="prospect">Prospect</option>
-                <option value="conversation">Conversation</option>
-                <option value="proposal">Proposal</option>
-              </select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Website</label>
-              <input
-                name="website"
-                type="url"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-                placeholder="https://..."
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Owner</label>
-              <input
-                name="owner_name"
-                defaultValue="Noah"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-              />
-            </div>
-          </div>
-        </SectionCard>
 
-        <SectionCard title="Key contact (optional)">
-          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Name</label>
+              <label className="block text-xs font-semibold text-ajs-dark mb-1">Follow-up date</label>
               <input
-                name="contact_name"
+                name="follow_up_date"
+                type="date"
                 className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-                placeholder="e.g. Jane Smith"
               />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Role</label>
-              <input
-                name="contact_role"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-                placeholder="e.g. Ops Manager"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Phone</label>
-              <input
-                name="contact_phone"
-                type="tel"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-                placeholder="07..."
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Email</label>
-              <input
-                name="contact_email"
-                type="email"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-                placeholder="jane@..."
-              />
-            </div>
-          </div>
-        </SectionCard>
 
-        <SectionCard title="Notes (optional)">
-          <textarea
-            name="notes"
-            rows={3}
-            className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary resize-none"
-            placeholder="How did we find them? What's the opportunity?"
-          />
-        </SectionCard>
+            <div>
+              <label className="block text-xs font-semibold text-ajs-dark mb-1">Notes</label>
+              <textarea
+                name="notes"
+                rows={3}
+                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary resize-none"
+                placeholder="What did they say? What's the opportunity?"
+              />
+            </div>
+          </div>
+        </div>
 
         <button
           type="submit"

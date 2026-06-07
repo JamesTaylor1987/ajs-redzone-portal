@@ -3,148 +3,148 @@ import { getServiceClient } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 
-const STAGE_LABEL: Record<string, string> = {
-  prospect:     "Prospect",
-  conversation: "Conversation",
-  proposal:     "Proposal",
-  lost:         "Lost",
+const STATUS_LABEL: Record<string, string> = {
+  new:           "New",
+  following_up:  "Following up",
+  quoted:        "Quoted",
+  dead:          "Dead",
 };
 
-const STAGE_COLOUR: Record<string, string> = {
-  prospect:     "bg-slate-100 text-slate-600",
-  conversation: "bg-blue-100 text-blue-700",
-  proposal:     "bg-amber-100 text-amber-700",
-  lost:         "bg-rose-100 text-rose-600",
+const STATUS_COLOUR: Record<string, string> = {
+  new:          "bg-amber-100 text-amber-700",
+  following_up: "bg-blue-100 text-blue-700",
+  quoted:       "bg-green-100 text-green-700",
+  dead:         "bg-slate-100 text-slate-400",
 };
 
-const STAGES = ["prospect", "conversation", "proposal", "lost"] as const;
+const STATUSES = ["new", "following_up", "quoted", "dead"] as const;
 
 interface PageProps {
-  searchParams: { stage?: string };
+  searchParams: { status?: string };
 }
 
-export default async function CRMPage({ searchParams }: PageProps) {
+export default async function CRMLeadsPage({ searchParams }: PageProps) {
   const supabase = getServiceClient();
-  const activeStage = searchParams.stage ?? null;
+  const activeStatus = searchParams.status ?? null;
 
-  let prospectsData;
-  if (activeStage) {
+  let leadsData;
+  if (activeStatus) {
     const { data } = await supabase
-      .from("crm_prospects")
-      .select("id, ref, company_name, industry, stage, owner_name, next_action, next_action_date, updated_at")
-      .eq("stage", activeStage)
-      .order("updated_at", { ascending: false });
-    prospectsData = data;
+      .from("crm_leads")
+      .select("id, company_name, status, follow_up_date, notes, hardware_quote_ref, rz_contact_id, created_at")
+      .eq("status", activeStatus)
+      .order("follow_up_date", { ascending: true, nullsFirst: false });
+    leadsData = data;
   } else {
     const { data } = await supabase
-      .from("crm_prospects")
-      .select("id, ref, company_name, industry, stage, owner_name, next_action, next_action_date, updated_at")
-      .neq("stage", "lost")
-      .order("updated_at", { ascending: false });
-    prospectsData = data;
+      .from("crm_leads")
+      .select("id, company_name, status, follow_up_date, notes, hardware_quote_ref, rz_contact_id, created_at")
+      .in("status", ["new", "following_up"])
+      .order("follow_up_date", { ascending: true, nullsFirst: false });
+    leadsData = data;
   }
 
-  const prospects = prospectsData ?? [];
+  const leads = leadsData ?? [];
 
-  const { data: actRows } = await supabase
-    .from("crm_activities")
-    .select("prospect_id");
+  const { data: contacts } = await supabase
+    .from("crm_rz_contacts")
+    .select("id, name, region");
 
-  const actCounts = (actRows ?? []).reduce((acc: Record<string, number>, r: { prospect_id: string }) => {
-    acc[r.prospect_id] = (acc[r.prospect_id] || 0) + 1;
-    return acc;
-  }, {});
+  const contactMap = Object.fromEntries(
+    (contacts ?? []).map((c: { id: string; name: string; region: string | null }) => [c.id, c])
+  );
 
-  const { data: contactRows } = await supabase
-    .from("crm_contacts")
-    .select("prospect_id, name")
-    .order("created_at", { ascending: true });
-
-  const firstContact = (contactRows ?? []).reduce((acc: Record<string, string>, r: { prospect_id: string; name: string }) => {
-    if (!acc[r.prospect_id]) acc[r.prospect_id] = r.name;
-    return acc;
-  }, {});
+  const today = new Date().toISOString().split("T")[0];
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-extrabold text-ajs-dark">Prospects</h1>
-        <Link
-          href="/admin/crm/new"
-          className="bg-ajs-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity shrink-0"
-        >
-          + Add Lead
-        </Link>
+        <div>
+          <h1 className="text-xl font-extrabold text-ajs-dark">Leads</h1>
+          <p className="text-xs text-ajs-muted mt-0.5">Tips from Redzone reps &mdash; ring back, qualify, quote.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/crm/contacts"
+            className="text-xs font-semibold text-ajs-muted border border-ajs-light bg-white px-3 py-2 rounded-lg hover:border-ajs-primary/40 hover:text-ajs-dark transition-colors"
+          >
+            RZ People
+          </Link>
+          <Link
+            href="/admin/crm/new"
+            className="bg-ajs-primary text-white px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity shrink-0"
+          >
+            + Add Lead
+          </Link>
+        </div>
       </div>
 
-      {/* Stage filter */}
+      {/* Status filter */}
       <div className="flex gap-2 flex-wrap">
         <Link
           href="/admin/crm"
           className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
-            !activeStage
+            !activeStatus
               ? "bg-ajs-primary text-white border-ajs-primary"
               : "bg-white border-ajs-light text-ajs-muted hover:border-ajs-primary/40 hover:text-ajs-dark"
           }`}
         >
           Active
         </Link>
-        {STAGES.map((s) => (
+        {STATUSES.map((s) => (
           <Link
             key={s}
-            href={`/admin/crm?stage=${s}`}
+            href={`/admin/crm?status=${s}`}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
-              activeStage === s
+              activeStatus === s
                 ? "bg-ajs-primary text-white border-ajs-primary"
                 : "bg-white border-ajs-light text-ajs-muted hover:border-ajs-primary/40 hover:text-ajs-dark"
             }`}
           >
-            {STAGE_LABEL[s]}
+            {STATUS_LABEL[s]}
           </Link>
         ))}
       </div>
 
-      {!prospects.length ? (
+      {!leads.length ? (
         <div className="bg-white rounded-xl border border-ajs-light p-10 text-center text-ajs-muted text-sm">
-          No prospects here yet.{" "}
+          No leads yet.{" "}
           <Link href="/admin/crm/new" className="text-ajs-primary font-semibold hover:underline">
             Add the first one
           </Link>
         </div>
       ) : (
         <>
-          {/* Mobile: card list */}
+          {/* Mobile: cards */}
           <div className="sm:hidden space-y-3">
-            {prospects.map((p) => (
-              <Link
-                key={p.id}
-                href={`/admin/crm/${p.id}`}
-                className="block bg-white rounded-xl border border-ajs-light p-4 hover:border-ajs-primary/40 transition-colors"
-              >
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <span className="font-bold text-ajs-dark">{p.company_name}</span>
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${STAGE_COLOUR[p.stage] ?? "bg-slate-100 text-slate-600"}`}>
-                    {STAGE_LABEL[p.stage] ?? p.stage}
-                  </span>
-                </div>
-                {firstContact[p.id] && <div className="text-sm text-ajs-muted">{firstContact[p.id]}</div>}
-                {p.industry && <div className="text-xs text-ajs-muted">{p.industry}</div>}
-                {p.next_action && (
-                  <div className="text-xs text-ajs-primary mt-1.5 font-medium">
-                    Next: {p.next_action}
-                    {p.next_action_date && (
-                      <span className="text-ajs-muted font-normal ml-1">
-                        ({new Date(p.next_action_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })})
-                      </span>
-                    )}
+            {leads.map((l) => {
+              const contact = l.rz_contact_id ? contactMap[l.rz_contact_id] : null;
+              const overdue = l.follow_up_date && l.follow_up_date < today;
+              return (
+                <Link
+                  key={l.id}
+                  href={`/admin/crm/${l.id}`}
+                  className="block bg-white rounded-xl border border-ajs-light p-4 hover:border-ajs-primary/40 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <span className="font-bold text-ajs-dark">{l.company_name}</span>
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${STATUS_COLOUR[l.status] ?? "bg-slate-100 text-slate-600"}`}>
+                      {STATUS_LABEL[l.status] ?? l.status}
+                    </span>
                   </div>
-                )}
-                <div className="flex gap-3 text-xs text-ajs-muted mt-2">
-                  <span>{actCounts[p.id] || 0} {actCounts[p.id] === 1 ? "activity" : "activities"}</span>
-                  {p.owner_name && <span>{p.owner_name}</span>}
-                </div>
-              </Link>
-            ))}
+                  {contact && <div className="text-xs text-ajs-muted">via {contact.name}{contact.region ? ` · ${contact.region}` : ""}</div>}
+                  {l.follow_up_date && (
+                    <div className={`text-xs font-medium mt-1.5 ${overdue ? "text-rose-600" : "text-ajs-primary"}`}>
+                      Follow up: {new Date(l.follow_up_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      {overdue && " — overdue"}
+                    </div>
+                  )}
+                  {l.hardware_quote_ref && (
+                    <div className="text-xs text-green-700 font-mono mt-1">HW: {l.hardware_quote_ref}</div>
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Desktop: table */}
@@ -153,41 +153,47 @@ export default async function CRMPage({ searchParams }: PageProps) {
               <thead className="bg-slate-50 border-b border-ajs-light">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Company</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Stage</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Key contact</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Next action</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Logs</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Owner</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Via (RZ rep)</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Follow-up</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">HW quote</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-ajs-light">
-                {prospects.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="font-semibold text-ajs-dark">{p.company_name}</div>
-                      {p.industry && <div className="text-xs text-ajs-muted">{p.industry}</div>}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STAGE_COLOUR[p.stage] ?? "bg-slate-100 text-slate-600"}`}>
-                        {STAGE_LABEL[p.stage] ?? p.stage}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-ajs-muted">{firstContact[p.id] ?? "—"}</td>
-                    <td className="px-4 py-3 text-xs max-w-48">
-                      {p.next_action
-                        ? <span className="text-ajs-primary">{p.next_action}</span>
-                        : <span className="text-ajs-muted">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-ajs-muted">{actCounts[p.id] || 0}</td>
-                    <td className="px-4 py-3 text-xs text-ajs-muted">{p.owner_name ?? "—"}</td>
-                    <td className="px-4 py-3 text-right">
-                      <Link href={`/admin/crm/${p.id}`} className="text-xs font-semibold text-ajs-primary hover:underline">
-                        View →
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {leads.map((l) => {
+                  const contact = l.rz_contact_id ? contactMap[l.rz_contact_id] : null;
+                  const overdue = l.follow_up_date && l.follow_up_date < today;
+                  return (
+                    <tr key={l.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-3 font-semibold text-ajs-dark">{l.company_name}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_COLOUR[l.status] ?? "bg-slate-100 text-slate-600"}`}>
+                          {STATUS_LABEL[l.status] ?? l.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-ajs-muted">
+                        {contact ? (
+                          <Link href={`/admin/crm/contacts/${contact.id}`} className="hover:text-ajs-primary hover:underline">
+                            {contact.name}
+                          </Link>
+                        ) : "—"}
+                      </td>
+                      <td className={`px-4 py-3 text-xs font-medium ${overdue ? "text-rose-600" : "text-ajs-muted"}`}>
+                        {l.follow_up_date
+                          ? new Date(l.follow_up_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+                          : "—"}
+                        {overdue && <span className="ml-1 text-rose-500">!</span>}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-green-700">{l.hardware_quote_ref ?? "—"}</td>
+                      <td className="px-4 py-3 text-right">
+                        <Link href={`/admin/crm/${l.id}`} className="text-xs font-semibold text-ajs-primary hover:underline">
+                          View →
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
