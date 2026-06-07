@@ -215,8 +215,10 @@ export async function POST(request: Request) {
     ),
   ]);
 
+  console.log("[quotes] dvGuid:", dvGuid);
   if (dvGuid) {
-    await supabase.from("quotes").update({ dataverse_opportunity_id: dvGuid }).eq("id", quoteRow.id);
+    const { error: dvUpdateError } = await supabase.from("quotes").update({ dataverse_opportunity_id: dvGuid }).eq("id", quoteRow.id);
+    console.log("[quotes] dataverse_opportunity_id save result:", dvUpdateError ?? "ok");
   }
 
   const response: CreateQuoteResponse = { ref, id: quoteRow.id };
