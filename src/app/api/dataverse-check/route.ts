@@ -64,7 +64,21 @@ export async function GET() {
     .map((e: { LogicalName: string; EntitySetName: string }) => ({ logicalName: e.LogicalName, entitySetName: e.EntitySetName }))
     .filter((e: { logicalName: string }) => e.logicalName.startsWith("cr49c_"));
 
-  // Step 4: try creating a test opportunity
+  // Step 4: fetch option set values for cr49c_docstatus and cr49c_projecttype
+  const picklistRes = await fetch(
+    `${INSTANCE_URL}/api/data/v9.2/EntityDefinitions(LogicalName='cr49c_opportunities')/Attributes/Microsoft.Dynamics.CRM.PicklistAttributeMetadata?$select=LogicalName&$expand=OptionSet($select=Options)&$filter=LogicalName eq 'cr49c_docstatus' or LogicalName eq 'cr49c_projecttype'`,
+    { headers: { Authorization: `Bearer ${token}`, "OData-MaxVersion": "4.0", "OData-Version": "4.0" } },
+  );
+  const picklistBody = await picklistRes.json();
+  const optionSets: Record<string, { value: number; label: string }[]> = {};
+  for (const attr of (picklistBody.value ?? [])) {
+    optionSets[attr.LogicalName] = (attr.OptionSet?.Options ?? []).map((o: { Value: number; Label: { UserLocalizedLabel: { Label: string } } }) => ({
+      value: o.Value,
+      label: o.Label?.UserLocalizedLabel?.Label ?? "",
+    }));
+  }
+
+  // Step 5: try creating a test opportunity
   const oppUrl = `${INSTANCE_URL}/api/data/v9.2/cr49c_opportunitieses`;
   const oppRes = await fetch(oppUrl, {
     method: "POST",
@@ -89,12 +103,12 @@ export async function GET() {
 
   if (!oppRes.ok) {
     const errText = await oppRes.text();
-    return NextResponse.json({ envCheck, tokenTest: "success", whoAmI: whoBody, entities, opportunityTest: "failed", status: oppRes.status, urlUsed: oppUrl, error: errText });
+    return NextResponse.json({ envCheck, tokenTest: "success", whoAmI: whoBody, optionSets, opportunityTest: "failed", status: oppRes.status, urlUsed: oppUrl, error: errText });
   }
 
   const entityId = oppRes.headers.get("OData-EntityId") ?? oppRes.headers.get("odata-entityid") ?? "";
   const match = entityId.match(/\(([^)]+)\)/);
   const guid = match?.[1] ?? null;
 
-  return NextResponse.json({ envCheck, tokenTest: "success", whoAmI: whoBody, entities, opportunityTest: "success", guid });
+  return NextResponse.json({ envCheck, tokenTest: "success", whoAmI: whoBody, optionSets, opportunityTest: "success", guid });
 }
