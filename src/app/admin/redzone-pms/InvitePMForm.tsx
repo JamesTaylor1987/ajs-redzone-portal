@@ -63,7 +63,7 @@ export function InvitePMForm() {
             className="border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
           >
             <option value="pm">Project Manager</option>
-            <option value="admin">Read-only Admin</option>
+            <option value="admin">Manager</option>
           </select>
         </div>
         <SubmitButton />
@@ -71,7 +71,7 @@ export function InvitePMForm() {
 
       <div className="mt-4 text-xs text-ajs-muted space-y-0.5">
         <p><strong>Project Manager</strong> — sees only quotes assigned to them</p>
-        <p><strong>Read-only Admin</strong> — sees all quotes in the Redzone portal</p>
+        <p><strong>Manager</strong> — sees all quotes that have a Redzone PM assigned</p>
       </div>
     </div>
   );
