@@ -66,7 +66,7 @@ const STATUS_MAP: Record<string, string> = {
 export async function createDataverseOpportunity(
   quote: QuoteForDataverse,
 ): Promise<string | null> {
-  console.log("[dataverse] createOpportunity called, configured:", isConfigured());
+  console.log("[dataverse] env:", { tenant: !!TENANT_ID, client: !!CLIENT_ID, secret: !!CLIENT_SECRET, url: !!INSTANCE_URL });
   if (!isConfigured()) return null;
 
   try {
