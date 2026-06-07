@@ -54,20 +54,15 @@ export async function GET() {
     return NextResponse.json({ envCheck, tokenTest: "success", whoAmI: "failed", status: whoRes.status, error: whoBody });
   }
 
-  // Step 3: check if standard opportunity entity exists
-  const [oppEntityRes, cr49cEntityRes] = await Promise.all([
-    fetch(`${INSTANCE_URL}/api/data/v9.2/EntityDefinitions?$select=LogicalName,EntitySetName&$filter=LogicalName eq 'opportunity'`, {
-      headers: { Authorization: `Bearer ${token}`, "OData-MaxVersion": "4.0", "OData-Version": "4.0" },
-    }),
-    fetch(`${INSTANCE_URL}/api/data/v9.2/EntityDefinitions?$select=LogicalName,EntitySetName&$filter=LogicalName eq 'cr49c_lead'`, {
-      headers: { Authorization: `Bearer ${token}`, "OData-MaxVersion": "4.0", "OData-Version": "4.0" },
-    }),
-  ]);
-  const [oppEntityBody, cr49cEntityBody] = await Promise.all([oppEntityRes.json(), cr49cEntityRes.json()]);
-  const entities = {
-    opportunity: (oppEntityBody.value ?? []).map((e: { LogicalName: string; EntitySetName: string }) => ({ logicalName: e.LogicalName, entitySetName: e.EntitySetName })),
-    cr49c_lead: (cr49cEntityBody.value ?? []).map((e: { LogicalName: string; EntitySetName: string }) => ({ logicalName: e.LogicalName, entitySetName: e.EntitySetName })),
-  };
+  // Step 3: find all custom (cr49c_) entities
+  const entityRes = await fetch(
+    `${INSTANCE_URL}/api/data/v9.2/EntityDefinitions?$select=LogicalName,EntitySetName,DisplayName&$filter=IsCustomEntity eq true`,
+    { headers: { Authorization: `Bearer ${token}`, "OData-MaxVersion": "4.0", "OData-Version": "4.0" } },
+  );
+  const entityBody = await entityRes.json();
+  const entities = (entityBody.value ?? [])
+    .map((e: { LogicalName: string; EntitySetName: string }) => ({ logicalName: e.LogicalName, entitySetName: e.EntitySetName }))
+    .filter((e: { logicalName: string }) => e.logicalName.startsWith("cr49c_"));
 
   // Step 4: try creating a test opportunity
   const oppUrl = `${INSTANCE_URL}/api/data/v9.2/opportunities`;
