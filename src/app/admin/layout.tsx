@@ -15,7 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen bg-slate-100">
       <AdminNav email={session.user.email ?? ""} isAdmin={isAdmin} />
-      <main className="max-w-6xl mx-auto p-4 sm:p-6">{children}</main>
+      <main className="max-w-6xl mx-auto p-4 sm:p-6 overflow-x-hidden">{children}</main>
     </div>
   );
 }
