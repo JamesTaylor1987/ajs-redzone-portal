@@ -97,7 +97,7 @@ export async function createDataverseOpportunity(
     if (quote.required_date) body.new_estimatedstartdate = quote.required_date;
     if (NOAH_OWNER_GUID) body["ownerid@odata.bind"] = `/systemusers(${NOAH_OWNER_GUID})`;
 
-    const res = await fetch(`${INSTANCE_URL}/api/data/v9.2/opportunities`, {
+    const res = await fetch(`${INSTANCE_URL}/api/data/v9.2/cr49c_opportunitieses`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -136,7 +136,7 @@ export async function updateDataverseOpportunity(
     const token = await getAccessToken();
 
     const res = await fetch(
-      `${INSTANCE_URL}/api/data/v9.2/opportunities(${dataverseId})`,
+      `${INSTANCE_URL}/api/data/v9.2/cr49c_opportunitieses(${dataverseId})`,
       {
         method: "PATCH",
         headers: {

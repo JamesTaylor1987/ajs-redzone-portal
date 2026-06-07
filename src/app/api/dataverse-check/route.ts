@@ -65,7 +65,7 @@ export async function GET() {
     .filter((e: { logicalName: string }) => e.logicalName.startsWith("cr49c_"));
 
   // Step 4: try creating a test opportunity
-  const oppUrl = `${INSTANCE_URL}/api/data/v9.2/opportunities`;
+  const oppUrl = `${INSTANCE_URL}/api/data/v9.2/cr49c_opportunitieses`;
   const oppRes = await fetch(oppUrl, {
     method: "POST",
     headers: {
