@@ -86,22 +86,22 @@ export default async function RZContactDetailPage({ params }: Props) {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 overflow-x-hidden">
       {/* Header */}
       <div>
         <Link href="/admin/crm/contacts" className="text-ajs-muted hover:text-ajs-primary text-sm">
           ← Redzone People
         </Link>
         <h1 className="text-xl font-extrabold text-ajs-dark mt-2">{contact.name}</h1>
-        <div className="flex gap-3 mt-1 text-xs text-ajs-muted flex-wrap">
+        <div className="flex gap-x-3 gap-y-1 mt-1 text-xs text-ajs-muted flex-wrap">
           {contact.role && <span>{contact.role}</span>}
           {contact.region && <span>{contact.region}</span>}
           {contact.country && <span>{contact.country}</span>}
-          {contact.email && <a href={`mailto:${contact.email}`} className="text-ajs-primary hover:underline">{contact.email}</a>}
+          {contact.email && <a href={`mailto:${contact.email}`} className="text-ajs-primary hover:underline break-all">{contact.email}</a>}
           {contact.phone && <a href={`tel:${contact.phone}`} className="text-ajs-primary hover:underline">{contact.phone}</a>}
           {contact.linkedin && <a href={contact.linkedin} target="_blank" rel="noopener noreferrer" className="text-ajs-primary hover:underline">LinkedIn</a>}
         </div>
-        {contact.notes && <p className="text-xs text-ajs-muted mt-2 italic">{contact.notes}</p>}
+        {contact.notes && <p className="text-xs text-ajs-muted mt-2 italic break-words">{contact.notes}</p>}
       </div>
 
       {/* Log interaction — primary mobile action */}
