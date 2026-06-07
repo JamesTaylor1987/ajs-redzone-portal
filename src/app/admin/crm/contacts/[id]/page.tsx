@@ -12,8 +12,9 @@ export const dynamic = "force-dynamic";
 
 const ACTIVITY_LABEL: Record<string, string> = {
   coffee:     "Coffee / Chat",
-  meeting:    "Meeting",
+  whatsapp:   "WhatsApp",
   call:       "Call",
+  meeting:    "Meeting",
   email:      "Email",
   linkedin:   "LinkedIn",
   conference: "Conference",
@@ -129,6 +130,15 @@ export default async function RZContactDetailPage({ params }: Props) {
                 className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
               />
             </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-ajs-dark mb-1">Follow-up date <span className="text-ajs-muted font-normal">(when to touch base again)</span></label>
+            <input
+              name="follow_up_date"
+              type="date"
+              defaultValue={contact.follow_up_date ?? ""}
+              className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+            />
           </div>
           <div>
             <label className="block text-xs font-semibold text-ajs-dark mb-1">Notes <span className="text-rose-500">*</span></label>

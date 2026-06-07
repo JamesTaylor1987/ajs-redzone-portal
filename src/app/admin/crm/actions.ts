@@ -70,10 +70,14 @@ export async function logRZActivityAction(formData: FormData) {
   });
 
   await supabase.from("crm_rz_contacts")
-    .update({ updated_at: new Date().toISOString() })
+    .update({
+      follow_up_date: g("follow_up_date") || null,
+      updated_at:     new Date().toISOString(),
+    })
     .eq("id", contact_id);
 
   revalidatePath(`/admin/crm/contacts/${contact_id}`);
+  revalidatePath("/admin/crm/contacts");
 }
 
 export async function deleteRZActivityAction(formData: FormData) {
