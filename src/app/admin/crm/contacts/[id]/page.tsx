@@ -109,7 +109,7 @@ export default async function RZContactDetailPage({ params }: Props) {
         <SectionHeader>Log interaction</SectionHeader>
         <form action={logRZActivityAction} className="px-4 py-4 space-y-3">
           <input type="hidden" name="contact_id" value={contact.id} />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-ajs-dark mb-1">Type</label>
               <select
