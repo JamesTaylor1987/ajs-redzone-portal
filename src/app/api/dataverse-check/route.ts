@@ -19,29 +19,58 @@ export async function GET() {
     return NextResponse.json({ envCheck, tokenTest: "skipped — missing env vars" });
   }
 
-  try {
-    const res = await fetch(
-      `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          client_id: CLIENT_ID,
-          client_secret: CLIENT_SECRET,
-          grant_type: "client_credentials",
-          scope: `${INSTANCE_URL}/.default`,
-        }),
-      },
-    );
+  // Step 1: get token
+  const tokenRes = await fetch(
+    `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        grant_type: "client_credentials",
+        scope: `${INSTANCE_URL}/.default`,
+      }),
+    },
+  );
 
-    const body = await res.json();
-
-    if (!res.ok) {
-      return NextResponse.json({ envCheck, tokenTest: "failed", status: res.status, error: body });
-    }
-
-    return NextResponse.json({ envCheck, tokenTest: "success", hasToken: !!body.access_token });
-  } catch (err) {
-    return NextResponse.json({ envCheck, tokenTest: "exception", error: String(err) });
+  const tokenBody = await tokenRes.json();
+  if (!tokenRes.ok) {
+    return NextResponse.json({ envCheck, tokenTest: "failed", status: tokenRes.status, error: tokenBody });
   }
+
+  const token = tokenBody.access_token as string;
+
+  // Step 2: try creating a test opportunity
+  const oppRes = await fetch(`${INSTANCE_URL}/api/data/v9.2/opportunities`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "OData-MaxVersion": "4.0",
+      "OData-Version": "4.0",
+    },
+    body: JSON.stringify({
+      cr49c_leaddescription: "TEST — diagnostics check, safe to delete",
+      cr49c_quoteref: "TEST-001",
+      cr49c_dealvalue: 1.00,
+      cr49c_docstatus: "Quoted",
+      cr49c_probability: 20,
+      cr49c_projecttype: "Red Zone Hardware",
+      cr49c_account: "Red Zone Sundry",
+      cr49c_opportunitycontact: "Test Contact",
+      new_estimatedprojectdurationmonths: 1,
+    }),
+  });
+
+  if (!oppRes.ok) {
+    const errText = await oppRes.text();
+    return NextResponse.json({ envCheck, tokenTest: "success", opportunityTest: "failed", status: oppRes.status, error: errText });
+  }
+
+  const entityId = oppRes.headers.get("OData-EntityId") ?? oppRes.headers.get("odata-entityid") ?? "";
+  const match = entityId.match(/\(([^)]+)\)/);
+  const guid = match?.[1] ?? null;
+
+  return NextResponse.json({ envCheck, tokenTest: "success", opportunityTest: "success", guid });
 }
