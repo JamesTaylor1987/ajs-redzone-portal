@@ -95,7 +95,6 @@ export async function GET() {
       cr49c_docstatus: "Quoted",
       cr49c_probability: 20,
       cr49c_projecttype: 774710007,
-      cr49c_account: "Red Zone Sundry",
       cr49c_opportunitycontact: "Test Contact",
       new_estimatedprojectdurationmonths: 1,
     }),

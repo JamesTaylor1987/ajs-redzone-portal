@@ -87,7 +87,6 @@ export async function createDataverseOpportunity(
       cr49c_docstatus: "Quoted",
       cr49c_probability: 20,
       cr49c_projecttype: 774710007,
-      cr49c_account: "Red Zone Sundry",
       cr49c_opportunitycontact: quote.contact_name ?? "",
       cr49c_siteaddress: siteAddress,
       cr49c_closedate: (quote.submitted_at ?? new Date().toISOString()).split("T")[0],
