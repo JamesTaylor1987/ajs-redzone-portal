@@ -110,22 +110,24 @@ export async function createLeadAction(formData: FormData) {
   redirect(`/admin/crm/${lead.id}`);
 }
 
-export async function updateLeadAction(formData: FormData) {
+export async function updateLeadAction(_prevState: unknown, formData: FormData) {
   const id = formData.get("id") as string;
   const g = (k: string) => (formData.get(k) as string ?? "").trim();
   const supabase = getServiceClient();
 
   await supabase.from("crm_leads").update({
-    company_name:      g("company_name"),
-    rz_contact_id:     g("rz_contact_id") || null,
-    notes:             g("notes")         || null,
-    follow_up_date:    g("follow_up_date") || null,
-    hardware_quote_ref: g("hardware_quote_ref") || null,
-    updated_at:        new Date().toISOString(),
+    company_name:       g("company_name"),
+    rz_contact_id:      g("rz_contact_id")      || null,
+    notes:              g("notes")               || null,
+    follow_up_date:     g("follow_up_date")      || null,
+    hardware_quote_ref: g("hardware_quote_ref")  || null,
+    lost_reason:        g("lost_reason")         || null,
+    updated_at:         new Date().toISOString(),
   }).eq("id", id);
 
   revalidatePath(`/admin/crm/${id}`);
   revalidatePath("/admin/crm");
+  return { ok: true };
 }
 
 export async function updateLeadStatusAction(formData: FormData) {

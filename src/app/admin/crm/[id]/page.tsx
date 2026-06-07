@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase-server";
-import { updateLeadAction, updateLeadStatusAction, deleteLeadAction } from "../actions";
+import { updateLeadStatusAction, deleteLeadAction } from "../actions";
+import { LeadForm } from "./LeadForm";
 
 export const dynamic = "force-dynamic";
 
@@ -114,71 +115,7 @@ export default async function LeadDetailPage({ params }: Props) {
       {/* Edit lead details */}
       <div className="bg-white rounded-xl border border-ajs-light overflow-hidden">
         <SectionHeader>Lead details</SectionHeader>
-        <form action={updateLeadAction} className="px-4 py-4 space-y-3">
-          <input type="hidden" name="id" value={lead.id} />
-
-          <div>
-            <label className="block text-xs font-semibold text-ajs-dark mb-1">Company name</label>
-            <input
-              name="company_name"
-              defaultValue={lead.company_name}
-              required
-              className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Heard from (RZ rep)</label>
-              <select
-                name="rz_contact_id"
-                defaultValue={lead.rz_contact_id ?? ""}
-                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary bg-white"
-              >
-                <option value="">Select rep...</option>
-                {(contacts ?? []).map((c: { id: string; name: string; region: string | null }) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}{c.region ? ` — ${c.region}` : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Follow-up date</label>
-              <input
-                name="follow_up_date"
-                type="date"
-                defaultValue={lead.follow_up_date ?? ""}
-                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-ajs-dark mb-1">Notes</label>
-            <textarea
-              name="notes"
-              defaultValue={lead.notes ?? ""}
-              rows={4}
-              className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary resize-none"
-              placeholder="What did they say? Updates from follow-up calls..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-ajs-dark mb-1">Hardware quote ref <span className="text-ajs-muted font-normal">(if converted)</span></label>
-            <input
-              name="hardware_quote_ref"
-              defaultValue={lead.hardware_quote_ref ?? ""}
-              className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-              placeholder="e.g. Q26-RZ0042"
-            />
-          </div>
-
-          <button type="submit" className="bg-ajs-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
-            Save
-          </button>
-        </form>
+        <LeadForm lead={lead} contacts={contacts ?? []} />
       </div>
 
       {/* Delete */}
