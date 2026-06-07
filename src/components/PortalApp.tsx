@@ -117,6 +117,9 @@ export function PortalApp({ products, productImages, stockColours }: PortalAppPr
         </div>
       </main>
 
+      {/* DEV ONLY — remove before go-live */}
+      <TestQuoteButton />
+
       <CartDrawer
         open={cartOpen}
         onClose={() => setCartOpen(false)}
@@ -129,5 +132,40 @@ export function PortalApp({ products, productImages, stockColours }: PortalAppPr
         onClear={clearCart}
       />
     </>
+  );
+}
+
+function TestQuoteButton() {
+  const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [result, setResult] = useState<string>("");
+
+  async function fire() {
+    setState("loading");
+    try {
+      const res = await fetch("/api/test-quote", { method: "POST" });
+      const data = await res.json();
+      setResult(JSON.stringify(data, null, 2));
+      setState("done");
+    } catch (e) {
+      setResult(String(e));
+      setState("error");
+    }
+  }
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+      {(state === "done" || state === "error") && (
+        <pre className="bg-white border border-slate-300 rounded-lg p-3 text-xs max-w-xs overflow-auto max-h-48 shadow-lg">
+          {result}
+        </pre>
+      )}
+      <button
+        onClick={fire}
+        disabled={state === "loading"}
+        className="bg-rose-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg hover:bg-rose-700 disabled:opacity-60"
+      >
+        {state === "loading" ? "Submitting..." : "🧪 Test Quote"}
+      </button>
+    </div>
   );
 }
