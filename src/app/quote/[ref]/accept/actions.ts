@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase-server";
 import { verificationHash, buildAccountsUrl } from "@/lib/magic-link";
 import { sendOrderConfirmationEmails, sendAccountsLinkEmail } from "@/lib/email";
+import { updateDataverseOpportunity } from "@/lib/dataverse";
 
 export type AcceptState = { error: string } | null;
 
@@ -54,7 +55,7 @@ export async function acceptQuoteAction(
   const { data: quote } = await supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, shipping_gbp_pence, shipping_pallets, required_date, install_requested, magic_token, magic_expires_at, site_name, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, currency, fx_rate_used",
+      "id, ref, status, contact_name, contact_email, contact_phone, contact_company, subtotal_gbp_pence, shipping_gbp_pence, shipping_pallets, required_date, install_requested, magic_token, magic_expires_at, site_name, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, currency, fx_rate_used, dataverse_opportunity_id",
     )
     .eq("ref", quoteRef)
     .single();
@@ -157,6 +158,11 @@ export async function acceptQuoteAction(
   if (updateError) {
     console.error("[accept] DB update failed:", updateError);
     return { error: "Could not save your order. Please try again or contact rz@ajsspalding.co.uk." };
+  }
+
+  // ── Sync to Dataverse ────────────────────────────────────────────────────────
+  if (quote.dataverse_opportunity_id) {
+    await updateDataverseOpportunity(quote.dataverse_opportunity_id, "order_confirmed");
   }
 
   // ── Send emails ──────────────────────────────────────────────────────────────

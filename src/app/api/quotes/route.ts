@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase-server";
 import { generateMagicToken, magicLinkExpiry, buildMagicUrl } from "@/lib/magic-link";
 import { sendQuoteEmails } from "@/lib/email";
+import { createDataverseOpportunity } from "@/lib/dataverse";
 import type { CreateQuoteRequest, CreateQuoteResponse } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -171,28 +172,52 @@ export async function POST(request: Request) {
     }
   }
 
-  // 7. Send emails (non-blocking failure — quote is already committed).
+  // 7. Send emails + create Dataverse opportunity in parallel (non-blocking failures).
   const magicUrl = buildMagicUrl(ref, magicToken);
-  await sendQuoteEmails(
-    {
+  const submittedAt = new Date().toISOString();
+
+  const [dvGuid] = await Promise.all([
+    createDataverseOpportunity({
       ref,
       contact_name: body.details.contactName.trim(),
-      contact_email: body.details.contactEmail.trim(),
       contact_company: body.details.contactCompany?.trim() || null,
+      project_description: body.details.projectDescription?.trim() || null,
+      site_name: body.details.siteName?.trim() || null,
+      site_address_line1: body.details.siteAddressLine1?.trim() || null,
+      site_address_line2: body.details.siteAddressLine2?.trim() || null,
+      site_address_city: body.details.siteAddressCity?.trim() || null,
+      site_address_postcode: body.details.siteAddressPostcode?.trim() || null,
+      site_country: body.details.siteCountry?.trim() || null,
+      required_date: body.details.requiredDate || null,
       subtotal_gbp_pence: subtotalPence,
       shipping_gbp_pence: body.shippingGbpPence ?? null,
-      shipping_pallets: body.shippingPallets ?? 1,
-      currency: body.currency ?? "GBP",
-      fx_rate_used: body.fxRateUsed,
-    },
-    itemsToInsert.map((i) => ({
-      sku: i.sku,
-      name: i.name,
-      qty: i.qty,
-      line_total_gbp_pence: i.line_total_gbp_pence,
-    })),
-    magicUrl,
-  );
+      submitted_at: submittedAt,
+    }),
+    sendQuoteEmails(
+      {
+        ref,
+        contact_name: body.details.contactName.trim(),
+        contact_email: body.details.contactEmail.trim(),
+        contact_company: body.details.contactCompany?.trim() || null,
+        subtotal_gbp_pence: subtotalPence,
+        shipping_gbp_pence: body.shippingGbpPence ?? null,
+        shipping_pallets: body.shippingPallets ?? 1,
+        currency: body.currency ?? "GBP",
+        fx_rate_used: body.fxRateUsed,
+      },
+      itemsToInsert.map((i) => ({
+        sku: i.sku,
+        name: i.name,
+        qty: i.qty,
+        line_total_gbp_pence: i.line_total_gbp_pence,
+      })),
+      magicUrl,
+    ),
+  ]);
+
+  if (dvGuid) {
+    await supabase.from("quotes").update({ dataverse_opportunity_id: dvGuid }).eq("id", quoteRow.id);
+  }
 
   const response: CreateQuoteResponse = { ref, id: quoteRow.id };
   return NextResponse.json(response, { status: 201 });

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getServiceClient } from "@/lib/supabase-server";
 import { sendStatusUpdateEmail } from "@/lib/email";
+import { updateDataverseOpportunity } from "@/lib/dataverse";
 
 const VALID_STATUSES = [
   "quote_submitted",
@@ -51,7 +52,7 @@ export async function updateStatusAction(
   // Fetch quote + assigned PM for notifications
   const { data: quote } = await supabase
     .from("quotes")
-    .select("ref, contact_name, contact_email, rz_pm_id")
+    .select("ref, contact_name, contact_email, rz_pm_id, dataverse_opportunity_id")
     .eq("id", id)
     .single();
 
@@ -66,16 +67,19 @@ export async function updateStatusAction(
       rzPmEmail = pm?.email ?? undefined;
     }
 
-    await sendStatusUpdateEmail(
-      quote.contact_name,
-      quote.contact_email,
-      quote.ref,
-      status,
-      trackingRef ?? undefined,
-      trackingUrl ?? undefined,
-      rzPmEmail,
-      cancellationReason ?? undefined,
-    );
+    await Promise.all([
+      sendStatusUpdateEmail(
+        quote.contact_name,
+        quote.contact_email,
+        quote.ref,
+        status,
+        trackingRef ?? undefined,
+        trackingUrl ?? undefined,
+        rzPmEmail,
+        cancellationReason ?? undefined,
+      ),
+      updateDataverseOpportunity(quote.dataverse_opportunity_id ?? "", status),
+    ]);
   }
 
   revalidatePath(`/admin/orders/${id}`);
