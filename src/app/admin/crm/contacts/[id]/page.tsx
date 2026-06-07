@@ -107,37 +107,37 @@ export default async function RZContactDetailPage({ params }: Props) {
       {/* Log interaction — primary mobile action */}
       <div className="bg-white rounded-xl border border-ajs-light overflow-hidden">
         <SectionHeader>Log interaction</SectionHeader>
-        <form action={logRZActivityAction} className="px-4 py-4 space-y-3">
+        <form action={logRZActivityAction} className="px-4 py-4 space-y-3 overflow-hidden">
           <input type="hidden" name="contact_id" value={contact.id} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-semibold text-ajs-dark mb-1">Type</label>
               <select
                 name="type"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary bg-white"
+                className="w-full max-w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary bg-white"
               >
                 {Object.entries(ACTIVITY_LABEL).map(([v, l]) => (
                   <option key={v} value={v}>{l}</option>
                 ))}
               </select>
             </div>
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-semibold text-ajs-dark mb-1">Date</label>
               <input
                 name="occurred_at"
                 type="date"
                 defaultValue={new Date().toISOString().split("T")[0]}
-                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+                className="w-full max-w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
               />
             </div>
           </div>
-          <div>
+          <div className="min-w-0">
             <label className="block text-xs font-semibold text-ajs-dark mb-1">Follow-up date <span className="text-ajs-muted font-normal">(when to touch base again)</span></label>
             <input
               name="follow_up_date"
               type="date"
               defaultValue={contact.follow_up_date ?? ""}
-              className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+              className="w-full max-w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
             />
           </div>
           <div>
