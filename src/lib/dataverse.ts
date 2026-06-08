@@ -71,6 +71,7 @@ async function lookupOrCreateContact(
       firstname: firstName,
       lastname: lastName,
       emailaddress1: email,
+      "parentcustomerid_account@odata.bind": `/accounts(${RZ_SUNDRY_ACCOUNT_GUID})`,
     };
     if (phone) createBody.telephone1 = phone;
 
