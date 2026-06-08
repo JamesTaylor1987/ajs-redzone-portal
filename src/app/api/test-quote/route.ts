@@ -89,8 +89,13 @@ export async function POST() {
     savedGuid = data?.dataverse_opportunity_id ?? null;
   }
 
-  // Query nav property names for contact and site address on cr49c_opportunities
-  let navProps: Record<string, string> = {};
+  // Directly test contact + site address creation to surface errors
+  const RZ_ACCOUNT = "301398fa-01bf-f011-bbd3-7c1e52609c0d";
+  let contactResult: string | null = null;
+  let contactError: string | null = null;
+  let siteResult: string | null = null;
+  let siteError: string | null = null;
+
   try {
     const tenant   = process.env.DATAVERSE_TENANT_ID;
     const clientId = process.env.DATAVERSE_CLIENT_ID;
@@ -101,18 +106,35 @@ export async function POST() {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ client_id: clientId!, client_secret: secret!, grant_type: "client_credentials", scope: `${dvUrl}/.default` }),
     });
-    const { access_token } = await tokRes.json() as { access_token: string };
-    const navRes = await fetch(
-      `${dvUrl}/api/data/v9.2/EntityDefinitions(LogicalName='cr49c_opportunities')/ManyToOneRelationships?$select=ReferencingAttribute,ReferencingEntityNavigationPropertyName`,
-      { headers: { Authorization: `Bearer ${access_token}`, "OData-MaxVersion": "4.0", "OData-Version": "4.0" } },
-    );
-    const navBody = await navRes.json() as { value: { ReferencingAttribute: string; ReferencingEntityNavigationPropertyName: string }[] };
-    for (const r of navBody.value ?? []) {
-      if (r.ReferencingAttribute === "cr49c_opportunitycontact" || r.ReferencingAttribute === "cr49c_siteaddress") {
-        navProps[r.ReferencingAttribute] = r.ReferencingEntityNavigationPropertyName;
-      }
-    }
-  } catch { /* ignore */ }
+    const { access_token: tok } = await tokRes.json() as { access_token: string };
+    const h = { Authorization: `Bearer ${tok}`, "Content-Type": "application/json", "OData-MaxVersion": "4.0", "OData-Version": "4.0" };
 
-  return NextResponse.json({ directDvGuid, directDvError, quote: quoteResult, savedDataverseId: savedGuid, navProps });
+    // Test contact create
+    const cRes = await fetch(`${dvUrl}/api/data/v9.2/contacts`, {
+      method: "POST", headers: h,
+      body: JSON.stringify({
+        firstname: "Test", lastname: "User", emailaddress1: `test-${Date.now()}@ajsspalding.co.uk`,
+        "parentaccountid@odata.bind": `/accounts(${RZ_ACCOUNT})`,
+      }),
+    });
+    contactResult = cRes.ok ? "ok" : await cRes.text();
+
+    // Test site address create
+    const sRes = await fetch(`${dvUrl}/api/data/v9.2/cr49c_siteaddresses`, {
+      method: "POST", headers: h,
+      body: JSON.stringify({
+        cr49c_SiteName: "Test Site",
+        cr49c_Postcode: "B1 1BB",
+        cr49c_Address1: "1 Test Street",
+        cr49c_Town: "Birmingham",
+        cr49c_Country: "United Kingdom",
+        "cr49c_Account@odata.bind": `/accounts(${RZ_ACCOUNT})`,
+      }),
+    });
+    siteResult = sRes.ok ? "ok" : await sRes.text();
+  } catch (err) {
+    contactError = String(err);
+  }
+
+  return NextResponse.json({ directDvGuid, directDvError, quote: quoteResult, savedDataverseId: savedGuid, contactCreate: contactResult, contactError, siteAddressCreate: siteResult, siteError });
 }
