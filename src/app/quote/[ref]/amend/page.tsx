@@ -82,8 +82,10 @@ export default async function AmendQuotePage({ params, searchParams }: PageProps
     unitPricePence: Number(i.unit_price_gbp_pence),
   }));
 
+  const nameParts = (quote.contact_name ?? "").split(" ");
   const prefill: Partial<CheckoutDetails> = {
-    contactName: quote.contact_name ?? "",
+    contactFirstName: nameParts[0] ?? "",
+    contactLastName: nameParts.slice(1).join(" ") ?? "",
     contactCompany: quote.contact_company ?? "",
     contactEmail: quote.contact_email ?? "",
     contactPhone: quote.contact_phone ?? "",

@@ -1,3 +1,5 @@
+const RZ_SUNDRY_ACCOUNT_GUID = "301398fa-01bf-f011-bbd3-7c1e52609c0d";
+
 function cfg() {
   return {
     tenant:   process.env.DATAVERSE_TENANT_ID,
@@ -5,6 +7,15 @@ function cfg() {
     secret:   process.env.DATAVERSE_CLIENT_SECRET,
     url:      process.env.DATAVERSE_INSTANCE_URL?.replace(/\/$/, ""),
     noahGuid: process.env.DATAVERSE_NOAH_OWNER_GUID,
+  };
+}
+
+function dvHeaders(token: string) {
+  return {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+    "OData-MaxVersion": "4.0",
+    "OData-Version": "4.0",
   };
 }
 
@@ -23,9 +34,7 @@ async function getAccessToken(): Promise<string> {
       }),
     },
   );
-
   if (!res.ok) throw new Error(`Dataverse auth failed: ${res.status}`);
-
   const data = await res.json() as { access_token: string };
   return data.access_token;
 }
@@ -35,9 +44,112 @@ function isConfigured(): boolean {
   return !!(tenant && clientId && secret && url);
 }
 
+function oq(s: string) {
+  // Escape single quotes for OData $filter string literals
+  return s.replace(/'/g, "''");
+}
+
+async function lookupOrCreateContact(
+  token: string,
+  url: string,
+  firstName: string,
+  lastName: string,
+  email: string,
+  phone: string | null,
+): Promise<string | null> {
+  try {
+    const lookupRes = await fetch(
+      `${url}/api/data/v9.2/contacts?$filter=emailaddress1 eq '${oq(email)}'&$select=contactid&$top=1`,
+      { headers: { Authorization: `Bearer ${token}`, "OData-MaxVersion": "4.0", "OData-Version": "4.0" } },
+    );
+    if (lookupRes.ok) {
+      const body = await lookupRes.json() as { value: { contactid: string }[] };
+      if (body.value?.length) return body.value[0].contactid;
+    }
+
+    const createBody: Record<string, unknown> = {
+      firstname: firstName,
+      lastname: lastName,
+      emailaddress1: email,
+      "parentaccountid@odata.bind": `/accounts(${RZ_SUNDRY_ACCOUNT_GUID})`,
+    };
+    if (phone) createBody.telephone1 = phone;
+
+    const createRes = await fetch(`${url}/api/data/v9.2/contacts`, {
+      method: "POST",
+      headers: dvHeaders(token),
+      body: JSON.stringify(createBody),
+    });
+    if (!createRes.ok) {
+      console.error("[dataverse] contact create failed:", createRes.status, await createRes.text());
+      return null;
+    }
+    const entityId = createRes.headers.get("OData-EntityId") ?? createRes.headers.get("odata-entityid") ?? "";
+    return entityId.match(/\(([^)]+)\)/)?.[1] ?? null;
+  } catch (err) {
+    console.error("[dataverse] lookupOrCreateContact error:", err);
+    return null;
+  }
+}
+
+async function lookupOrCreateSiteAddress(
+  token: string,
+  url: string,
+  siteName: string | null,
+  address1: string | null,
+  address2: string | null,
+  town: string | null,
+  postcode: string | null,
+  country: string | null,
+): Promise<string | null> {
+  // Postcode/country fallback per spec: if no postcode use country so mandatory field is always satisfied
+  const postcodeValue = postcode?.trim() || country?.trim() || null;
+  if (!postcodeValue) return null;
+
+  try {
+    const lookupRes = await fetch(
+      `${url}/api/data/v9.2/cr49c_siteaddresses?$filter=cr49c_Postcode eq '${oq(postcodeValue)}'&$select=cr49c_siteaddressid&$top=1`,
+      { headers: { Authorization: `Bearer ${token}`, "OData-MaxVersion": "4.0", "OData-Version": "4.0" } },
+    );
+    if (lookupRes.ok) {
+      const body = await lookupRes.json() as { value: { cr49c_siteaddressid: string }[] };
+      if (body.value?.length) return body.value[0].cr49c_siteaddressid;
+    }
+
+    const createBody: Record<string, unknown> = {
+      cr49c_SiteName: siteName?.trim() || postcodeValue,
+      cr49c_Postcode: postcodeValue,
+      "cr49c_Account@odata.bind": `/accounts(${RZ_SUNDRY_ACCOUNT_GUID})`,
+    };
+    if (address1?.trim()) createBody.cr49c_Address1 = address1.trim();
+    if (address2?.trim()) createBody.cr49c_Address2 = address2.trim();
+    if (town?.trim()) createBody.cr49c_Town = town.trim();
+    if (country?.trim()) createBody.cr49c_Country = country.trim();
+
+    const createRes = await fetch(`${url}/api/data/v9.2/cr49c_siteaddresses`, {
+      method: "POST",
+      headers: dvHeaders(token),
+      body: JSON.stringify(createBody),
+    });
+    if (!createRes.ok) {
+      console.error("[dataverse] site address create failed:", createRes.status, await createRes.text());
+      return null;
+    }
+    const entityId = createRes.headers.get("OData-EntityId") ?? createRes.headers.get("odata-entityid") ?? "";
+    return entityId.match(/\(([^)]+)\)/)?.[1] ?? null;
+  } catch (err) {
+    console.error("[dataverse] lookupOrCreateSiteAddress error:", err);
+    return null;
+  }
+}
+
 export interface QuoteForDataverse {
   ref: string;
+  contact_first_name: string | null;
+  contact_last_name: string | null;
   contact_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
   contact_company: string | null;
   project_description: string | null;
   site_name: string | null;
@@ -70,6 +182,29 @@ export async function createDataverseOpportunity(
   }
 
   const token = await getAccessToken();
+  const { url, noahGuid } = cfg();
+
+  // Lookup/create contact and site address in parallel before creating the opportunity
+  const [contactGuid, siteAddressGuid] = await Promise.all([
+    quote.contact_email
+      ? lookupOrCreateContact(
+          token, url!,
+          quote.contact_first_name ?? quote.contact_name?.split(" ")[0] ?? "Unknown",
+          quote.contact_last_name ?? (quote.contact_name?.split(" ").slice(1).join(" ") || "Unknown"),
+          quote.contact_email,
+          quote.contact_phone ?? null,
+        )
+      : Promise.resolve(null),
+    lookupOrCreateSiteAddress(
+      token, url!,
+      quote.site_name ?? quote.contact_company,
+      quote.site_address_line1,
+      quote.site_address_line2,
+      quote.site_address_city,
+      quote.site_address_postcode,
+      quote.site_country,
+    ),
+  ]);
 
   const totalGbp =
     (Number(quote.subtotal_gbp_pence) + Number(quote.shipping_gbp_pence ?? 0)) / 100;
@@ -81,9 +216,7 @@ export async function createDataverseOpportunity(
     quote.site_address_city,
     quote.site_address_postcode,
     quote.site_country,
-  ]
-    .filter(Boolean)
-    .join(", ");
+  ].filter(Boolean).join(", ");
 
   const t = (s: string, max: number) => s.length > max ? s.substring(0, max) : s;
 
@@ -106,22 +239,15 @@ export async function createDataverseOpportunity(
     cr49c_projecttype: 774710007,
     cr49c_closedate: (quote.submitted_at ?? new Date().toISOString()).split("T")[0],
     new_estimatedprojectdurationmonths: 1,
-    // nav property name is cr49c_Account (capital A) — confirmed via ManyToOneRelationships metadata
-    "cr49c_Account@odata.bind": "/accounts(301398fa-01bf-f011-bbd3-7c1e52609c0d)",
+    "cr49c_Account@odata.bind": `/accounts(${RZ_SUNDRY_ACCOUNT_GUID})`,
   };
 
-  const { url, noahGuid } = cfg();
   if (quote.required_date) body.new_estimatedstartdate = quote.required_date;
   if (noahGuid) body["ownerid@odata.bind"] = `/systemusers(${noahGuid})`;
 
   const res = await fetch(`${url}/api/data/v9.2/cr49c_opportunitieses`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      "OData-MaxVersion": "4.0",
-      "OData-Version": "4.0",
-    },
+    headers: dvHeaders(token),
     body: JSON.stringify(body),
   });
 
@@ -132,8 +258,28 @@ export async function createDataverseOpportunity(
 
   const entityIdHeader =
     res.headers.get("OData-EntityId") ?? res.headers.get("odata-entityid") ?? "";
-  const match = entityIdHeader.match(/\(([^)]+)\)/);
-  return match?.[1] ?? null;
+  const oppGuid = entityIdHeader.match(/\(([^)]+)\)/)?.[1] ?? null;
+
+  // PATCH contact and site address — use separate calls so nav property name errors
+  // don't break the opportunity creation (guessing schema names from naming pattern)
+  if (oppGuid) {
+    const patchBody: Record<string, unknown> = {};
+    if (contactGuid) patchBody["cr49c_OpportunityContact@odata.bind"] = `/contacts(${contactGuid})`;
+    if (siteAddressGuid) patchBody["cr49c_SiteAddress@odata.bind"] = `/cr49c_siteaddresses(${siteAddressGuid})`;
+
+    if (Object.keys(patchBody).length) {
+      const patchRes = await fetch(`${url}/api/data/v9.2/cr49c_opportunitieses(${oppGuid})`, {
+        method: "PATCH",
+        headers: dvHeaders(token),
+        body: JSON.stringify(patchBody),
+      });
+      if (!patchRes.ok) {
+        console.error("[dataverse] contact/site PATCH failed:", patchRes.status, await patchRes.text());
+      }
+    }
+  }
+
+  return oppGuid;
 }
 
 export async function updateDataverseOpportunity(
@@ -147,22 +293,15 @@ export async function updateDataverseOpportunity(
 
   try {
     const token = await getAccessToken();
-
     const { url } = cfg();
     const res = await fetch(
       `${url}/api/data/v9.2/cr49c_opportunitieses(${dataverseId})`,
       {
         method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-          "OData-MaxVersion": "4.0",
-          "OData-Version": "4.0",
-        },
+        headers: dvHeaders(token),
         body: JSON.stringify({ cr49c_docstatus: docStatus }),
       },
     );
-
     if (!res.ok) {
       console.error("[dataverse] updateOpportunity failed:", res.status, await res.text());
     }

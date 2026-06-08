@@ -18,9 +18,9 @@ export async function POST(request: Request) {
   if (!body?.lines?.length) {
     return NextResponse.json({ error: "Basket is empty" }, { status: 400 });
   }
-  if (!body.details?.contactName?.trim() || !body.details?.contactEmail?.trim()) {
+  if (!body.details?.contactFirstName?.trim() || !body.details?.contactLastName?.trim() || !body.details?.contactEmail?.trim()) {
     return NextResponse.json(
-      { error: "contactName and contactEmail are required" },
+      { error: "contactFirstName, contactLastName and contactEmail are required" },
       { status: 400 }
     );
   }
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
       status: "quote_submitted",
       currency: body.currency ?? "GBP",
       fx_rate_used: body.fxRateUsed,
-      contact_name: body.details.contactName.trim(),
+      contact_name: `${body.details.contactFirstName.trim()} ${body.details.contactLastName.trim()}`,
       contact_company: body.details.contactCompany?.trim() || null,
       contact_email: body.details.contactEmail.trim(),
       contact_phone: body.details.contactPhone?.trim() || null,
@@ -158,7 +158,7 @@ export async function POST(request: Request) {
         hardware_quote_id: quoteRow.id,
         hardware_quote_ref: ref,
         customer_email: body.details.contactEmail.trim(),
-        customer_name: body.details.contactName.trim(),
+        customer_name: `${body.details.contactFirstName.trim()} ${body.details.contactLastName.trim()}`,
         company_name: body.details.contactCompany?.trim() || null,
         site_name: body.details.siteName?.trim() || null,
         site_address_line1: body.details.siteAddressLine1?.trim() || null,
@@ -175,12 +175,13 @@ export async function POST(request: Request) {
   // 7. Send emails + create Dataverse opportunity in parallel (non-blocking failures).
   const magicUrl = buildMagicUrl(ref, magicToken);
   const submittedAt = new Date().toISOString();
+  const contactName = `${body.details.contactFirstName.trim()} ${body.details.contactLastName.trim()}`;
 
   // Fire email non-blocking
   sendQuoteEmails(
     {
       ref,
-      contact_name: body.details.contactName.trim(),
+      contact_name: contactName,
       contact_email: body.details.contactEmail.trim(),
       contact_company: body.details.contactCompany?.trim() || null,
       subtotal_gbp_pence: subtotalPence,
@@ -202,7 +203,11 @@ export async function POST(request: Request) {
   try {
     dvGuid = await createDataverseOpportunity({
       ref,
-      contact_name: body.details.contactName.trim(),
+      contact_first_name: body.details.contactFirstName.trim(),
+      contact_last_name: body.details.contactLastName.trim(),
+      contact_name: contactName,
+      contact_email: body.details.contactEmail.trim(),
+      contact_phone: body.details.contactPhone?.trim() || null,
       contact_company: body.details.contactCompany?.trim() || null,
       project_description: body.details.projectDescription?.trim() || null,
       site_name: body.details.siteName?.trim() || null,

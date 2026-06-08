@@ -26,7 +26,11 @@ export async function POST() {
   try {
     directDvGuid = await createDataverseOpportunity({
       ref: `TEST-A-${testId}`,
+      contact_first_name: "Test",
+      contact_last_name: "User",
       contact_name: "Test User",
+      contact_email: "james@ajsspalding.co.uk",
+      contact_phone: "07700900000",
       contact_company: "Test Company Ltd",
       project_description: "Direct test — safe to delete",
       site_name: "Test Site",
@@ -51,7 +55,8 @@ export async function POST() {
     shippingGbpPence: 15000,
     lines: [{ productId: product.id, sku: product.sku, name: product.name, qty: 1, unitPricePence: product.price_gbp_pence }],
     details: {
-      contactName: "Test User",
+      contactFirstName: "Test",
+      contactLastName: "User",
       contactCompany: "Test Company Ltd",
       contactEmail: "james@ajsspalding.co.uk",
       contactPhone: "07700900000",

@@ -13,7 +13,8 @@ interface CheckoutFormProps {
 }
 
 const EMPTY: CheckoutDetails = {
-  contactName: "",
+  contactFirstName: "",
+  contactLastName: "",
   contactCompany: "",
   contactEmail: "",
   contactPhone: "",
@@ -28,7 +29,7 @@ const EMPTY: CheckoutDetails = {
   installRequested: false,
 };
 
-const PREFILL_KEY = "ajs_redzone_prefill_v1";
+const PREFILL_KEY = "ajs_redzone_prefill_v2";
 const AMEND_KEY   = "ajs_redzone_amend_ref_v1";
 
 export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFormProps) {
@@ -76,8 +77,8 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!details.contactName.trim() || !details.contactEmail.trim()) {
-      setError("Name and email are required.");
+    if (!details.contactFirstName.trim() || !details.contactLastName.trim() || !details.contactEmail.trim()) {
+      setError("First name, last name and email are required.");
       return;
     }
     if (!details.contactCompany.trim()) {
@@ -138,8 +139,9 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
       <div className="bg-white rounded-xl border border-ajs-light p-4">
         <h2 className="font-bold text-lg mb-3 text-ajs-dark">Your details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Full name *" required value={details.contactName} onChange={set("contactName")} />
-          <Field label="Company *" required value={details.contactCompany} onChange={set("contactCompany")} />
+          <Field label="First name *" required value={details.contactFirstName} onChange={set("contactFirstName")} />
+          <Field label="Last name *" required value={details.contactLastName} onChange={set("contactLastName")} />
+          <Field label="Company *" required value={details.contactCompany} onChange={set("contactCompany")} className="sm:col-span-2" />
           <Field label="Site name" value={details.siteName} onChange={set("siteName")} placeholder="e.g. Manchester Factory, Unit 4 Warehouse" className="sm:col-span-2" />
           <Field label="Email *" type="email" required value={details.contactEmail} onChange={set("contactEmail")} />
           <Field label="Phone *" type="tel" required value={details.contactPhone} onChange={set("contactPhone")} />

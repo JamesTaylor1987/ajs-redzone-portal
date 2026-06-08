@@ -39,7 +39,8 @@ export interface CartLine {
 }
 
 export interface CheckoutDetails {
-  contactName: string;
+  contactFirstName: string;
+  contactLastName: string;
   contactCompany: string;
   contactEmail: string;
   contactPhone: string;
