@@ -110,7 +110,7 @@ export async function createDataverseOpportunity(
   };
 
   const { url, noahGuid } = cfg();
-  if (quote.required_date) body.new_estimatedstartdate = `${quote.required_date}T00:00:00Z`;
+  if (quote.required_date) body.new_estimatedstartdate = quote.required_date;
   if (noahGuid) body["ownerid@odata.bind"] = `/systemusers(${noahGuid})`;
 
   const res = await fetch(`${url}/api/data/v9.2/cr49c_opportunitieses`, {
