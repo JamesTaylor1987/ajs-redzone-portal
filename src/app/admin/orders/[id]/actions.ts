@@ -115,6 +115,7 @@ export async function assignPMAction(
   if (error) return { error: "Failed to save — please try again" };
 
   revalidatePath(`/admin/orders/${id}`);
+  revalidatePath("/admin/orders");
   return { success: true };
 }
 
@@ -140,7 +141,7 @@ export async function updateWinProbabilityAction(
   const supabase = getServiceClient();
   const { error } = await supabase
     .from("quotes")
-    .update({ win_probability: probability })
+    .update({ win_probability: probability, win_probability_set_at: new Date().toISOString() })
     .eq("id", id);
 
   if (error) return { error: "Failed to save — please try again" };

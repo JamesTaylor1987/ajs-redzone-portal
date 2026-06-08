@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getServiceClient } from "@/lib/supabase-server";
 import { StatusFilter } from "./StatusFilter";
+import { InlineProbabilityForm } from "./InlineProbabilityForm";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
   let query = supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_company, contact_email, subtotal_gbp_pence, created_at, original_quote_ref",
+      "id, ref, status, contact_name, contact_company, contact_email, subtotal_gbp_pence, created_at, original_quote_ref, win_probability, win_probability_set_at",
     )
     .order("created_at", { ascending: false });
 
@@ -72,6 +73,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                 <Th>Ref</Th>
                 <Th>Customer</Th>
                 <Th>Status</Th>
+                <Th>Win %</Th>
                 <Th>Total</Th>
                 <Th>Submitted</Th>
                 <Th></Th>
@@ -102,6 +104,19 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                     >
                       {STATUS_LABEL[o.status] ?? o.status}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {o.status === "quote_submitted" ? (
+                      <InlineProbabilityForm
+                        quoteId={o.id}
+                        currentProbability={o.win_probability ?? null}
+                        updatedAt={o.win_probability_set_at ?? null}
+                      />
+                    ) : o.win_probability !== null ? (
+                      <span className="text-sm font-semibold text-ajs-dark">{o.win_probability}%</span>
+                    ) : (
+                      <span className="text-ajs-light text-sm">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 font-semibold">
                     {gbp(o.subtotal_gbp_pence)}
