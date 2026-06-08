@@ -85,11 +85,15 @@ export async function createDataverseOpportunity(
     .filter(Boolean)
     .join(", ");
 
+  const t = (s: string, max: number) => s.length > max ? s.substring(0, max) : s;
+
   const body: Record<string, unknown> = {
-    cr49c_opportunityname: `${quote.contact_company ?? quote.contact_name ?? "Unknown"} — ${quote.ref}`,
-    cr49c_leaddescription:
+    cr49c_opportunityname: t(`${quote.contact_company ?? quote.contact_name ?? "Unknown"} — ${quote.ref}`, 100),
+    cr49c_leaddescription: t(
       quote.project_description ??
       `${quote.contact_company ?? quote.contact_name ?? "Unknown"} — Red Zone Hardware`,
+      40,
+    ),
     cr49c_opportunitysummary: [
       quote.contact_name ? `Contact: ${quote.contact_name}` : null,
       quote.contact_company ? `Company: ${quote.contact_company}` : null,
