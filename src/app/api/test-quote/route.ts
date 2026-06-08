@@ -89,5 +89,30 @@ export async function POST() {
     savedGuid = data?.dataverse_opportunity_id ?? null;
   }
 
-  return NextResponse.json({ directDvGuid, directDvError, quote: quoteResult, savedDataverseId: savedGuid });
+  // Query nav property names for contact and site address on cr49c_opportunities
+  let navProps: Record<string, string> = {};
+  try {
+    const tenant   = process.env.DATAVERSE_TENANT_ID;
+    const clientId = process.env.DATAVERSE_CLIENT_ID;
+    const secret   = process.env.DATAVERSE_CLIENT_SECRET;
+    const dvUrl    = process.env.DATAVERSE_INSTANCE_URL?.replace(/\/$/, "");
+    const tokRes = await fetch(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ client_id: clientId!, client_secret: secret!, grant_type: "client_credentials", scope: `${dvUrl}/.default` }),
+    });
+    const { access_token } = await tokRes.json() as { access_token: string };
+    const navRes = await fetch(
+      `${dvUrl}/api/data/v9.2/EntityDefinitions(LogicalName='cr49c_opportunities')/ManyToOneRelationships?$select=ReferencingAttribute,ReferencingEntityNavigationPropertyName`,
+      { headers: { Authorization: `Bearer ${access_token}`, "OData-MaxVersion": "4.0", "OData-Version": "4.0" } },
+    );
+    const navBody = await navRes.json() as { value: { ReferencingAttribute: string; ReferencingEntityNavigationPropertyName: string }[] };
+    for (const r of navBody.value ?? []) {
+      if (r.ReferencingAttribute === "cr49c_opportunitycontact" || r.ReferencingAttribute === "cr49c_siteaddress") {
+        navProps[r.ReferencingAttribute] = r.ReferencingEntityNavigationPropertyName;
+      }
+    }
+  } catch { /* ignore */ }
+
+  return NextResponse.json({ directDvGuid, directDvError, quote: quoteResult, savedDataverseId: savedGuid, navProps });
 }
