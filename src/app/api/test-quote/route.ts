@@ -120,8 +120,18 @@ export async function POST() {
     });
     if (!cRes.ok) { contactResult = await cRes.text(); }
     else {
-      contactResult = "ok";
       const contactGuid = (cRes.headers.get("OData-EntityId") ?? "").match(/\(([^)]+)\)/)?.[1] ?? null;
+
+      // Try PATCHing parentaccountid separately (POST rejected it as undeclared nav prop)
+      let accountPatchResult = "no guid";
+      if (contactGuid) {
+        const apRes = await fetch(`${dvUrl}/api/data/v9.2/contacts(${contactGuid})`, {
+          method: "PATCH", headers: h,
+          body: JSON.stringify({ "parentaccountid@odata.bind": `/accounts(${RZ_ACCOUNT})` }),
+        });
+        accountPatchResult = apRes.ok ? "ok" : await apRes.text();
+      }
+      contactResult = `ok — accountPatch: ${accountPatchResult}`;
 
       // Create site address
       const sRes = await fetch(`${dvUrl}/api/data/v9.2/cr49c_siteaddresses`, {
