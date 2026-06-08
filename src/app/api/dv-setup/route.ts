@@ -36,7 +36,7 @@ export async function GET() {
 
   // 1. cr49c_docstatus option set values
   const statusRes = await fetch(
-    `${url}/api/data/v9.2/EntityDefinitions(LogicalName='cr49c_opportunities')/Attributes(LogicalName='cr49c_docstatus')/Microsoft.Dynamics.CRM.PicklistAttributeMetadata?$select=LogicalName&$expand=OptionSet($select=Options)`,
+    `${url}/api/data/v9.2/EntityDefinitions(LogicalName='cr49c_opportunities')/Attributes(LogicalName='cr49c_docstatus')/Microsoft.Dynamics.CRM.PicklistAttributeMetadata?$expand=OptionSet`,
     { headers },
   );
   const statusBody = await statusRes.json();
