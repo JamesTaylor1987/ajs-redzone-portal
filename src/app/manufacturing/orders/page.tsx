@@ -23,7 +23,26 @@ interface PageProps {
   searchParams: { status?: string };
 }
 
+async function autoCompleteShipped() {
+  const supabase = getServiceClient();
+  const cutoff = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const { data } = await supabase
+    .from("quotes")
+    .select("id")
+    .eq("status", "shipped")
+    .or(`shipped_at.is.null,shipped_at.lte.${cutoff}`);
+  if (data?.length) {
+    const now = new Date().toISOString();
+    for (const q of data) {
+      await supabase.from("quotes").update({ status: "complete", completed_at: now }).eq("id", q.id);
+    }
+  }
+}
+
 export default async function ManufacturingOrdersPage({ searchParams }: PageProps) {
+  // Auto-complete any shipped orders past the 10-minute threshold
+  autoCompleteShipped().catch(() => {});
+
   const supabase = getServiceClient();
 
   const activeStatus = searchParams.status && WORKSHOP_STATUSES.includes(searchParams.status)
