@@ -51,7 +51,7 @@ export default async function PipelineSkuPage({ params }: PageProps) {
 
   if (!product) notFound();
 
-  const allItems = [...(openItems ?? []), ...(confirmedItems ?? [])] as QuoteItem[];
+  const allItems = [...(openItems ?? []), ...(confirmedItems ?? [])] as unknown as QuoteItem[];
 
   return (
     <div className="space-y-5 max-w-4xl">
