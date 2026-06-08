@@ -116,7 +116,7 @@ export async function POST() {
     );
     const metaBody = await metaRes.json() as { value: { ReferencedEntity: string; ReferencingAttribute: string; ReferencingEntityNavigationPropertyName: string }[] };
     const accountNavProps = (metaBody.value ?? [])
-      .filter(r => r.ReferencedEntity === "account" && r.ReferencingAttribute.includes("account"))
+      .filter(r => r.ReferencedEntity === "account")
       .map(r => ({ attr: r.ReferencingAttribute, nav: r.ReferencingEntityNavigationPropertyName }));
 
     // Test contact create
