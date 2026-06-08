@@ -71,7 +71,6 @@ async function lookupOrCreateContact(
       firstname: firstName,
       lastname: lastName,
       emailaddress1: email,
-      "parentaccountid@odata.bind": `/accounts(${RZ_SUNDRY_ACCOUNT_GUID})`,
     };
     if (phone) createBody.telephone1 = phone;
 
@@ -108,7 +107,7 @@ async function lookupOrCreateSiteAddress(
 
   try {
     const lookupRes = await fetch(
-      `${url}/api/data/v9.2/cr49c_siteaddresses?$filter=cr49c_Postcode eq '${oq(postcodeValue)}'&$select=cr49c_siteaddressid&$top=1`,
+      `${url}/api/data/v9.2/cr49c_siteaddresses?$filter=cr49c_postcode eq '${oq(postcodeValue)}'&$select=cr49c_siteaddressid&$top=1`,
       { headers: { Authorization: `Bearer ${token}`, "OData-MaxVersion": "4.0", "OData-Version": "4.0" } },
     );
     if (lookupRes.ok) {
@@ -117,14 +116,14 @@ async function lookupOrCreateSiteAddress(
     }
 
     const createBody: Record<string, unknown> = {
-      cr49c_SiteName: siteName?.trim() || postcodeValue,
-      cr49c_Postcode: postcodeValue,
+      cr49c_sitename: siteName?.trim() || postcodeValue,
+      cr49c_postcode: postcodeValue,
       "cr49c_Account@odata.bind": `/accounts(${RZ_SUNDRY_ACCOUNT_GUID})`,
     };
-    if (address1?.trim()) createBody.cr49c_Address1 = address1.trim();
-    if (address2?.trim()) createBody.cr49c_Address2 = address2.trim();
-    if (town?.trim()) createBody.cr49c_Town = town.trim();
-    if (country?.trim()) createBody.cr49c_Country = country.trim();
+    if (address1?.trim()) createBody.cr49c_address1 = address1.trim();
+    if (address2?.trim()) createBody.cr49c_address2 = address2.trim();
+    if (town?.trim()) createBody.cr49c_town = town.trim();
+    if (country?.trim()) createBody.cr49c_country = country.trim();
 
     const createRes = await fetch(`${url}/api/data/v9.2/cr49c_siteaddresses`, {
       method: "POST",

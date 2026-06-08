@@ -114,7 +114,7 @@ export async function POST() {
       method: "POST", headers: h,
       body: JSON.stringify({
         firstname: "Test", lastname: "User", emailaddress1: `test-${Date.now()}@ajsspalding.co.uk`,
-        "parentaccountid@odata.bind": `/accounts(${RZ_ACCOUNT})`,
+        telephone1: "07700900000",
       }),
     });
     contactResult = cRes.ok ? "ok" : await cRes.text();
@@ -123,11 +123,11 @@ export async function POST() {
     const sRes = await fetch(`${dvUrl}/api/data/v9.2/cr49c_siteaddresses`, {
       method: "POST", headers: h,
       body: JSON.stringify({
-        cr49c_SiteName: "Test Site",
-        cr49c_Postcode: "B1 1BB",
-        cr49c_Address1: "1 Test Street",
-        cr49c_Town: "Birmingham",
-        cr49c_Country: "United Kingdom",
+        cr49c_sitename: "Test Site",
+        cr49c_postcode: "B1 1BB",
+        cr49c_address1: "1 Test Street",
+        cr49c_town: "Birmingham",
+        cr49c_country: "United Kingdom",
         "cr49c_Account@odata.bind": `/accounts(${RZ_ACCOUNT})`,
       }),
     });
