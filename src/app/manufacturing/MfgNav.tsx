@@ -24,6 +24,9 @@ export function MfgNav({ isAdmin }: Props) {
             <Link href="/manufacturing/orders" className="text-white/80 hover:text-white transition-colors">
               Work orders
             </Link>
+            <Link href="/manufacturing/pipeline" className="text-white/80 hover:text-white transition-colors">
+              Pipeline
+            </Link>
             <Link href="/manufacturing/products" className="text-white/80 hover:text-white transition-colors">
               Products
             </Link>
@@ -66,6 +69,9 @@ export function MfgNav({ isAdmin }: Props) {
         <div className="sm:hidden border-t border-white/20 px-4 py-3 space-y-1 max-w-5xl mx-auto">
           <Link href="/manufacturing/orders" onClick={() => setOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 hover:bg-white/10 transition-colors">
             Work orders
+          </Link>
+          <Link href="/manufacturing/pipeline" onClick={() => setOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 hover:bg-white/10 transition-colors">
+            Pipeline
           </Link>
           <Link href="/manufacturing/products" onClick={() => setOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 hover:bg-white/10 transition-colors">
             Products
