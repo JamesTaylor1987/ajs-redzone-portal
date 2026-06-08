@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase-server";
+import { createDataverseOpportunity } from "@/lib/dataverse";
 import type { CreateQuoteRequest } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -16,6 +17,30 @@ export async function POST() {
 
   if (!product) {
     return NextResponse.json({ error: "No active products found" }, { status: 400 });
+  }
+
+  // Direct DV call to surface any errors immediately
+  let directDvGuid: string | null = null;
+  let directDvError: string | null = null;
+  try {
+    directDvGuid = await createDataverseOpportunity({
+      ref: "TEST-DIRECT",
+      contact_name: "Test User",
+      contact_company: "Test Company Ltd",
+      project_description: "Direct test — safe to delete",
+      site_name: "Test Site",
+      site_address_line1: "1 Test Street",
+      site_address_line2: null,
+      site_address_city: "Birmingham",
+      site_address_postcode: "B1 1BB",
+      site_country: "United Kingdom",
+      required_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      subtotal_gbp_pence: product.price_gbp_pence,
+      shipping_gbp_pence: 15000,
+      submitted_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    directDvError = String(err);
   }
 
   const body: CreateQuoteRequest = {
@@ -58,5 +83,5 @@ export async function POST() {
     savedGuid = data?.dataverse_opportunity_id ?? null;
   }
 
-  return NextResponse.json({ quote: quoteResult, savedDataverseId: savedGuid });
+  return NextResponse.json({ directDvGuid, directDvError, quote: quoteResult, savedDataverseId: savedGuid });
 }
