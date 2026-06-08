@@ -1,46 +1,64 @@
 import { NextResponse } from "next/server";
-import { getServiceClient } from "@/lib/supabase-server";
-import { createDataverseOpportunity } from "@/lib/dataverse";
 
 export const runtime = "nodejs";
 
 export async function POST() {
-  const supabase = getServiceClient();
+  const tenant   = process.env.DATAVERSE_TENANT_ID;
+  const clientId = process.env.DATAVERSE_CLIENT_ID;
+  const secret   = process.env.DATAVERSE_CLIENT_SECRET;
+  const url      = process.env.DATAVERSE_INSTANCE_URL?.replace(/\/$/, "");
 
-  const { data: product } = await supabase
-    .from("products")
-    .select("id, sku, name, price_gbp_pence")
-    .eq("active", true)
-    .limit(1)
-    .single();
+  // Step 1: get token
+  const tokenRes = await fetch(
+    `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: clientId!,
+        client_secret: secret!,
+        grant_type: "client_credentials",
+        scope: `${url}/.default`,
+      }),
+    },
+  );
+  if (!tokenRes.ok) {
+    return NextResponse.json({ step: "token", status: tokenRes.status, error: await tokenRes.json() });
+  }
+  const { access_token: token } = await tokenRes.json() as { access_token: string };
 
-  if (!product) {
-    return NextResponse.json({ error: "No active products found" }, { status: 400 });
+  // Step 2: create opportunity
+  const body = {
+    cr49c_opportunityname: "Test Company Ltd — TEST-DIRECT",
+    cr49c_leaddescription: "Direct Dataverse test — safe to delete",
+    cr49c_opportunitysummary: "Contact: Test User\nCompany: Test Company Ltd\nSite: 1 Test Street, Birmingham, B1 1BB",
+    cr49c_quoteref: "TEST-DIRECT",
+    cr49c_dealvalue: 2075,
+    cr49c_docstatus: "Quoted",
+    cr49c_probability: 20,
+    cr49c_projecttype: 774710007,
+    cr49c_closedate: new Date().toISOString().split("T")[0],
+    new_estimatedprojectdurationmonths: 1,
+  };
+
+  const oppRes = await fetch(`${url}/api/data/v9.2/cr49c_opportunitieses`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "OData-MaxVersion": "4.0",
+      "OData-Version": "4.0",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!oppRes.ok) {
+    return NextResponse.json({ step: "create", status: oppRes.status, error: await oppRes.text() });
   }
 
-  const subtotalPence = product.price_gbp_pence;
-  const shippingPence = 15000;
+  const entityId = oppRes.headers.get("OData-EntityId") ?? oppRes.headers.get("odata-entityid") ?? "";
+  const match = entityId.match(/\(([^)]+)\)/);
+  const guid = match?.[1] ?? null;
 
-  const dvGuid = await createDataverseOpportunity({
-    ref: "TEST-DIRECT",
-    contact_name: "Test User",
-    contact_company: "Test Company Ltd",
-    project_description: "Direct Dataverse test — safe to delete",
-    site_name: "Test Site",
-    site_address_line1: "1 Test Street",
-    site_address_line2: null,
-    site_address_city: "Birmingham",
-    site_address_postcode: "B1 1BB",
-    site_country: "United Kingdom",
-    required_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    subtotal_gbp_pence: subtotalPence,
-    shipping_gbp_pence: shippingPence,
-    submitted_at: new Date().toISOString(),
-  });
-
-  return NextResponse.json({
-    dvGuid,
-    configured: !!(process.env.DATAVERSE_TENANT_ID && process.env.DATAVERSE_CLIENT_ID && process.env.DATAVERSE_CLIENT_SECRET && process.env.DATAVERSE_INSTANCE_URL),
-    totalGbp: (subtotalPence + shippingPence) / 100,
-  });
+  return NextResponse.json({ step: "success", guid, totalGbp: 2075 });
 }
