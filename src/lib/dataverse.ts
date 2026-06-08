@@ -131,7 +131,28 @@ export async function createDataverseOpportunity(
   const entityIdHeader =
     res.headers.get("OData-EntityId") ?? res.headers.get("odata-entityid") ?? "";
   const match = entityIdHeader.match(/\(([^)]+)\)/);
-  return match?.[1] ?? null;
+  const guid = match?.[1] ?? null;
+
+  // Set account via PATCH — @odata.bind in the POST body causes OData 400
+  if (guid) {
+    const patchRes = await fetch(`${url}/api/data/v9.2/cr49c_opportunitieses(${guid})`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "OData-MaxVersion": "4.0",
+        "OData-Version": "4.0",
+      },
+      body: JSON.stringify({
+        "cr49c_account@odata.bind": "/accounts(301398fa-01bf-f011-bbd3-7c1e52609c0d)",
+      }),
+    });
+    if (!patchRes.ok) {
+      console.error("[dataverse] account PATCH failed:", patchRes.status, await patchRes.text());
+    }
+  }
+
+  return guid;
 }
 
 export async function updateDataverseOpportunity(
