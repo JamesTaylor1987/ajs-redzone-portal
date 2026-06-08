@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase-server";
-import { createDataverseOpportunity } from "@/lib/dataverse";
 import type { CreateQuoteRequest } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -19,25 +18,90 @@ export async function POST() {
     return NextResponse.json({ error: "No active products found" }, { status: 400 });
   }
 
-  // Test createDataverseOpportunity directly
-  const dvGuid = await createDataverseOpportunity({
-    ref: "TEST-DIRECT",
-    contact_name: "Test User",
-    contact_company: "Test Company Ltd",
-    project_description: "Direct Dataverse test — safe to delete",
-    site_name: "Test Site",
-    site_address_line1: "1 Test Street",
-    site_address_line2: null,
-    site_address_city: "Birmingham",
-    site_address_postcode: "B1 1BB",
-    site_country: "United Kingdom",
-    required_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-    subtotal_gbp_pence: product.price_gbp_pence,
-    shipping_gbp_pence: 15000,
-    submitted_at: new Date().toISOString(),
-  });
+  // --- Step 1: env var check ---
+  const tenant   = process.env.DATAVERSE_TENANT_ID;
+  const clientId = process.env.DATAVERSE_CLIENT_ID;
+  const secret   = process.env.DATAVERSE_CLIENT_SECRET;
+  const url      = process.env.DATAVERSE_INSTANCE_URL?.replace(/\/$/, "");
 
-  // Also submit a real quote through the full flow
+  const envCheck = { tenant: !!tenant, clientId: !!clientId, secret: !!secret, url: !!url };
+
+  if (!tenant || !clientId || !secret || !url) {
+    return NextResponse.json({ step: "env_missing", envCheck });
+  }
+
+  // --- Step 2: token ---
+  let token: string;
+  try {
+    const tokenRes = await fetch(
+      `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: secret,
+          grant_type: "client_credentials",
+          scope: `${url}/.default`,
+        }),
+      },
+    );
+    if (!tokenRes.ok) {
+      const body = await tokenRes.text();
+      return NextResponse.json({ step: "token_failed", status: tokenRes.status, body: body.substring(0, 300), envCheck });
+    }
+    const tokenBody = await tokenRes.json() as { access_token: string };
+    token = tokenBody.access_token;
+  } catch (err) {
+    return NextResponse.json({ step: "token_threw", error: String(err), envCheck });
+  }
+
+  // --- Step 3: create opportunity directly (no wrapper function) ---
+  const totalGbp = (product.price_gbp_pence + 15000) / 100;
+  const oppBody = {
+    cr49c_opportunityname: "Test Company Ltd — TEST-DIRECT",
+    cr49c_leaddescription: "Direct Dataverse test — safe to delete",
+    cr49c_opportunitysummary: "Contact: Test User\nCompany: Test Company Ltd\nSite: Test Site, 1 Test Street, Birmingham, B1 1BB, United Kingdom",
+    cr49c_quoteref: "TEST-DIRECT",
+    cr49c_dealvalue: totalGbp,
+    cr49c_docstatus: "Quoted",
+    cr49c_probability: 20,
+    cr49c_projecttype: 774710007,
+    cr49c_closedate: new Date().toISOString().split("T")[0],
+    new_estimatedprojectdurationmonths: 1,
+  };
+
+  let dvGuid: string | null = null;
+  let dvStatus: number | null = null;
+  let dvError: string | null = null;
+
+  try {
+    const oppRes = await fetch(`${url}/api/data/v9.2/cr49c_opportunitieses`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "OData-MaxVersion": "4.0",
+        "OData-Version": "4.0",
+      },
+      body: JSON.stringify(oppBody),
+    });
+
+    dvStatus = oppRes.status;
+
+    if (!oppRes.ok) {
+      dvError = (await oppRes.text()).substring(0, 500);
+    } else {
+      const entityIdHeader =
+        oppRes.headers.get("OData-EntityId") ?? oppRes.headers.get("odata-entityid") ?? "";
+      const match = entityIdHeader.match(/\(([^)]+)\)/);
+      dvGuid = match?.[1] ?? null;
+    }
+  } catch (err) {
+    dvError = String(err);
+  }
+
+  // --- Step 4: full quote flow ---
   const body: CreateQuoteRequest = {
     currency: "GBP",
     fxRateUsed: null,
@@ -68,8 +132,7 @@ export async function POST() {
   });
   const quoteResult = await quoteRes.json();
 
-  // Check if the GUID was saved
-  let savedGuid = null;
+  let savedGuid: string | null = null;
   if (quoteResult.id) {
     const { data } = await supabase
       .from("quotes")
@@ -80,7 +143,11 @@ export async function POST() {
   }
 
   return NextResponse.json({
+    step: "complete",
+    envCheck,
+    directDvStatus: dvStatus,
     directDvGuid: dvGuid,
+    directDvError: dvError,
     quote: quoteResult,
     savedDataverseId: savedGuid,
   });
