@@ -1,64 +1,87 @@
 import { NextResponse } from "next/server";
+import { getServiceClient } from "@/lib/supabase-server";
+import { createDataverseOpportunity } from "@/lib/dataverse";
+import type { CreateQuoteRequest } from "@/lib/types";
 
 export const runtime = "nodejs";
 
 export async function POST() {
-  const tenant   = process.env.DATAVERSE_TENANT_ID;
-  const clientId = process.env.DATAVERSE_CLIENT_ID;
-  const secret   = process.env.DATAVERSE_CLIENT_SECRET;
-  const url      = process.env.DATAVERSE_INSTANCE_URL?.replace(/\/$/, "");
+  const supabase = getServiceClient();
 
-  // Step 1: get token
-  const tokenRes = await fetch(
-    `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: clientId!,
-        client_secret: secret!,
-        grant_type: "client_credentials",
-        scope: `${url}/.default`,
-      }),
-    },
-  );
-  if (!tokenRes.ok) {
-    return NextResponse.json({ step: "token", status: tokenRes.status, error: await tokenRes.json() });
+  const { data: product } = await supabase
+    .from("products")
+    .select("id, sku, name, price_gbp_pence")
+    .eq("active", true)
+    .limit(1)
+    .single();
+
+  if (!product) {
+    return NextResponse.json({ error: "No active products found" }, { status: 400 });
   }
-  const { access_token: token } = await tokenRes.json() as { access_token: string };
 
-  // Step 2: create opportunity
-  const body = {
-    cr49c_opportunityname: "Test Company Ltd — TEST-DIRECT",
-    cr49c_leaddescription: "Direct Dataverse test — safe to delete",
-    cr49c_opportunitysummary: "Contact: Test User\nCompany: Test Company Ltd\nSite: 1 Test Street, Birmingham, B1 1BB",
-    cr49c_quoteref: "TEST-DIRECT",
-    cr49c_dealvalue: 2075,
-    cr49c_docstatus: "Quoted",
-    cr49c_probability: 20,
-    cr49c_projecttype: 774710007,
-    cr49c_closedate: new Date().toISOString().split("T")[0],
-    new_estimatedprojectdurationmonths: 1,
-  };
-
-  const oppRes = await fetch(`${url}/api/data/v9.2/cr49c_opportunitieses`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      "OData-MaxVersion": "4.0",
-      "OData-Version": "4.0",
-    },
-    body: JSON.stringify(body),
+  // Test createDataverseOpportunity directly
+  const dvGuid = await createDataverseOpportunity({
+    ref: "TEST-DIRECT",
+    contact_name: "Test User",
+    contact_company: "Test Company Ltd",
+    project_description: "Direct Dataverse test — safe to delete",
+    site_name: "Test Site",
+    site_address_line1: "1 Test Street",
+    site_address_line2: null,
+    site_address_city: "Birmingham",
+    site_address_postcode: "B1 1BB",
+    site_country: "United Kingdom",
+    required_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    subtotal_gbp_pence: product.price_gbp_pence,
+    shipping_gbp_pence: 15000,
+    submitted_at: new Date().toISOString(),
   });
 
-  if (!oppRes.ok) {
-    return NextResponse.json({ step: "create", status: oppRes.status, error: await oppRes.text() });
+  // Also submit a real quote through the full flow
+  const body: CreateQuoteRequest = {
+    currency: "GBP",
+    fxRateUsed: null,
+    shippingPallets: 1,
+    shippingGbpPence: 15000,
+    lines: [{ productId: product.id, sku: product.sku, name: product.name, qty: 1, unitPricePence: product.price_gbp_pence }],
+    details: {
+      contactName: "Test User",
+      contactCompany: "Test Company Ltd",
+      contactEmail: "james@ajsspalding.co.uk",
+      contactPhone: "07700900000",
+      siteName: "Test Site",
+      siteAddressLine1: "1 Test Street",
+      siteAddressLine2: "",
+      siteAddressCity: "Birmingham",
+      siteAddressPostcode: "B1 1BB",
+      siteCountry: "United Kingdom",
+      requiredDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      projectDescription: "Dataverse integration test — safe to delete",
+      installRequested: false,
+    },
+  };
+
+  const quoteRes = await fetch(`https://redzone.ajsspalding.co.uk/api/quotes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const quoteResult = await quoteRes.json();
+
+  // Check if the GUID was saved
+  let savedGuid = null;
+  if (quoteResult.id) {
+    const { data } = await supabase
+      .from("quotes")
+      .select("dataverse_opportunity_id")
+      .eq("id", quoteResult.id)
+      .single();
+    savedGuid = data?.dataverse_opportunity_id ?? null;
   }
 
-  const entityId = oppRes.headers.get("OData-EntityId") ?? oppRes.headers.get("odata-entityid") ?? "";
-  const match = entityId.match(/\(([^)]+)\)/);
-  const guid = match?.[1] ?? null;
-
-  return NextResponse.json({ step: "success", guid, totalGbp: 2075 });
+  return NextResponse.json({
+    directDvGuid: dvGuid,
+    quote: quoteResult,
+    savedDataverseId: savedGuid,
+  });
 }
