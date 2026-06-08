@@ -232,8 +232,7 @@ export async function createDataverseOpportunity(
   const body: Record<string, unknown> = {
     cr49c_opportunityname: t(`${quote.contact_company ?? quote.contact_name ?? "Unknown"} — ${quote.ref}`, 100),
     cr49c_leaddescription: t(
-      quote.project_description ??
-      `${quote.contact_company ?? quote.contact_name ?? "Unknown"} — Red Zone Hardware`,
+      `Redzone Hardware - ${quote.site_name ?? quote.contact_company ?? "Unknown"}`,
       40,
     ),
     cr49c_opportunitysummary: [

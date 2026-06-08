@@ -89,6 +89,10 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
       setError("Phone number is required.");
       return;
     }
+    if (!details.siteName.trim()) {
+      setError("Site name is required.");
+      return;
+    }
     if (!details.projectDescription.trim()) {
       setError("Project description is required.");
       return;
@@ -142,7 +146,7 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
           <Field label="First name *" required value={details.contactFirstName} onChange={set("contactFirstName")} />
           <Field label="Last name *" required value={details.contactLastName} onChange={set("contactLastName")} />
           <Field label="Company *" required value={details.contactCompany} onChange={set("contactCompany")} className="sm:col-span-2" />
-          <Field label="Site name" value={details.siteName} onChange={set("siteName")} placeholder="e.g. Manchester Factory, Unit 4 Warehouse" className="sm:col-span-2" />
+          <Field label="Site name *" required value={details.siteName} onChange={set("siteName")} placeholder="e.g. Manchester Factory, Unit 4 Warehouse" className="sm:col-span-2" />
           <Field label="Email *" type="email" required value={details.contactEmail} onChange={set("contactEmail")} />
           <Field label="Phone *" type="tel" required value={details.contactPhone} onChange={set("contactPhone")} />
         </div>
