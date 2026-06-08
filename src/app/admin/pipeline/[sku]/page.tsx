@@ -7,10 +7,14 @@ export const dynamic = "force-dynamic";
 const STATUS_LABEL: Record<string, string> = {
   quote_submitted: "Quote submitted",
   order_confirmed: "Order confirmed",
+  in_build: "In build",
+  ready_to_ship: "Ready to ship",
 };
 const STATUS_COLOUR: Record<string, string> = {
   quote_submitted: "bg-amber-100 text-amber-700",
   order_confirmed: "bg-blue-100 text-blue-700",
+  in_build: "bg-purple-100 text-purple-700",
+  ready_to_ship: "bg-teal-100 text-teal-700",
 };
 
 interface PageProps {
@@ -46,7 +50,7 @@ export default async function PipelineSkuPage({ params }: PageProps) {
       .from("quote_items")
       .select("qty, quotes!inner(id, ref, status, contact_name, contact_company, site_name, required_date, win_probability)")
       .eq("sku", sku)
-      .eq("quotes.status", "order_confirmed"),
+      .in("quotes.status", ["order_confirmed", "in_build", "ready_to_ship"]),
   ]);
 
   if (!product) notFound();

@@ -33,7 +33,7 @@ export default async function AdminPipelinePage() {
     supabase
       .from("quote_items")
       .select("sku, qty, quotes!inner(status)")
-      .eq("quotes.status", "order_confirmed"),
+      .in("quotes.status", ["order_confirmed", "in_build", "ready_to_ship"]),
   ]);
 
   // Build open aggregations
@@ -79,6 +79,7 @@ export default async function AdminPipelinePage() {
 
   const totalOpen      = rows.reduce((s, r) => s + r.openQty, 0);
   const totalConfirmed = rows.reduce((s, r) => s + r.confirmedQty, 0);
+  const totalForecast  = rows.reduce((s, r) => s + r.forecastQty, 0);
 
   return (
     <div className="space-y-6">
@@ -93,7 +94,7 @@ export default async function AdminPipelinePage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <Stat label="Open quote units" value={totalOpen} colour="amber" />
         <Stat label="Confirmed order units" value={totalConfirmed} colour="blue" />
-        <Stat label="Total demand" value={totalOpen + totalConfirmed} colour="teal" />
+        <Stat label="Forecast demand" value={totalForecast} colour="teal" />
       </div>
 
       {categories.map(([category, catRows]) => (

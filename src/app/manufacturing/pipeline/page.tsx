@@ -20,9 +20,8 @@ export default async function ManufacturingPipelinePage() {
       .eq("quotes.status", "quote_submitted"),
     supabase
       .from("quote_items")
-      .select("sku, name, qty")
-      .eq("quotes.status", "order_confirmed")
-      .not("quotes", "is", null),
+      .select("sku, name, qty, quotes!inner(status)")
+      .in("quotes.status", ["order_confirmed", "in_build", "ready_to_ship"]),
   ]);
 
   // Aggregate open quotes
