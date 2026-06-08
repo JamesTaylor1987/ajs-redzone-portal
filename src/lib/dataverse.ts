@@ -64,7 +64,16 @@ async function lookupOrCreateContact(
     );
     if (lookupRes.ok) {
       const body = await lookupRes.json() as { value: { contactid: string }[] };
-      if (body.value?.length) return body.value[0].contactid;
+      if (body.value?.length) {
+        const existingId = body.value[0].contactid;
+        // Ensure existing contact is linked to the Redzone Sundry account
+        await fetch(`${url}/api/data/v9.2/contacts(${existingId})`, {
+          method: "PATCH",
+          headers: dvHeaders(token),
+          body: JSON.stringify({ "parentcustomerid_account@odata.bind": `/accounts(${RZ_SUNDRY_ACCOUNT_GUID})` }),
+        }).catch(() => {/* non-blocking */});
+        return existingId;
+      }
     }
 
     const createBody: Record<string, unknown> = {
