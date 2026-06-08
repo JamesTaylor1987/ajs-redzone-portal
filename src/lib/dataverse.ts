@@ -65,72 +65,69 @@ const STATUS_MAP: Record<string, string> = {
 export async function createDataverseOpportunity(
   quote: QuoteForDataverse,
 ): Promise<string | null> {
-  if (!isConfigured()) return null;
-
-  try {
-    const token = await getAccessToken();
-
-    const totalGbp =
-      (Number(quote.subtotal_gbp_pence) + Number(quote.shipping_gbp_pence ?? 0)) / 100;
-
-    const siteAddress = [
-      quote.site_name,
-      quote.site_address_line1,
-      quote.site_address_line2,
-      quote.site_address_city,
-      quote.site_address_postcode,
-      quote.site_country,
-    ]
-      .filter(Boolean)
-      .join(", ");
-
-    const body: Record<string, unknown> = {
-      cr49c_opportunityname: `${quote.contact_company ?? quote.contact_name ?? "Unknown"} — ${quote.ref}`,
-      cr49c_leaddescription:
-        quote.project_description ??
-        `${quote.contact_company ?? quote.contact_name ?? "Unknown"} — Red Zone Hardware`,
-      cr49c_opportunitysummary: [
-        quote.contact_name ? `Contact: ${quote.contact_name}` : null,
-        quote.contact_company ? `Company: ${quote.contact_company}` : null,
-        siteAddress ? `Site: ${siteAddress}` : null,
-      ].filter(Boolean).join("\n"),
-      cr49c_quoteref: quote.ref,
-      cr49c_dealvalue: totalGbp,
-      cr49c_docstatus: "Quoted",
-      cr49c_probability: 20,
-      cr49c_projecttype: 774710007,
-      cr49c_closedate: (quote.submitted_at ?? new Date().toISOString()).split("T")[0],
-      new_estimatedprojectdurationmonths: 1,
-    };
-
-    const { url, noahGuid } = cfg();
-    if (quote.required_date) body.new_estimatedstartdate = quote.required_date;
-    if (noahGuid) body["ownerid@odata.bind"] = `/systemusers(${noahGuid})`;
-
-    const res = await fetch(`${url}/api/data/v9.2/cr49c_opportunitieses`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        "OData-MaxVersion": "4.0",
-        "OData-Version": "4.0",
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      console.error("[dataverse] createOpportunity failed:", res.status, await res.text());
-      return null;
-    }
-
-    const entityIdHeader =
-      res.headers.get("OData-EntityId") ?? res.headers.get("odata-entityid") ?? "";
-    const match = entityIdHeader.match(/\(([^)]+)\)/);
-    return match?.[1] ?? null;
-  } catch (err) {
-    console.error("[dataverse] createOpportunity error:", err);
-    return null;
+  if (!isConfigured()) {
+    throw new Error("[dataverse] not configured — missing env vars");
   }
+
+  const token = await getAccessToken();
+
+  const totalGbp =
+    (Number(quote.subtotal_gbp_pence) + Number(quote.shipping_gbp_pence ?? 0)) / 100;
+
+  const siteAddress = [
+    quote.site_name,
+    quote.site_address_line1,
+    quote.site_address_line2,
+    quote.site_address_city,
+    quote.site_address_postcode,
+    quote.site_country,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const body: Record<string, unknown> = {
+    cr49c_opportunityname: `${quote.contact_company ?? quote.contact_name ?? "Unknown"} — ${quote.ref}`,
+    cr49c_leaddescription:
+      quote.project_description ??
+      `${quote.contact_company ?? quote.contact_name ?? "Unknown"} — Red Zone Hardware`,
+    cr49c_opportunitysummary: [
+      quote.contact_name ? `Contact: ${quote.contact_name}` : null,
+      quote.contact_company ? `Company: ${quote.contact_company}` : null,
+      siteAddress ? `Site: ${siteAddress}` : null,
+    ].filter(Boolean).join("\n"),
+    cr49c_quoteref: quote.ref,
+    cr49c_dealvalue: totalGbp,
+    cr49c_docstatus: "Quoted",
+    cr49c_probability: 20,
+    cr49c_projecttype: 774710007,
+    cr49c_closedate: (quote.submitted_at ?? new Date().toISOString()).split("T")[0],
+    new_estimatedprojectdurationmonths: 1,
+  };
+
+  const { url, noahGuid } = cfg();
+  if (quote.required_date) body.new_estimatedstartdate = quote.required_date;
+  if (noahGuid) body["ownerid@odata.bind"] = `/systemusers(${noahGuid})`;
+
+  const res = await fetch(`${url}/api/data/v9.2/cr49c_opportunitieses`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "OData-MaxVersion": "4.0",
+      "OData-Version": "4.0",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`[dataverse] createOpportunity failed: ${res.status} ${errText.substring(0, 300)}`);
+  }
+
+  const entityIdHeader =
+    res.headers.get("OData-EntityId") ?? res.headers.get("odata-entityid") ?? "";
+  const match = entityIdHeader.match(/\(([^)]+)\)/);
+  return match?.[1] ?? null;
 }
 
 export async function updateDataverseOpportunity(
