@@ -1,53 +1,46 @@
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase-server";
-import type { CreateQuoteRequest } from "@/lib/types";
+import { createDataverseOpportunity } from "@/lib/dataverse";
 
 export const runtime = "nodejs";
 
 export async function POST() {
   const supabase = getServiceClient();
 
-  // Grab first active product
-  const { data: products } = await supabase
+  const { data: product } = await supabase
     .from("products")
     .select("id, sku, name, price_gbp_pence")
     .eq("active", true)
     .limit(1)
     .single();
 
-  if (!products) {
+  if (!product) {
     return NextResponse.json({ error: "No active products found" }, { status: 400 });
   }
 
-  const body: CreateQuoteRequest = {
-    currency: "GBP",
-    fxRateUsed: null,
-    shippingPallets: 1,
-    shippingGbpPence: 15000,
-    lines: [{ productId: products.id, sku: products.sku, name: products.name, qty: 1, unitPricePence: products.price_gbp_pence }],
-    details: {
-      contactName: "Test User",
-      contactCompany: "Test Company Ltd",
-      contactEmail: "james@ajsspalding.co.uk",
-      contactPhone: "07700900000",
-      siteName: "Test Site",
-      siteAddressLine1: "1 Test Street",
-      siteAddressLine2: "",
-      siteAddressCity: "Birmingham",
-      siteAddressPostcode: "B1 1BB",
-      siteCountry: "United Kingdom",
-      requiredDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      projectDescription: "Dataverse integration test — safe to delete",
-      installRequested: false,
-    },
-  };
+  const subtotalPence = product.price_gbp_pence;
+  const shippingPence = 15000;
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? "https://redzone.ajsspalding.co.uk"}/api/quotes`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+  const dvGuid = await createDataverseOpportunity({
+    ref: "TEST-DIRECT",
+    contact_name: "Test User",
+    contact_company: "Test Company Ltd",
+    project_description: "Direct Dataverse test — safe to delete",
+    site_name: "Test Site",
+    site_address_line1: "1 Test Street",
+    site_address_line2: null,
+    site_address_city: "Birmingham",
+    site_address_postcode: "B1 1BB",
+    site_country: "United Kingdom",
+    required_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    subtotal_gbp_pence: subtotalPence,
+    shipping_gbp_pence: shippingPence,
+    submitted_at: new Date().toISOString(),
   });
 
-  const result = await res.json();
-  return NextResponse.json({ status: res.status, result });
+  return NextResponse.json({
+    dvGuid,
+    configured: !!(process.env.DATAVERSE_TENANT_ID && process.env.DATAVERSE_CLIENT_ID && process.env.DATAVERSE_CLIENT_SECRET && process.env.DATAVERSE_INSTANCE_URL),
+    totalGbp: (subtotalPence + shippingPence) / 100,
+  });
 }
