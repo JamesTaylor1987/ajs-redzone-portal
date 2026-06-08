@@ -109,6 +109,16 @@ export async function POST() {
     const { access_token: tok } = await tokRes.json() as { access_token: string };
     const h = { Authorization: `Bearer ${tok}`, "Content-Type": "application/json", "OData-MaxVersion": "4.0", "OData-Version": "4.0" };
 
+    // Query contact ManyToOneRelationships to find correct account nav property
+    const metaRes = await fetch(
+      `${dvUrl}/api/data/v9.2/EntityDefinitions(LogicalName='contact')/ManyToOneRelationships?$select=ReferencedEntity,ReferencingAttribute,ReferencingEntityNavigationPropertyName`,
+      { headers: { Authorization: `Bearer ${tok}`, "OData-MaxVersion": "4.0", "OData-Version": "4.0" } },
+    );
+    const metaBody = await metaRes.json() as { value: { ReferencedEntity: string; ReferencingAttribute: string; ReferencingEntityNavigationPropertyName: string }[] };
+    const accountNavProps = (metaBody.value ?? [])
+      .filter(r => r.ReferencedEntity === "account" && r.ReferencingAttribute.includes("account"))
+      .map(r => ({ attr: r.ReferencingAttribute, nav: r.ReferencingEntityNavigationPropertyName }));
+
     // Test contact create
     const cRes = await fetch(`${dvUrl}/api/data/v9.2/contacts`, {
       method: "POST", headers: h,
@@ -117,7 +127,7 @@ export async function POST() {
         telephone1: "07700900000",
       }),
     });
-    contactResult = cRes.ok ? "ok" : await cRes.text();
+    contactResult = cRes.ok ? `ok — accountNavProps: ${JSON.stringify(accountNavProps)}` : await cRes.text();
 
     // Test site address create
     const sRes = await fetch(`${dvUrl}/api/data/v9.2/cr49c_siteaddresses`, {
