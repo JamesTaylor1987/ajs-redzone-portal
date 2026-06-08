@@ -106,7 +106,6 @@ export async function createDataverseOpportunity(
     cr49c_projecttype: 774710007,
     cr49c_closedate: (quote.submitted_at ?? new Date().toISOString()).split("T")[0],
     new_estimatedprojectdurationmonths: 1,
-    "cr49c_account@odata.bind": "/accounts(301398fa-01bf-f011-bbd3-7c1e52609c0d)",
   };
 
   const { url, noahGuid } = cfg();
