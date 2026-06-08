@@ -176,8 +176,33 @@ export async function POST(request: Request) {
   const magicUrl = buildMagicUrl(ref, magicToken);
   const submittedAt = new Date().toISOString();
 
-  const [dvGuid] = await Promise.all([
-    createDataverseOpportunity({
+  // Fire email non-blocking
+  sendQuoteEmails(
+    {
+      ref,
+      contact_name: body.details.contactName.trim(),
+      contact_email: body.details.contactEmail.trim(),
+      contact_company: body.details.contactCompany?.trim() || null,
+      subtotal_gbp_pence: subtotalPence,
+      shipping_gbp_pence: body.shippingGbpPence ?? null,
+      shipping_pallets: body.shippingPallets ?? 1,
+      currency: body.currency ?? "GBP",
+      fx_rate_used: body.fxRateUsed,
+    },
+    itemsToInsert.map((i) => ({
+      sku: i.sku,
+      name: i.name,
+      qty: i.qty,
+      line_total_gbp_pence: i.line_total_gbp_pence,
+    })),
+    magicUrl,
+  ).catch((err) => console.error("[quotes] email error:", err));
+
+  // Dataverse — separate await so errors are isolated and visible
+  let dvGuid: string | null = null;
+  let dvCaught: string | null = null;
+  try {
+    dvGuid = await createDataverseOpportunity({
       ref,
       contact_name: body.details.contactName.trim(),
       contact_company: body.details.contactCompany?.trim() || null,
@@ -192,35 +217,19 @@ export async function POST(request: Request) {
       subtotal_gbp_pence: subtotalPence,
       shipping_gbp_pence: body.shippingGbpPence ?? null,
       submitted_at: submittedAt,
-    }),
-    sendQuoteEmails(
-      {
-        ref,
-        contact_name: body.details.contactName.trim(),
-        contact_email: body.details.contactEmail.trim(),
-        contact_company: body.details.contactCompany?.trim() || null,
-        subtotal_gbp_pence: subtotalPence,
-        shipping_gbp_pence: body.shippingGbpPence ?? null,
-        shipping_pallets: body.shippingPallets ?? 1,
-        currency: body.currency ?? "GBP",
-        fx_rate_used: body.fxRateUsed,
-      },
-      itemsToInsert.map((i) => ({
-        sku: i.sku,
-        name: i.name,
-        qty: i.qty,
-        line_total_gbp_pence: i.line_total_gbp_pence,
-      })),
-      magicUrl,
-    ),
-  ]);
+    });
+  } catch (err) {
+    dvCaught = String(err);
+    console.error("[quotes] createDataverseOpportunity threw:", dvCaught);
+  }
 
-  console.log("[quotes] dvGuid:", dvGuid);
+  console.log("[quotes] dvGuid:", dvGuid, "dvCaught:", dvCaught);
   if (dvGuid) {
     const { error: dvUpdateError } = await supabase.from("quotes").update({ dataverse_opportunity_id: dvGuid }).eq("id", quoteRow.id);
     console.log("[quotes] dataverse_opportunity_id save result:", dvUpdateError ?? "ok");
   }
 
+  // _dv fields are temporary diagnostics — remove before go-live
   const response: CreateQuoteResponse = { ref, id: quoteRow.id };
-  return NextResponse.json(response, { status: 201 });
+  return NextResponse.json({ ...response, _dvGuid: dvGuid, _dvCaught: dvCaught }, { status: 201 });
 }
