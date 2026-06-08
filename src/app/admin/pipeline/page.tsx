@@ -39,7 +39,8 @@ export default async function AdminPipelinePage() {
   // Build open aggregations
   const openMap = new Map<string, { qty: number; forecast: number }>();
   for (const item of openItems ?? []) {
-    const prob = (item.quotes as unknown as { win_probability: number | null } | null)?.win_probability ?? null;
+    const quotesArr = item.quotes as unknown as { win_probability: number | null }[];
+    const prob = Array.isArray(quotesArr) ? (quotesArr[0]?.win_probability ?? null) : null;
     const existing = openMap.get(item.sku) ?? { qty: 0, forecast: 0 };
     existing.qty += item.qty;
     if (prob !== null) existing.forecast += item.qty * (prob / 100);
