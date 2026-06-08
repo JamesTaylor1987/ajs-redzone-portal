@@ -1,20 +1,25 @@
-const TENANT = process.env.DATAVERSE_TENANT_ID;
-const CLIENT_ID = process.env.DATAVERSE_CLIENT_ID;
-const CLIENT_SECRET = process.env.DATAVERSE_CLIENT_SECRET;
-const INSTANCE_URL = process.env.DATAVERSE_INSTANCE_URL?.replace(/\/$/, "");
-const NOAH_OWNER_GUID = process.env.DATAVERSE_NOAH_OWNER_GUID;
+function cfg() {
+  return {
+    tenant:   process.env.DATAVERSE_TENANT_ID,
+    clientId: process.env.DATAVERSE_CLIENT_ID,
+    secret:   process.env.DATAVERSE_CLIENT_SECRET,
+    url:      process.env.DATAVERSE_INSTANCE_URL?.replace(/\/$/, ""),
+    noahGuid: process.env.DATAVERSE_NOAH_OWNER_GUID,
+  };
+}
 
 async function getAccessToken(): Promise<string> {
+  const { tenant, clientId, secret, url } = cfg();
   const res = await fetch(
-    `https://login.microsoftonline.com/${TENANT}/oauth2/v2.0/token`,
+    `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`,
     {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        client_id: CLIENT_ID!,
-        client_secret: CLIENT_SECRET!,
+        client_id: clientId!,
+        client_secret: secret!,
         grant_type: "client_credentials",
-        scope: `${INSTANCE_URL}/.default`,
+        scope: `${url}/.default`,
       }),
     },
   );
@@ -26,7 +31,8 @@ async function getAccessToken(): Promise<string> {
 }
 
 function isConfigured(): boolean {
-  return !!(TENANT && CLIENT_ID && CLIENT_SECRET && INSTANCE_URL);
+  const { tenant, clientId, secret, url } = cfg();
+  return !!(tenant && clientId && secret && url);
 }
 
 export interface QuoteForDataverse {
@@ -97,10 +103,11 @@ export async function createDataverseOpportunity(
       new_estimatedprojectdurationmonths: 1,
     };
 
+    const { url, noahGuid } = cfg();
     if (quote.required_date) body.new_estimatedstartdate = quote.required_date;
-    if (NOAH_OWNER_GUID) body["ownerid@odata.bind"] = `/systemusers(${NOAH_OWNER_GUID})`;
+    if (noahGuid) body["ownerid@odata.bind"] = `/systemusers(${noahGuid})`;
 
-    const res = await fetch(`${INSTANCE_URL}/api/data/v9.2/cr49c_opportunitieses`, {
+    const res = await fetch(`${url}/api/data/v9.2/cr49c_opportunitieses`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -138,8 +145,9 @@ export async function updateDataverseOpportunity(
   try {
     const token = await getAccessToken();
 
+    const { url } = cfg();
     const res = await fetch(
-      `${INSTANCE_URL}/api/data/v9.2/cr49c_opportunitieses(${dataverseId})`,
+      `${url}/api/data/v9.2/cr49c_opportunitieses(${dataverseId})`,
       {
         method: "PATCH",
         headers: {
