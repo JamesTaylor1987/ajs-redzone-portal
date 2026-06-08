@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase-server";
-import { createDataverseOpportunity } from "@/lib/dataverse";
 import type { CreateQuoteRequest } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -17,35 +16,6 @@ export async function POST() {
 
   if (!product) {
     return NextResponse.json({ error: "No active products found" }, { status: 400 });
-  }
-
-  // Direct DV call to surface any errors immediately
-  const testId = new Date().toTimeString().split(" ")[0].replace(/:/g, "");
-  let directDvGuid: string | null = null;
-  let directDvError: string | null = null;
-  try {
-    directDvGuid = await createDataverseOpportunity({
-      ref: `TEST-A-${testId}`,
-      contact_first_name: "Test",
-      contact_last_name: "User",
-      contact_name: "Test User",
-      contact_email: "james@ajsspalding.co.uk",
-      contact_phone: "07700900000",
-      contact_company: "Test Company Ltd",
-      project_description: "Direct test — safe to delete",
-      site_name: "Test Site",
-      site_address_line1: "1 Test Street",
-      site_address_line2: null,
-      site_address_city: "Birmingham",
-      site_address_postcode: "B1 1BB",
-      site_country: "United Kingdom",
-      required_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      subtotal_gbp_pence: product.price_gbp_pence,
-      shipping_gbp_pence: 15000,
-      submitted_at: new Date().toISOString(),
-    });
-  } catch (err) {
-    directDvError = String(err);
   }
 
   const body: CreateQuoteRequest = {
@@ -67,7 +37,7 @@ export async function POST() {
       siteAddressPostcode: "B1 1BB",
       siteCountry: "United Kingdom",
       requiredDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      projectDescription: `TEST-B-${testId} — safe to delete`,
+      projectDescription: `Test quote — safe to delete (${new Date().toISOString()})`,
       installRequested: false,
     },
   };
@@ -79,93 +49,15 @@ export async function POST() {
   });
   const quoteResult = await quoteRes.json();
 
-  let savedGuid: string | null = null;
+  let dataverseId: string | null = null;
   if (quoteResult.id) {
     const { data } = await supabase
       .from("quotes")
       .select("dataverse_opportunity_id")
       .eq("id", quoteResult.id)
       .single();
-    savedGuid = data?.dataverse_opportunity_id ?? null;
+    dataverseId = data?.dataverse_opportunity_id ?? null;
   }
 
-  // Directly test contact + site address creation, then PATCH opportunity to link them
-  const RZ_ACCOUNT = "301398fa-01bf-f011-bbd3-7c1e52609c0d";
-  let contactResult: string | null = null;
-  let siteResult: string | null = null;
-  let patchResult: string | null = null;
-  let inlineError: string | null = null;
-
-  try {
-    const tenant   = process.env.DATAVERSE_TENANT_ID;
-    const clientId = process.env.DATAVERSE_CLIENT_ID;
-    const secret   = process.env.DATAVERSE_CLIENT_SECRET;
-    const dvUrl    = process.env.DATAVERSE_INSTANCE_URL?.replace(/\/$/, "");
-    const tokRes = await fetch(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ client_id: clientId!, client_secret: secret!, grant_type: "client_credentials", scope: `${dvUrl}/.default` }),
-    });
-    const { access_token: tok } = await tokRes.json() as { access_token: string };
-    const h = { Authorization: `Bearer ${tok}`, "Content-Type": "application/json", "OData-MaxVersion": "4.0", "OData-Version": "4.0" };
-
-    // Create contact
-    const cRes = await fetch(`${dvUrl}/api/data/v9.2/contacts`, {
-      method: "POST", headers: h,
-      body: JSON.stringify({
-        firstname: "Test", lastname: "User", emailaddress1: `test-${Date.now()}@ajsspalding.co.uk`,
-        telephone1: "07700900000",
-        "parentcustomerid_account@odata.bind": `/accounts(${RZ_ACCOUNT})`,
-      }),
-    });
-    if (!cRes.ok) { contactResult = await cRes.text(); }
-    else {
-      const contactGuid = (cRes.headers.get("OData-EntityId") ?? "").match(/\(([^)]+)\)/)?.[1] ?? null;
-
-      // Try PATCHing parentaccountid separately (POST rejected it as undeclared nav prop)
-      let accountPatchResult = "no guid";
-      if (contactGuid) {
-        const apRes = await fetch(`${dvUrl}/api/data/v9.2/contacts(${contactGuid})`, {
-          method: "PATCH", headers: h,
-          body: JSON.stringify({ "parentaccountid@odata.bind": `/accounts(${RZ_ACCOUNT})` }),
-        });
-        accountPatchResult = apRes.ok ? "ok" : await apRes.text();
-      }
-      contactResult = `ok — accountPatch: ${accountPatchResult}`;
-
-      // Create site address
-      const sRes = await fetch(`${dvUrl}/api/data/v9.2/cr49c_siteaddresses`, {
-        method: "POST", headers: h,
-        body: JSON.stringify({
-          cr49c_sitename: "Test Site",
-          cr49c_postcode: "B1 1BB",
-          cr49c_address1: "1 Test Street",
-          cr49c_town: "Birmingham",
-          cr49c_country: "United Kingdom",
-          "cr49c_Account@odata.bind": `/accounts(${RZ_ACCOUNT})`,
-        }),
-      });
-      if (!sRes.ok) { siteResult = await sRes.text(); }
-      else {
-        siteResult = "ok";
-        const siteGuid = (sRes.headers.get("OData-EntityId") ?? "").match(/\(([^)]+)\)/)?.[1] ?? null;
-
-        // PATCH the directDvGuid opportunity to link contact + site address
-        if (directDvGuid) {
-          const patchBody: Record<string, string> = {};
-          if (contactGuid) patchBody["cr49c_OpportunityContact@odata.bind"] = `/contacts(${contactGuid})`;
-          if (siteGuid) patchBody["cr49c_SiteAddress@odata.bind"] = `/cr49c_siteaddresses(${siteGuid})`;
-          const pRes = await fetch(`${dvUrl}/api/data/v9.2/cr49c_opportunitieses(${directDvGuid})`, {
-            method: "PATCH", headers: h,
-            body: JSON.stringify(patchBody),
-          });
-          patchResult = pRes.ok ? `ok (contact:${contactGuid} site:${siteGuid})` : await pRes.text();
-        }
-      }
-    }
-  } catch (err) {
-    inlineError = String(err);
-  }
-
-  return NextResponse.json({ directDvGuid, directDvError, quote: quoteResult, savedDataverseId: savedGuid, contactCreate: contactResult, siteAddressCreate: siteResult, patchResult, inlineError });
+  return NextResponse.json({ quote: quoteResult, dataverseId });
 }
