@@ -198,9 +198,7 @@ export async function POST(request: Request) {
     magicUrl,
   ).catch((err) => console.error("[quotes] email error:", err));
 
-  // Dataverse — separate await so errors are isolated and visible
   let dvGuid: string | null = null;
-  let dvCaught: string | null = null;
   try {
     dvGuid = await createDataverseOpportunity({
       ref,
@@ -219,17 +217,13 @@ export async function POST(request: Request) {
       submitted_at: submittedAt,
     });
   } catch (err) {
-    dvCaught = String(err);
-    console.error("[quotes] createDataverseOpportunity threw:", dvCaught);
+    console.error("[quotes] createDataverseOpportunity failed:", err);
   }
 
-  console.log("[quotes] dvGuid:", dvGuid, "dvCaught:", dvCaught);
   if (dvGuid) {
-    const { error: dvUpdateError } = await supabase.from("quotes").update({ dataverse_opportunity_id: dvGuid }).eq("id", quoteRow.id);
-    console.log("[quotes] dataverse_opportunity_id save result:", dvUpdateError ?? "ok");
+    await supabase.from("quotes").update({ dataverse_opportunity_id: dvGuid }).eq("id", quoteRow.id);
   }
 
-  // _dv fields are temporary diagnostics — remove before go-live
   const response: CreateQuoteResponse = { ref, id: quoteRow.id };
-  return NextResponse.json({ ...response, _dvGuid: dvGuid, _dvCaught: dvCaught }, { status: 201 });
+  return NextResponse.json(response, { status: 201 });
 }
