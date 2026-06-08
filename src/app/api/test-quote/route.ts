@@ -20,11 +20,12 @@ export async function POST() {
   }
 
   // Direct DV call to surface any errors immediately
+  const testId = new Date().toTimeString().split(" ")[0].replace(/:/g, "");
   let directDvGuid: string | null = null;
   let directDvError: string | null = null;
   try {
     directDvGuid = await createDataverseOpportunity({
-      ref: "TEST-DIRECT",
+      ref: `TEST-A-${testId}`,
       contact_name: "Test User",
       contact_company: "Test Company Ltd",
       project_description: "Direct test — safe to delete",
@@ -61,7 +62,7 @@ export async function POST() {
       siteAddressPostcode: "B1 1BB",
       siteCountry: "United Kingdom",
       requiredDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      projectDescription: "Dataverse integration test — safe to delete",
+      projectDescription: `TEST-B-${testId} — safe to delete`,
       installRequested: false,
     },
   };
