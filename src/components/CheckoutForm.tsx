@@ -89,8 +89,8 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
       setError("Phone number is required.");
       return;
     }
-    if (!details.siteAddressPostcode.trim()) {
-      setError("Postcode is required.");
+    if (!details.projectDescription.trim()) {
+      setError("Project description is required.");
       return;
     }
     if (!details.requiredDate) {
@@ -180,7 +180,7 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
           <Field label="Required delivery date *" type="date" required value={details.requiredDate} onChange={set("requiredDate")} />
           <div className="sm:col-span-2">
             <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
-              Any further information
+              Project description *
             </label>
             <textarea
               value={details.projectDescription}
