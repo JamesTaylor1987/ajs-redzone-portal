@@ -58,37 +58,34 @@ export async function GET() {
     .filter((s: { Name: string }) => s.Name?.includes("docstatus") || s.Name?.includes("cr49c"))
     .map((s: { Name: string; Options: unknown[] }) => ({ name: s.Name, options: s.Options }));
 
-  const ACCOUNT_GUID = "301398fa-01bf-f011-bbd3-7c1e52609c0d";
-
-  // 2. Try PATCH with @odata.bind on most recent test record
-  // Use the last known working opportunity GUID
-  const testOppGuid = "138b6021-0863-f111-a826-7c1e52715e42";
-
-  const patchBind = await fetch(`${url}/api/data/v9.2/cr49c_opportunitieses(${testOppGuid})`, {
-    method: "PATCH",
-    headers: { ...headers, "Content-Type": "application/json" },
-    body: JSON.stringify({ "cr49c_account@odata.bind": `/accounts(${ACCOUNT_GUID})` }),
-  });
-  const patchBindResult = patchBind.ok ? "ok" : await patchBind.text();
-
-  // 3. Try $ref association approach
-  const refRes = await fetch(
-    `${url}/api/data/v9.2/cr49c_opportunitieses(${testOppGuid})/cr49c_account/$ref`,
-    {
-      method: "PUT",
-      headers: { ...headers, "Content-Type": "application/json" },
-      body: JSON.stringify({ "@odata.id": `${url}/api/data/v9.2/accounts(${ACCOUNT_GUID})` }),
-    },
+  // 2. List all many-to-one navigation properties on cr49c_opportunities
+  const navRes = await fetch(
+    `${url}/api/data/v9.2/EntityDefinitions(LogicalName='cr49c_opportunities')/ManyToOneRelationships?$select=SchemaName,ReferencingAttribute,ReferencedEntity,ReferencingEntityNavigationPropertyName`,
+    { headers },
   );
-  const refResult = refRes.ok ? "ok" : await refRes.text();
+  const navBody = await navRes.json();
+  const navProps = (navBody?.value ?? [])
+    .filter((r: { ReferencedEntity: string; ReferencingAttribute: string }) =>
+      r.ReferencedEntity === "account" || r.ReferencingAttribute?.includes("account")
+    )
+    .map((r: { SchemaName: string; ReferencingAttribute: string; ReferencedEntity: string; ReferencingEntityNavigationPropertyName: string }) => ({
+      schemaName: r.SchemaName,
+      referencingAttribute: r.ReferencingAttribute,
+      referencedEntity: r.ReferencedEntity,
+      navPropertyName: r.ReferencingEntityNavigationPropertyName,
+    }));
+
+  // All nav property names (to find any with 'account')
+  const allNavNames = (navBody?.value ?? [])
+    .map((r: { ReferencingEntityNavigationPropertyName: string; ReferencingAttribute: string }) =>
+      `${r.ReferencingAttribute} → ${r.ReferencingEntityNavigationPropertyName}`
+    )
+    .filter((s: string) => s.toLowerCase().includes("account"));
 
   return NextResponse.json({
     docStatusOptions,
     rawAttributeType: b2?.AttributeType,
-    rawB1Keys: Object.keys(b1 ?? {}),
-    matchingGlobalSets: matchingGlobalSet,
-    accountGuid: ACCOUNT_GUID,
-    patchBindResult,
-    refResult,
+    accountNavProps: navProps,
+    allNavNamesContainingAccount: allNavNames,
   });
 }
