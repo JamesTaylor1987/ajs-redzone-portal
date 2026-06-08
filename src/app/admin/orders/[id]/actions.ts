@@ -36,6 +36,7 @@ export async function updateStatusAction(
   }
 
   const supabase = getServiceClient();
+  const now = new Date().toISOString();
 
   const { error } = await supabase
     .from("quotes")
@@ -44,6 +45,9 @@ export async function updateStatusAction(
       ...(trackingRef !== null && { tracking_ref: trackingRef }),
       ...(trackingUrl !== null && { tracking_url: trackingUrl }),
       ...(cancellationReason !== null && { cancellation_reason: cancellationReason }),
+      ...(status === "order_confirmed" && { confirmed_at: now }),
+      ...(status === "shipped" && { shipped_at: now }),
+      ...(status === "complete" && { completed_at: now }),
     })
     .eq("id", id);
 
@@ -106,6 +110,37 @@ export async function assignPMAction(
   const { error } = await supabase
     .from("quotes")
     .update({ rz_pm_id: rzPmId })
+    .eq("id", id);
+
+  if (error) return { error: "Failed to save — please try again" };
+
+  revalidatePath(`/admin/orders/${id}`);
+  return { success: true };
+}
+
+export interface WinProbabilityState {
+  success?: boolean;
+  error?: string;
+}
+
+export async function updateWinProbabilityAction(
+  _prev: WinProbabilityState,
+  formData: FormData,
+): Promise<WinProbabilityState> {
+  const id = (formData.get("id") as string) ?? "";
+  const raw = (formData.get("probability") as string) ?? "";
+
+  if (!id) return { error: "Missing order id" };
+
+  const probability = raw === "" ? null : parseInt(raw, 10);
+  if (probability !== null && (isNaN(probability) || probability < 0 || probability > 100)) {
+    return { error: "Probability must be 0–100" };
+  }
+
+  const supabase = getServiceClient();
+  const { error } = await supabase
+    .from("quotes")
+    .update({ win_probability: probability })
     .eq("id", id);
 
   if (error) return { error: "Failed to save — please try again" };

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getServiceClient } from "@/lib/supabase-server";
 import { sendStatusUpdateEmail } from "@/lib/email";
 
-const MFG_STATUSES = ["in_build", "ready_to_ship", "shipped", "complete"] as const;
+const MFG_STATUSES = ["in_build", "ready_to_ship", "shipped"] as const;
 
 export interface StatusUpdateState {
   success?: boolean;
@@ -17,15 +17,26 @@ export async function manufacturingUpdateStatusAction(
 ): Promise<StatusUpdateState> {
   const id = (formData.get("id") as string) ?? "";
   const status = (formData.get("status") as string) ?? "";
-  const trackingRef = (formData.get("tracking_ref") as string | null)?.trim() || undefined;
-  const trackingUrl = (formData.get("tracking_url") as string | null)?.trim() || undefined;
+  const trackingRef = (formData.get("tracking_ref") as string | null)?.trim() || null;
+  const trackingUrl = (formData.get("tracking_url") as string | null)?.trim() || null;
 
   if (!MFG_STATUSES.includes(status as (typeof MFG_STATUSES)[number])) {
     return { error: "Invalid status" };
   }
 
   const supabase = getServiceClient();
-  const { error } = await supabase.from("quotes").update({ status }).eq("id", id);
+  const now = new Date().toISOString();
+
+  const { error } = await supabase
+    .from("quotes")
+    .update({
+      status,
+      ...(trackingRef !== null && { tracking_ref: trackingRef }),
+      ...(trackingUrl !== null && { tracking_url: trackingUrl }),
+      ...(status === "shipped" && { shipped_at: now }),
+    })
+    .eq("id", id);
+
   if (error) return { error: "Failed to update status" };
 
   const { data: quote } = await supabase
@@ -35,7 +46,14 @@ export async function manufacturingUpdateStatusAction(
     .single();
 
   if (quote) {
-    await sendStatusUpdateEmail(quote.contact_name, quote.contact_email, quote.ref, status, trackingRef, trackingUrl);
+    await sendStatusUpdateEmail(
+      quote.contact_name,
+      quote.contact_email,
+      quote.ref,
+      status,
+      trackingRef ?? undefined,
+      trackingUrl ?? undefined,
+    );
   }
 
   revalidatePath(`/manufacturing/orders/${id}`);

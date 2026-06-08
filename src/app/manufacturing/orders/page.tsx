@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { getServiceClient } from "@/lib/supabase-server";
+import { MfgStatusFilter } from "../MfgStatusFilter";
 
 export const dynamic = "force-dynamic";
 
@@ -7,28 +9,39 @@ const STATUS_LABEL: Record<string, string> = {
   order_confirmed: "Order confirmed",
   in_build:        "In build",
   ready_to_ship:   "Ready to ship",
-  shipped:         "Shipped",
-  complete:        "Complete",
 };
 
 const STATUS_COLOUR: Record<string, string> = {
   order_confirmed: "bg-blue-100 text-blue-700",
   in_build:        "bg-purple-100 text-purple-700",
   ready_to_ship:   "bg-teal-100 text-teal-700",
-  shipped:         "bg-green-100 text-green-700",
-  complete:        "bg-slate-100 text-slate-500",
 };
 
-const ACTIVE_STATUSES = ["order_confirmed", "in_build", "ready_to_ship", "shipped"];
+const WORKSHOP_STATUSES = ["order_confirmed", "in_build", "ready_to_ship"];
 
-export default async function ManufacturingOrdersPage() {
+interface PageProps {
+  searchParams: { status?: string };
+}
+
+export default async function ManufacturingOrdersPage({ searchParams }: PageProps) {
   const supabase = getServiceClient();
 
-  const { data: orders } = await supabase
+  const activeStatus = searchParams.status && WORKSHOP_STATUSES.includes(searchParams.status)
+    ? searchParams.status
+    : null;
+
+  let query = supabase
     .from("quotes")
-    .select("id, ref, status, contact_name, contact_company, required_date, created_at")
-    .in("status", ACTIVE_STATUSES)
+    .select("id, ref, status, contact_name, contact_company, required_date, site_name")
     .order("required_date", { ascending: true, nullsFirst: false });
+
+  if (activeStatus) {
+    query = query.eq("status", activeStatus);
+  } else {
+    query = query.in("status", WORKSHOP_STATUSES);
+  }
+
+  const { data: orders } = await query;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -45,6 +58,10 @@ export default async function ManufacturingOrdersPage() {
   return (
     <div className="space-y-5">
       <h1 className="text-xl font-extrabold text-ajs-dark">Work orders</h1>
+
+      <Suspense>
+        <MfgStatusFilter />
+      </Suspense>
 
       {!orders?.length ? (
         <div className="bg-white rounded-xl border border-ajs-light p-8 text-center text-ajs-muted text-sm">
@@ -69,6 +86,9 @@ export default async function ManufacturingOrdersPage() {
                         <span className="text-ajs-muted font-normal"> — {o.contact_company}</span>
                       )}
                     </p>
+                    {o.site_name && (
+                      <p className="text-xs text-ajs-muted mt-0.5">{o.site_name}</p>
+                    )}
                   </div>
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_COLOUR[o.status] ?? "bg-slate-100 text-slate-600"}`}>
                     {STATUS_LABEL[o.status] ?? o.status}

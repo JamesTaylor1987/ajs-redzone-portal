@@ -11,6 +11,7 @@ interface Props {
 
 const NAV_LINKS = [
   { href: "/admin/orders", label: "Orders" },
+  { href: "/admin/pipeline", label: "Pipeline" },
   { href: "/admin/installation-quotes", label: "Install Quotes" },
   { href: "/admin/crm", label: "CRM" },
   { href: "/admin/products", label: "Products" },

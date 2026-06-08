@@ -7,7 +7,6 @@ const MFG_STATUSES = [
   { value: "in_build",      label: "In build" },
   { value: "ready_to_ship", label: "Ready to ship" },
   { value: "shipped",       label: "Shipped" },
-  { value: "complete",      label: "Complete" },
 ];
 
 function SubmitButton() {

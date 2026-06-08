@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase-server";
 import { StatusUpdateForm } from "./StatusUpdateForm";
 import { AssignPMForm } from "./AssignPMForm";
+import { WinProbabilityForm } from "./WinProbabilityForm";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,11 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
         currentTrackingRef={quote.tracking_ref}
         currentTrackingUrl={quote.tracking_url}
       />
+
+      {/* Win probability — only for open quotes */}
+      {quote.status === "quote_submitted" && (
+        <WinProbabilityForm quoteId={quote.id} currentProbability={quote.win_probability ?? null} />
+      )}
 
       {/* Redzone PM assignment */}
       <AssignPMForm
@@ -193,22 +199,11 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
 
       {/* Dates */}
       <Card title="Timestamps">
-        <Row
-          label="Submitted"
-          value={
-            quote.submitted_at
-              ? new Date(quote.submitted_at).toLocaleString("en-GB")
-              : null
-          }
-        />
-        <Row
-          label="Accepted"
-          value={
-            quote.accepted_at
-              ? new Date(quote.accepted_at).toLocaleString("en-GB")
-              : null
-          }
-        />
+        <Row label="Submitted"     value={quote.submitted_at  ? new Date(quote.submitted_at).toLocaleString("en-GB")  : null} />
+        <Row label="Accepted"      value={quote.accepted_at   ? new Date(quote.accepted_at).toLocaleString("en-GB")   : null} />
+        <Row label="Order confirmed" value={quote.confirmed_at ? new Date(quote.confirmed_at).toLocaleString("en-GB") : null} />
+        <Row label="Shipped"       value={quote.shipped_at    ? new Date(quote.shipped_at).toLocaleString("en-GB")    : null} />
+        <Row label="Completed"     value={quote.completed_at  ? new Date(quote.completed_at).toLocaleString("en-GB")  : null} />
       </Card>
     </div>
   );
