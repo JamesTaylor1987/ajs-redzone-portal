@@ -89,12 +89,12 @@ export async function POST() {
     savedGuid = data?.dataverse_opportunity_id ?? null;
   }
 
-  // Directly test contact + site address creation to surface errors
+  // Directly test contact + site address creation, then PATCH opportunity to link them
   const RZ_ACCOUNT = "301398fa-01bf-f011-bbd3-7c1e52609c0d";
   let contactResult: string | null = null;
-  let contactError: string | null = null;
   let siteResult: string | null = null;
-  let siteError: string | null = null;
+  let patchResult: string | null = null;
+  let inlineError: string | null = null;
 
   try {
     const tenant   = process.env.DATAVERSE_TENANT_ID;
@@ -109,7 +109,7 @@ export async function POST() {
     const { access_token: tok } = await tokRes.json() as { access_token: string };
     const h = { Authorization: `Bearer ${tok}`, "Content-Type": "application/json", "OData-MaxVersion": "4.0", "OData-Version": "4.0" };
 
-    // Test contact create with account binding
+    // Create contact
     const cRes = await fetch(`${dvUrl}/api/data/v9.2/contacts`, {
       method: "POST", headers: h,
       body: JSON.stringify({
@@ -118,24 +118,44 @@ export async function POST() {
         "parentcustomerid_account@odata.bind": `/accounts(${RZ_ACCOUNT})`,
       }),
     });
-    contactResult = cRes.ok ? "ok" : await cRes.text();
+    if (!cRes.ok) { contactResult = await cRes.text(); }
+    else {
+      contactResult = "ok";
+      const contactGuid = (cRes.headers.get("OData-EntityId") ?? "").match(/\(([^)]+)\)/)?.[1] ?? null;
 
-    // Test site address create
-    const sRes = await fetch(`${dvUrl}/api/data/v9.2/cr49c_siteaddresses`, {
-      method: "POST", headers: h,
-      body: JSON.stringify({
-        cr49c_sitename: "Test Site",
-        cr49c_postcode: "B1 1BB",
-        cr49c_address1: "1 Test Street",
-        cr49c_town: "Birmingham",
-        cr49c_country: "United Kingdom",
-        "cr49c_Account@odata.bind": `/accounts(${RZ_ACCOUNT})`,
-      }),
-    });
-    siteResult = sRes.ok ? "ok" : await sRes.text();
+      // Create site address
+      const sRes = await fetch(`${dvUrl}/api/data/v9.2/cr49c_siteaddresses`, {
+        method: "POST", headers: h,
+        body: JSON.stringify({
+          cr49c_sitename: "Test Site",
+          cr49c_postcode: "B1 1BB",
+          cr49c_address1: "1 Test Street",
+          cr49c_town: "Birmingham",
+          cr49c_country: "United Kingdom",
+          "cr49c_Account@odata.bind": `/accounts(${RZ_ACCOUNT})`,
+        }),
+      });
+      if (!sRes.ok) { siteResult = await sRes.text(); }
+      else {
+        siteResult = "ok";
+        const siteGuid = (sRes.headers.get("OData-EntityId") ?? "").match(/\(([^)]+)\)/)?.[1] ?? null;
+
+        // PATCH the directDvGuid opportunity to link contact + site address
+        if (directDvGuid) {
+          const patchBody: Record<string, string> = {};
+          if (contactGuid) patchBody["cr49c_OpportunityContact@odata.bind"] = `/contacts(${contactGuid})`;
+          if (siteGuid) patchBody["cr49c_SiteAddress@odata.bind"] = `/cr49c_siteaddresses(${siteGuid})`;
+          const pRes = await fetch(`${dvUrl}/api/data/v9.2/cr49c_opportunitieses(${directDvGuid})`, {
+            method: "PATCH", headers: h,
+            body: JSON.stringify(patchBody),
+          });
+          patchResult = pRes.ok ? `ok (contact:${contactGuid} site:${siteGuid})` : await pRes.text();
+        }
+      }
+    }
   } catch (err) {
-    contactError = String(err);
+    inlineError = String(err);
   }
 
-  return NextResponse.json({ directDvGuid, directDvError, quote: quoteResult, savedDataverseId: savedGuid, contactCreate: contactResult, contactError, siteAddressCreate: siteResult, siteError });
+  return NextResponse.json({ directDvGuid, directDvError, quote: quoteResult, savedDataverseId: savedGuid, contactCreate: contactResult, siteAddressCreate: siteResult, patchResult, inlineError });
 }
