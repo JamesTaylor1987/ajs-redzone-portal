@@ -58,27 +58,37 @@ export async function GET() {
     .filter((s: { Name: string }) => s.Name?.includes("docstatus") || s.Name?.includes("cr49c"))
     .map((s: { Name: string; Options: unknown[] }) => ({ name: s.Name, options: s.Options }));
 
-  // 2. Red Zone Sundry account GUID
-  const accountRes = await fetch(
-    `${url}/api/data/v9.2/accounts?$filter=name eq 'Red Zone Sundry'&$select=accountid,name`,
-    { headers },
-  );
-  const accountBody = await accountRes.json();
+  const ACCOUNT_GUID = "301398fa-01bf-f011-bbd3-7c1e52609c0d";
 
-  // 3. Also try with "Redzone Sundry" (no space)
-  const account2Res = await fetch(
-    `${url}/api/data/v9.2/accounts?$filter=name eq 'Redzone Sundry'&$select=accountid,name`,
-    { headers },
+  // 2. Try PATCH with @odata.bind on most recent test record
+  // Use the last known working opportunity GUID
+  const testOppGuid = "138b6021-0863-f111-a826-7c1e52715e42";
+
+  const patchBind = await fetch(`${url}/api/data/v9.2/cr49c_opportunitieses(${testOppGuid})`, {
+    method: "PATCH",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({ "cr49c_account@odata.bind": `/accounts(${ACCOUNT_GUID})` }),
+  });
+  const patchBindResult = patchBind.ok ? "ok" : await patchBind.text();
+
+  // 3. Try $ref association approach
+  const refRes = await fetch(
+    `${url}/api/data/v9.2/cr49c_opportunitieses(${testOppGuid})/cr49c_account/$ref`,
+    {
+      method: "PUT",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ "@odata.id": `${url}/api/data/v9.2/accounts(${ACCOUNT_GUID})` }),
+    },
   );
-  const account2Body = await account2Res.json();
+  const refResult = refRes.ok ? "ok" : await refRes.text();
 
   return NextResponse.json({
     docStatusOptions,
     rawAttributeType: b2?.AttributeType,
-    rawOptionSetMetadataId: b1?.OptionSet?.MetadataId ?? null,
     rawB1Keys: Object.keys(b1 ?? {}),
     matchingGlobalSets: matchingGlobalSet,
-    redZoneSundryAccount: accountBody?.value ?? [],
-    redzoneAccount: account2Body?.value ?? [],
+    accountGuid: ACCOUNT_GUID,
+    patchBindResult,
+    refResult,
   });
 }
