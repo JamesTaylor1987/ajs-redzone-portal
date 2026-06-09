@@ -58,45 +58,44 @@ export async function upsertProductAction(formData: FormData) {
   redirect("/admin/products");
 }
 
-export async function addProductImageAction(formData: FormData) {
-  const productId = formData.get("productId") as string;
-  const imageFile = formData.get("image") as File | null;
-
-  if (!productId || !imageFile || imageFile.size === 0) {
-    return { error: "No image provided." };
-  }
-
+// Returns a signed upload URL so the browser can upload directly to Supabase
+// Storage without going through Vercel (which has a 4.5 MB body limit).
+export async function createSignedUploadUrlAction(
+  productId: string,
+  filename: string,
+): Promise<{ path?: string; token?: string; error?: string }> {
+  if (!productId || !filename) return { error: "Missing params." };
   const supabase = getServiceClient();
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "jpg";
+  const path = `products/${productId}/${Date.now()}_${Math.random().toString(36).slice(2, 7)}.${ext}`;
+  const { data, error } = await supabase.storage
+    .from("product-images")
+    .createSignedUploadUrl(path);
+  if (error || !data) return { error: error?.message ?? "Could not create upload URL." };
+  return { path, token: data.token };
+}
 
+// Called after direct upload succeeds — saves the public URL to the DB.
+export async function registerProductImageAction(
+  productId: string,
+  path: string,
+): Promise<{ success?: boolean; error?: string }> {
+  if (!productId || !path) return { error: "Missing params." };
+  const supabase = getServiceClient();
   const { count } = await supabase
     .from("product_images")
     .select("*", { count: "exact", head: true })
     .eq("product_id", productId);
-
   const sortOrder = count ?? 0;
-
-  const ext = imageFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const path = `products/${productId}/${Date.now()}.${ext}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("product-images")
-    .upload(path, imageFile, { upsert: false, contentType: imageFile.type });
-
-  if (uploadError) return { error: `Upload failed: ${uploadError.message}` };
-
   const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
   const url = urlData.publicUrl;
-
   const { error: insertError } = await supabase
     .from("product_images")
     .insert({ product_id: productId, url, sort_order: sortOrder });
-
   if (insertError) return { error: insertError.message };
-
   if (sortOrder === 0) {
     await supabase.from("products").update({ image_url: url }).eq("id", productId);
   }
-
   revalidatePath(`/admin/products/${productId}/edit`);
   revalidatePath("/admin/products");
   revalidatePath("/");
