@@ -18,7 +18,7 @@ export async function upsertProductAction(formData: FormData) {
   const price_gbp_pence = Math.round(parseFloat(g("price_gbp")) * 100);
   const stock_status = g("stock_status");
   const lead_time = g("lead_time");
-  const sort_order = parseInt(g("sort_order") || "0", 10);
+  let sort_order = parseInt(g("sort_order") || "0", 10);
   const active = formData.get("active") === "on";
 
   if (!sku || !name || !category || isNaN(price_gbp_pence)) {
@@ -26,6 +26,51 @@ export async function upsertProductAction(formData: FormData) {
   }
 
   const supabase = getServiceClient();
+
+  // Treat sort_order as 1-based position within the category.
+  // Re-sequence all products in the category so positions are 10, 20, 30…
+  const desiredPosition = Math.max(1, sort_order || 1);
+
+  // Siblings = other products in same category, ordered by current sort_order
+  const sibQuery = supabase
+    .from("products")
+    .select("id, sort_order")
+    .eq("category", category)
+    .order("sort_order", { ascending: true });
+  if (id) sibQuery.neq("id", id);
+  const { data: siblings } = await sibQuery;
+  const sibs = siblings ?? [];
+
+  // Clamp position to valid range
+  const pos = Math.min(desiredPosition, sibs.length + 1);
+
+  // Build ordered list with the current product inserted at pos
+  const ordered: string[] = [];
+  for (let i = 0; i < sibs.length; i++) {
+    if (ordered.length + 1 === pos) ordered.push("__current__");
+    ordered.push(sibs[i].id);
+  }
+  if (!ordered.includes("__current__")) ordered.push("__current__");
+
+  // Assign clean sort_orders (10, 20, 30…) and collect updates for siblings
+  let newSortOrder = 10;
+  const sibUpdates: { id: string; sort_order: number }[] = [];
+  for (const pid of ordered) {
+    if (pid === "__current__") {
+      sort_order = newSortOrder;
+    } else {
+      const existing = sibs.find((s) => s.id === pid)!;
+      if (existing.sort_order !== newSortOrder) {
+        sibUpdates.push({ id: pid, sort_order: newSortOrder });
+      }
+    }
+    newSortOrder += 10;
+  }
+
+  // Update any siblings whose sort_order changed
+  for (const u of sibUpdates) {
+    await supabase.from("products").update({ sort_order: u.sort_order }).eq("id", u.id);
+  }
 
   const payload = {
     sku,

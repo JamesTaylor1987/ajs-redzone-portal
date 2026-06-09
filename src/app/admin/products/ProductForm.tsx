@@ -6,9 +6,11 @@ import type { Product } from "@/lib/types";
 
 interface Props {
   product?: Product;
+  currentPosition?: number;
+  sectionSize?: number;
 }
 
-export function ProductForm({ product }: Props) {
+export function ProductForm({ product, currentPosition, sectionSize }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -137,12 +139,26 @@ export function ProductForm({ product }: Props) {
           name="lead_time"
           defaultValue={product?.lead_time ?? "4–6 weeks"}
         />
-        <Field
-          label="Sort order"
-          name="sort_order"
-          type="number"
-          defaultValue={product?.sort_order?.toString() ?? "0"}
-        />
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
+            Position in section
+          </label>
+          <input
+            type="number"
+            name="sort_order"
+            min="1"
+            defaultValue={currentPosition ?? 1}
+            className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
+          />
+          {sectionSize != null && (
+            <p className="text-xs text-ajs-muted mt-1">
+              Currently {currentPosition} of {sectionSize} in this section
+            </p>
+          )}
+          {sectionSize == null && (
+            <p className="text-xs text-ajs-muted mt-1">1 = show first in this section</p>
+          )}
+        </div>
       </Section>
 
       <div className="bg-white rounded-xl border border-ajs-light p-5">
