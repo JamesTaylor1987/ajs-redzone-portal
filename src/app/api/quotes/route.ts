@@ -3,11 +3,16 @@ import { getServiceClient } from "@/lib/supabase-server";
 import { generateMagicToken, magicLinkExpiry, buildMagicUrl } from "@/lib/magic-link";
 import { sendQuoteEmails } from "@/lib/email";
 import { createDataverseOpportunity } from "@/lib/dataverse";
+import { getLocale } from "@/lib/i18n";
 import type { CreateQuoteRequest, CreateQuoteResponse } from "@/lib/types";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  const localeCookie = cookieHeader.match(/ajs_locale=([^;]+)/)?.[1] ?? null;
+  const locale = getLocale(localeCookie);
+
   let body: CreateQuoteRequest;
   try {
     body = (await request.json()) as CreateQuoteRequest;
@@ -119,6 +124,7 @@ export async function POST(request: Request) {
       submitted_at: new Date().toISOString(),
       magic_token: magicToken,
       magic_expires_at: magicExpiresAt.toISOString(),
+      locale,
     })
     .select("id")
     .single();
@@ -189,6 +195,7 @@ export async function POST(request: Request) {
       shipping_pallets: body.shippingPallets ?? 1,
       currency: body.currency ?? "GBP",
       fx_rate_used: body.fxRateUsed,
+      locale,
     },
     itemsToInsert.map((i) => ({
       sku: i.sku,

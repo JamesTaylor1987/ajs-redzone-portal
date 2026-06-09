@@ -41,7 +41,7 @@ export async function manufacturingUpdateStatusAction(
 
   const { data: quote } = await supabase
     .from("quotes")
-    .select("ref, contact_name, contact_email")
+    .select("ref, contact_name, contact_email, locale")
     .eq("id", id)
     .single();
 
@@ -53,6 +53,9 @@ export async function manufacturingUpdateStatusAction(
       status,
       trackingRef ?? undefined,
       trackingUrl ?? undefined,
+      undefined,
+      undefined,
+      quote.locale,
     );
   }
 

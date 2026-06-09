@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
 import { REDZONE_LOGO_B64 } from "./pdf-logos";
+import { getLocale, getT } from "./i18n";
 
 // ─── pdfmake Node.js singleton ────────────────────────────────────────────────
 // Imported as CJS to avoid ESM/RSC conflicts that broke @react-pdf/renderer.
@@ -54,6 +55,7 @@ export interface PDFQuote {
   shipping_pallets?: number | null;
   currency?: string | null;
   fx_rate_used?: number | null;
+  locale?: string | null;
 }
 
 export interface PDFItem {
@@ -99,7 +101,7 @@ function addr(quote: PDFQuote): string {
 
 // ─── Document sections ────────────────────────────────────────────────────────
 
-function buildHeader(label: string, ref: string, date: string, logoKey: string | null, badge?: string): Content {
+function buildHeader(label: string, ref: string, date: string, logoKey: string | null, badge?: string, partnershipWith = "in partnership with"): Content {
   const ajsLogoContent: Content = logoKey
     ? { image: logoKey, width: 80, margin: [0, 0, 0, 0] } as any
     : { text: "AJS Control and Automation Ltd", bold: true, color: BLUE, fontSize: 11 };
@@ -127,7 +129,7 @@ function buildHeader(label: string, ref: string, date: string, logoKey: string |
           ajsLogoContent,
           {
             columns: [
-              { text: "in partnership with", color: MUTED, fontSize: 7, italics: true, alignment: "right" as const, margin: [0, 0, 8, 0] },
+              { text: partnershipWith, color: MUTED, fontSize: 7, italics: true, alignment: "right" as const, margin: [0, 0, 8, 0] },
               { image: REDZONE_LOGO_B64, width: 72, margin: [0, 0, 0, 0] } as any,
             ],
             columnGap: 0,
@@ -172,38 +174,38 @@ function buildHeader(label: string, ref: string, date: string, logoKey: string |
   return { stack: [logoBar, refBar] } as any;
 }
 
-function buildCustomerSection(quote: PDFQuote): Content {
+function buildCustomerSection(quote: PDFQuote, t: ReturnType<typeof getT>): Content {
   const rows: Content[] = [];
   function row(label: string, value: string | null | undefined): void {
     if (!value) return;
     rows.push({ columns: [{ text: label, color: MUTED, width: 120 }, { text: value, bold: false }] } as any);
   }
-  row("Name", quote.contact_name);
-  row("Company", quote.contact_company);
-  row("Email", quote.contact_email);
-  row("Phone", quote.contact_phone);
+  row(t("pdfCustomerName"), quote.contact_name);
+  row(t("pdfCustomerCompany"), quote.contact_company);
+  row(t("pdfCustomerEmail"), quote.contact_email);
+  row(t("pdfCustomerPhone"), quote.contact_phone);
   const a = addr(quote);
-  if (a) row("Delivery address", a);
-  if (quote.required_date) row("Required by", fmtDate(quote.required_date));
+  if (a) row(t("pdfCustomerDeliveryAddress"), a);
+  if (quote.required_date) row(t("pdfCustomerRequiredBy"), fmtDate(quote.required_date));
   return {
     stack: [
-      { text: "CUSTOMER", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
+      { text: t("pdfCustomerSection"), color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
       { stack: rows, fontSize: 10 },
     ],
     margin: [0, 0, 0, 14],
   } as any;
 }
 
-function buildItemsTable(quote: PDFQuote, items: PDFItem[]): Content {
+function buildItemsTable(quote: PDFQuote, items: PDFItem[], t: ReturnType<typeof getT>): Content {
   const ccy = quote.currency ?? "GBP";
   const fx  = quote.fx_rate_used ?? null;
   const total = items.reduce((sum, i) => sum + Number(i.line_total_gbp_pence), 0);
 
   const headerRow: any[] = [
-    { text: "Part code", bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
-    { text: "Description", bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
-    { text: "Qty", bold: true, color: MUTED, fontSize: 8, alignment: "center", fillColor: FAINT },
-    { text: "Total", bold: true, color: MUTED, fontSize: 8, alignment: "right", fillColor: FAINT },
+    { text: t("pdfPartCode"), bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
+    { text: t("pdfDescription"), bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
+    { text: t("pdfQty"), bold: true, color: MUTED, fontSize: 8, alignment: "center", fillColor: FAINT },
+    { text: t("pdfTotal"), bold: true, color: MUTED, fontSize: 8, alignment: "right", fillColor: FAINT },
   ];
 
   const dataRows: any[][] = items.map((item) => [
@@ -216,25 +218,26 @@ function buildItemsTable(quote: PDFQuote, items: PDFItem[]): Content {
   const shippingPence = quote.shipping_gbp_pence ? Number(quote.shipping_gbp_pence) : null;
   const pallets = quote.shipping_pallets ?? 1;
   const grandTotal = total + (shippingPence ?? 0);
+  const shippingLabel = t(pallets !== 1 ? "pdfShippingPallets" : "pdfShippingPallet", { count: pallets });
 
   const subtotalRow: any[] = [
-    { text: "Subtotal (ex-VAT)", colSpan: 3, alignment: "right", border: [false, true, false, false] },
+    { text: t("pdfSubtotalExVat"), colSpan: 3, alignment: "right", border: [false, true, false, false] },
     {}, {},
     { text: money(total, ccy, fx), alignment: "right", border: [false, true, false, false] },
   ];
 
   const shippingRow: any[] = shippingPence !== null ? [
-    { text: `Shipping (${pallets} pallet${pallets !== 1 ? "s" : ""})`, colSpan: 3, alignment: "right", border: [false, false, false, false] },
+    { text: shippingLabel, colSpan: 3, alignment: "right", border: [false, false, false, false] },
     {}, {},
     { text: money(shippingPence, ccy, fx), alignment: "right", border: [false, false, false, false] },
   ] : [
-    { text: `Shipping (${pallets} pallet${pallets !== 1 ? "s" : ""})`, colSpan: 3, alignment: "right", border: [false, false, false, false] },
+    { text: shippingLabel, colSpan: 3, alignment: "right", border: [false, false, false, false] },
     {}, {},
     { text: "EXW", alignment: "right", color: MUTED, border: [false, false, false, false] },
   ];
 
   const grandTotalRow: any[] = [
-    { text: "Total (ex-VAT)", colSpan: 3, bold: true, alignment: "right", border: [false, true, false, false] },
+    { text: t("pdfTotalExVat"), colSpan: 3, bold: true, alignment: "right", border: [false, true, false, false] },
     {}, {},
     { text: money(grandTotal, ccy, fx), bold: true, color: BLUE, fontSize: 11, alignment: "right", border: [false, true, false, false] },
   ];
@@ -242,7 +245,7 @@ function buildItemsTable(quote: PDFQuote, items: PDFItem[]): Content {
   const tableBody = [headerRow, ...dataRows, subtotalRow, shippingRow, grandTotalRow];
 
   const sections: Content[] = [
-    { text: "ITEMS", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] } as any,
+    { text: t("pdfItemsSection"), color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] } as any,
     {
       table: {
         widths: [72, "*", 28, 68],
@@ -263,7 +266,7 @@ function buildItemsTable(quote: PDFQuote, items: PDFItem[]): Content {
   ];
 
   if (ccy === "EUR") {
-    sections.push({ text: "Indicative EUR rate — invoice issued in GBP", color: "#94a3b8", fontSize: 8, alignment: "right", margin: [0, 4, 0, 0] } as any);
+    sections.push({ text: t("pdfIndicativeEur"), color: "#94a3b8", fontSize: 8, alignment: "right", margin: [0, 4, 0, 0] } as any);
   }
 
   return { stack: sections } as any;
@@ -292,9 +295,9 @@ function buildNoticeBox(text: string, bg: string, color: string, heading?: strin
   } as any;
 }
 
-function buildTerms(): Content {
+function buildTerms(t: ReturnType<typeof getT>): Content {
   return {
-    text: "All prices ex-VAT. VAT applied on invoice based on registration status.\nHardware invoiced 100% prior to shipment. DAP delivery terms.",
+    text: t("pdfTermsText"),
     color: "#94a3b8",
     fontSize: 8,
     lineHeight: 1.5,
@@ -336,6 +339,7 @@ export interface InstallPDFQuote {
   ajs_notes?: string | null;
   containment_notes?: string | null;
   payment_terms?: string | null;
+  locale?: string | null;
 }
 
 export interface InstallPDFItem {
@@ -351,6 +355,7 @@ function renderDoc(def: TDocumentDefinitions): Promise<Buffer> {
 
 // ─── Documents ────────────────────────────────────────────────────────────────
 export async function renderQuoteRequestPDF(quote: PDFQuote, items: PDFItem[]): Promise<Buffer> {
+  const t = getT(getLocale(quote.locale));
   const logoSrc = await fetchLogoBase64();
   const images = logoSrc ? { logo: logoSrc } : undefined;
 
@@ -359,18 +364,14 @@ export async function renderQuoteRequestPDF(quote: PDFQuote, items: PDFItem[]): 
     pageMargins: [0, 0, 0, 50],
     ...(images && { images }),
     content: [
-      buildHeader("Quote request", quote.ref, today(), logoSrc ? "logo" : null),
+      buildHeader(t("pdfQuoteRequest"), quote.ref, today(), logoSrc ? "logo" : null, undefined, t("pdfInPartnershipWith")),
       {
         stack: [
-          buildCustomerSection(quote),
+          buildCustomerSection(quote, t),
           buildDivider(),
-          buildItemsTable(quote, items),
-          buildNoticeBox(
-            "This confirms receipt of your quote request. Prices are indicative and subject to confirmation by the AJS Redzone team. You will receive your priced quote by email shortly.",
-            "#eff6ff",
-            "#1e40af",
-          ),
-          buildTerms(),
+          buildItemsTable(quote, items, t),
+          buildNoticeBox(t("pdfQuoteNoticeText"), "#eff6ff", "#1e40af"),
+          buildTerms(t),
         ],
         margin: [36, 24, 36, 0],
       } as any,
@@ -383,6 +384,7 @@ export async function renderQuoteRequestPDF(quote: PDFQuote, items: PDFItem[]): 
 }
 
 export async function renderOrderConfirmationPDF(quote: PDFQuote, items: PDFItem[]): Promise<Buffer> {
+  const t = getT(getLocale(quote.locale));
   const logoSrc = await fetchLogoBase64();
   const images = logoSrc ? { logo: logoSrc } : undefined;
 
@@ -391,19 +393,21 @@ export async function renderOrderConfirmationPDF(quote: PDFQuote, items: PDFItem
     pageMargins: [0, 0, 0, 50],
     ...(images && { images }),
     content: [
-      buildHeader("Order confirmation", quote.ref, `Confirmed ${today()}`, logoSrc ? "logo" : null, "ORDER CONFIRMED"),
+      buildHeader(
+        t("pdfOrderConfirmation"),
+        quote.ref,
+        t("pdfConfirmedDate", { date: today() }),
+        logoSrc ? "logo" : null,
+        t("pdfOrderConfirmedBadge"),
+        t("pdfInPartnershipWith"),
+      ),
       {
         stack: [
-          buildCustomerSection(quote),
+          buildCustomerSection(quote, t),
           buildDivider(),
-          buildItemsTable(quote, items),
-          buildNoticeBox(
-            "An invoice will be issued within 24 hours, payable 100% prior to shipment. Once payment is received your order moves into production. You will receive automated updates at each stage.",
-            "#f0fdf4",
-            "#166534",
-            "What happens next",
-          ),
-          buildTerms(),
+          buildItemsTable(quote, items, t),
+          buildNoticeBox(t("pdfOrderNoticeText"), "#f0fdf4", "#166534", t("pdfOrderNoticeHeading")),
+          buildTerms(t),
         ],
         margin: [36, 24, 36, 0],
       } as any,
@@ -561,7 +565,7 @@ function buildInstallIntro(): Content {
   } as any;
 }
 
-function buildScopeOfWorks(): Content {
+function buildScopeOfWorks(t: ReturnType<typeof getT>): Content {
   function scopeSection(title: string, bullets: string[]): any {
     return {
       stack: [
@@ -572,7 +576,7 @@ function buildScopeOfWorks(): Content {
   }
   return {
     stack: [
-      { text: "SCOPE OF WORKS", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 10] } as any,
+      { text: t("pdfInstallScopeSection"), color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 10] } as any,
       scopeSection("Project Management", [
         "Travel and accommodation arrangements",
         "Health & Safety documentation (RAMS)",
@@ -602,10 +606,10 @@ function buildScopeOfWorks(): Content {
   } as any;
 }
 
-function buildExclusions(): Content {
+function buildExclusions(t: ReturnType<typeof getT>): Content {
   return {
     stack: [
-      { text: "EXCLUSIONS", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
+      { text: t("pdfInstallExclusionsSection"), color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
       { text: "Unless otherwise stated, the following are excluded from this quotation:", fontSize: 9, color: MUTED, margin: [0, 0, 0, 6] },
       {
         ul: [
@@ -624,11 +628,11 @@ function buildExclusions(): Content {
   } as any;
 }
 
-function buildPaymentTerms(terms: string): Content {
+function buildPaymentTerms(terms: string, t: ReturnType<typeof getT>): Content {
   const lines = terms.split("\n").map((l) => l.trim()).filter(Boolean);
   return {
     stack: [
-      { text: "PAYMENT TERMS", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
+      { text: t("pdfInstallPaymentTermsSection"), color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
       { ul: lines, fontSize: 9, color: "#475569", lineHeight: 1.4 },
     ],
     margin: [0, 14, 0, 0],
@@ -639,6 +643,7 @@ export async function renderInstallationQuotePDF(
   quote: InstallPDFQuote,
   items: InstallPDFItem[],
 ): Promise<Buffer> {
+  const t = getT(getLocale(quote.locale));
   const logoSrc = await fetchLogoBase64();
   const images = logoSrc ? { logo: logoSrc } : undefined;
 
@@ -656,15 +661,15 @@ export async function renderInstallationQuotePDF(
   }
 
   const customerRows = [
-    drow("Name", quote.customer_name),
-    drow("Company", quote.company_name),
-    drow("Email", quote.customer_email),
-    drow("Site", quote.site_name),
-    drow("Address", addrStr || null),
-    quote.required_date ? drow("Required by", fmtDate(quote.required_date)) : null,
+    drow(t("pdfCustomerName"), quote.customer_name),
+    drow(t("pdfCustomerCompany"), quote.company_name),
+    drow(t("pdfCustomerEmail"), quote.customer_email),
+    drow(t("pdfInstallSite"), quote.site_name),
+    drow(t("pdfInstallAddress"), addrStr || null),
+    quote.required_date ? drow(t("pdfCustomerRequiredBy"), fmtDate(quote.required_date)) : null,
   ].filter(Boolean);
 
-  const itemRows: any[][] = items.map((i) => [
+  const installItemRows: any[][] = items.map((i) => [
     { text: i.sku, color: "#94a3b8", fontSize: 9 },
     { text: i.name },
     { text: String(i.qty), alignment: "center" },
@@ -677,13 +682,13 @@ export async function renderInstallationQuotePDF(
     pageMargins: [0, 0, 0, 50],
     ...(images && { images }),
     content: [
-      buildHeader("Installation Budget Estimate", quote.ref, today(), logoSrc ? "logo" : null),
+      buildHeader(t("pdfInstallationBudgetEstimate"), quote.ref, today(), logoSrc ? "logo" : null, undefined, t("pdfInPartnershipWith")),
       {
         stack: [
           buildInstallIntro(),
           {
             stack: [
-              { text: "CUSTOMER & SITE", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
+              { text: t("pdfInstallCustomerSite"), color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
               ...customerRows,
             ],
             margin: [0, 0, 0, 14],
@@ -692,11 +697,11 @@ export async function renderInstallationQuotePDF(
           ...(items.length > 0 ? [
             {
               stack: [
-                { text: "HARDWARE BEING INSTALLED", color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 3] },
+                { text: t("pdfInstallHardwareSection"), color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 3] },
                 {
                   text: quote.hardware_ref
-                    ? `Supplied under hardware reference ${quote.hardware_ref} — not included in this installation quotation.`
-                    : "Items listed below are not included in this installation quotation.",
+                    ? t("pdfInstallHardwareSupplied", { ref: quote.hardware_ref })
+                    : t("pdfInstallHardwareNote"),
                   fontSize: 8,
                   color: MUTED,
                   italics: true,
@@ -710,11 +715,11 @@ export async function renderInstallationQuotePDF(
                 headerRows: 1,
                 body: [
                   [
-                    { text: "Part code", bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
-                    { text: "Description", bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
-                    { text: "Qty", bold: true, color: MUTED, fontSize: 8, alignment: "center", fillColor: FAINT },
+                    { text: t("pdfPartCode"), bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
+                    { text: t("pdfDescription"), bold: true, color: MUTED, fontSize: 8, fillColor: FAINT },
+                    { text: t("pdfQty"), bold: true, color: MUTED, fontSize: 8, alignment: "center", fillColor: FAINT },
                   ],
-                  ...itemRows,
+                  ...installItemRows,
                 ],
               },
               layout: {
@@ -731,14 +736,14 @@ export async function renderInstallationQuotePDF(
             } as any,
             buildDivider(),
           ] : []),
-          buildScopeOfWorks(),
+          buildScopeOfWorks(t),
           buildDivider(),
           {
             table: {
               widths: ["*"],
               body: [[{
                 stack: [
-                  { text: quote.budget_from_pence >= quote.budget_to_pence ? "FIXED PRICE (EX-VAT)" : "INSTALLATION BUDGET ESTIMATE (EX-VAT)", bold: true, color: HEADER_MUTED, fontSize: 8, margin: [0, 0, 0, 8] },
+                  { text: quote.budget_from_pence >= quote.budget_to_pence ? t("pdfInstallFixedPriceBox") : t("pdfInstallBudgetBox"), bold: true, color: HEADER_MUTED, fontSize: 8, margin: [0, 0, 0, 8] },
                   { text: quote.budget_from_pence >= quote.budget_to_pence ? gbpRound(quote.budget_from_pence) : `${gbpRound(quote.budget_from_pence)} – ${gbpRound(quote.budget_to_pence)}`, bold: true, color: "#ffffff", fontSize: 28 },
                 ],
               }]],
@@ -754,10 +759,10 @@ export async function renderInstallationQuotePDF(
           } as any,
           ...(quote.containment_notes ? [buildNoticeBox(quote.containment_notes, "#f0fdf4", "#166534", "CONTAINMENT")] : []),
           ...(quote.ajs_notes ? [buildNoticeBox(quote.ajs_notes, FAINT, "#1e293b", "NOTES FROM AJS REDZONE")] : []),
-          buildExclusions(),
-          buildPaymentTerms(paymentTerms),
+          buildExclusions(t),
+          buildPaymentTerms(paymentTerms, t),
           {
-            text: "All prices ex-VAT. Subject to survey and final agreement.\nAJS Control and Automation Ltd  ·  rz@ajsspalding.co.uk  ·  01406 424954",
+            text: `${t("pdfInstallFooterText")}\nAJS Control and Automation Ltd  ·  rz@ajsspalding.co.uk  ·  01406 424954`,
             color: "#94a3b8",
             fontSize: 8,
             lineHeight: 1.5,

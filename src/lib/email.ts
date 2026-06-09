@@ -1,6 +1,8 @@
 import { Resend } from "resend";
 import { renderQuoteRequestPDF, renderOrderConfirmationPDF, renderWorkOrderPDF, renderInstallationQuotePDF } from "./quote-pdf";
 import type { InstallPDFItem } from "./quote-pdf";
+import { getLocale, getT } from "./i18n";
+import type { MessageKey } from "./i18n";
 
 const PDF_TIMEOUT_MS = 8_000;
 
@@ -77,6 +79,7 @@ export interface EmailQuoteRow {
   shipping_pallets?: number | null;
   currency?: string | null;
   fx_rate_used?: number | null;
+  locale?: string | null;
 }
 
 export interface EmailItemRow {
@@ -102,6 +105,7 @@ function itemRows(items: EmailItemRow[], ccy = "GBP", fx: number | null = null):
 }
 
 function customerHtml(quote: EmailQuoteRow, items: EmailItemRow[], magicUrl: string): string {
+  const t = getT(getLocale(quote.locale));
   const first = quote.contact_name.trim().split(" ")[0] ?? "there";
   const ccy = quote.currency ?? "GBP";
   const fx = quote.fx_rate_used ?? null;
@@ -109,27 +113,28 @@ function customerHtml(quote: EmailQuoteRow, items: EmailItemRow[], magicUrl: str
   const shippingPence = quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : null;
   const grandTotalPence = subtotalPence + (shippingPence ?? 0);
   const pallets = quote.shipping_pallets;
-  const shippingLabel = `Shipping${pallets ? ` (${pallets} pallet${pallets !== 1 ? "s" : ""})` : ""}`;
+  const shippingLabel = pallets
+    ? t(pallets !== 1 ? "pdfShippingPallets" : "pdfShippingPallet", { count: pallets })
+    : t("shipping" as MessageKey);
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
 <div style="max-width:600px;margin:0 auto;padding:24px 16px">
 
-  ${emailHeader("Your quote request", quote.ref)}
+  ${emailHeader(t("emailYourQuoteRequest"), quote.ref)}
 
   <div style="background:#fff;border-radius:0 0 12px 12px;padding:32px;border:1px solid #e6ebed;border-top:none">
     <p style="color:#1e293b;font-size:15px;margin:0 0 12px">Hi ${first},</p>
     <p style="color:#475569;font-size:14px;margin:0 0 24px;line-height:1.6">
-      Thanks for your quote request &mdash; reference <strong>${quote.ref}</strong> has been assigned.
-      The AJS Redzone team will review your request and be in touch shortly to confirm pricing and lead times.
+      ${t("emailQuoteIntroBody", { ref: quote.ref })}
     </p>
 
-    <h2 style="color:#03415f;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin:0 0 6px">Items Requested</h2>
+    <h2 style="color:#03415f;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin:0 0 6px">${t("emailItemsRequested")}</h2>
     <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:24px">
       ${itemRows(items, ccy, fx)}
       <tr style="border-top:2px solid #e6ebed">
-        <td colspan="2" style="padding:8px 0;color:#475569;font-size:13px">Subtotal (ex-VAT)</td>
+        <td colspan="2" style="padding:8px 0;color:#475569;font-size:13px">${t("emailSubtotalExVat")}</td>
         <td style="padding:8px 0;font-weight:bold;color:#1e293b;font-size:13px;text-align:right;white-space:nowrap">${money(subtotalPence, ccy, fx)}</td>
       </tr>
       <tr>
@@ -137,32 +142,32 @@ function customerHtml(quote: EmailQuoteRow, items: EmailItemRow[], magicUrl: str
         <td style="padding:4px 0;font-weight:bold;font-size:13px;text-align:right;white-space:nowrap;color:${shippingPence === null ? "#d97706" : "#1e293b"}">${shippingPence !== null ? money(shippingPence, ccy, fx) : "EXW"}</td>
       </tr>
       <tr style="border-top:2px solid #e6ebed">
-        <td colspan="2" style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px">Total (ex-VAT)</td>
+        <td colspan="2" style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px">${t("emailTotalExVat")}</td>
         <td style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px;text-align:right;white-space:nowrap">${money(grandTotalPence, ccy, fx)}</td>
       </tr>
     </table>
-    ${ccy === "EUR" ? `<p style="color:#94a3b8;font-size:11px;margin:-16px 0 24px">Indicative EUR rate &mdash; invoice issued in GBP.</p>` : ""}
+    ${ccy === "EUR" ? `<p style="color:#94a3b8;font-size:11px;margin:-16px 0 24px">${t("emailIndicativeEur")}</p>` : ""}
 
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px 24px;margin-bottom:24px;text-align:center">
       <p style="color:#475569;font-size:13px;margin:0 0 16px;line-height:1.5">
-        Use the button below to return to your quote at any time &mdash; to amend it or accept and place your order.
+        ${t("emailViewManageBody")}
       </p>
       <a href="${magicUrl}" style="display:inline-block;background:#1886a1;color:#fff;font-weight:bold;text-decoration:none;padding:13px 28px;border-radius:8px;font-size:14px">
-        View &amp; Manage Your Quote &rarr;
+        ${t("emailViewManageBtn")}
       </a>
-      <p style="color:#94a3b8;font-size:11px;margin:12px 0 0">This link is personal to you and expires after 90&nbsp;days.</p>
+      <p style="color:#94a3b8;font-size:11px;margin:12px 0 0">${t("emailLinkPersonal")}</p>
     </div>
 
     <p style="color:#64748b;font-size:13px;margin:0;line-height:1.8">
-      Questions? Contact the AJS Redzone team:<br>
+      ${t("emailQuestions")}<br>
       <a href="mailto:rz@ajsspalding.co.uk" style="color:#1886a1;text-decoration:none">rz@ajsspalding.co.uk</a>
       &nbsp;&middot;&nbsp; 01406&nbsp;424954
     </p>
   </div>
 
   <p style="color:#94a3b8;font-size:11px;text-align:center;margin:16px 0 0;line-height:1.6">
-    AJS Spalding Ltd &nbsp;&middot;&nbsp; Redzone Hardware Portal<br>
-    You received this because you submitted a quote request.
+    ${t("emailFooterBody")}<br>
+    ${t("emailFooterSubmitted")}
   </p>
 </div>
 </body></html>`;
@@ -223,6 +228,7 @@ export async function sendQuoteEmails(
         shipping_pallets: quote.shipping_pallets,
         currency: quote.currency,
         fx_rate_used: quote.fx_rate_used,
+        locale: quote.locale,
       },
       items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty, line_total_gbp_pence: i.line_total_gbp_pence })),
     ),
@@ -230,12 +236,13 @@ export async function sendQuoteEmails(
   const pdfAttachment = pdfBuf ? [{ filename: `Quote-${quote.ref}.pdf`, content: pdfBuf }] : undefined;
   console.log(`[email] quote PDF: ${pdfBuf ? pdfBuf.length + " bytes, attaching" : "null — sending without attachment"}`);
 
+  const t = getT(getLocale(quote.locale));
   try {
     const [customerRes, ajsRes] = await Promise.all([
       resend.emails.send({
         from: FROM,
         to: recipients(quote.contact_email),
-        subject: `Your Redzone quote ${quote.ref}`,
+        subject: `${t("emailYourQuoteRequest")} ${quote.ref}`,
         html: customerHtml(quote, items, magicUrl),
         attachments: pdfAttachment,
       }),
@@ -268,6 +275,7 @@ export interface OrderQuoteRow extends EmailQuoteRow {
 }
 
 function orderConfirmationHtml(quote: OrderQuoteRow, items: EmailItemRow[]): string {
+  const t = getT(getLocale(quote.locale));
   const first = quote.contact_name.trim().split(" ")[0] ?? "there";
   const ccy = quote.currency ?? "GBP";
   const fx = quote.fx_rate_used ?? null;
@@ -275,28 +283,28 @@ function orderConfirmationHtml(quote: OrderQuoteRow, items: EmailItemRow[]): str
   const shippingPence = quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : null;
   const grandTotalPence = subtotalPence + (shippingPence ?? 0);
   const pallets = quote.shipping_pallets;
-  const shippingLabel = `Shipping${pallets ? ` (${pallets} pallet${pallets !== 1 ? "s" : ""})` : ""}`;
+  const shippingLabel = pallets
+    ? t(pallets !== 1 ? "pdfShippingPallets" : "pdfShippingPallet", { count: pallets })
+    : t("shipping" as MessageKey);
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
 <div style="max-width:600px;margin:0 auto;padding:24px 16px">
 
-  ${emailHeader("Order confirmed", quote.ref)}
+  ${emailHeader(t("emailOrderConfirmedLabel"), quote.ref)}
 
   <div style="background:#fff;border-radius:0 0 12px 12px;padding:32px;border:1px solid #e6ebed;border-top:none">
     <p style="color:#1e293b;font-size:15px;margin:0 0 12px">Hi ${first},</p>
     <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">
-      Thank you &mdash; your order <strong>${quote.ref}</strong> has been confirmed.
-      An invoice will be issued within 24 hours, payable 100% prior to shipment.
-      Delivery is on DAP terms.
+      ${t("emailOrderConfirmedBody", { ref: quote.ref })}
     </p>
 
-    <h2 style="color:#03415f;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin:0 0 6px">Items Ordered</h2>
+    <h2 style="color:#03415f;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin:0 0 6px">${t("emailItemsOrdered")}</h2>
     <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:24px">
       ${itemRows(items, ccy, fx)}
       <tr style="border-top:2px solid #e6ebed">
-        <td colspan="2" style="padding:8px 0;color:#475569;font-size:13px">Subtotal (ex-VAT)</td>
+        <td colspan="2" style="padding:8px 0;color:#475569;font-size:13px">${t("emailSubtotalExVat")}</td>
         <td style="padding:8px 0;font-weight:bold;color:#1e293b;font-size:13px;text-align:right;white-space:nowrap">${money(subtotalPence, ccy, fx)}</td>
       </tr>
       <tr>
@@ -304,29 +312,27 @@ function orderConfirmationHtml(quote: OrderQuoteRow, items: EmailItemRow[]): str
         <td style="padding:4px 0;font-weight:bold;font-size:13px;text-align:right;white-space:nowrap;color:${shippingPence === null ? "#d97706" : "#1e293b"}">${shippingPence !== null ? money(shippingPence, ccy, fx) : "EXW"}</td>
       </tr>
       <tr style="border-top:2px solid #e6ebed">
-        <td colspan="2" style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px">Total (ex-VAT)</td>
+        <td colspan="2" style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px">${t("emailTotalExVat")}</td>
         <td style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px;text-align:right;white-space:nowrap">${money(grandTotalPence, ccy, fx)}</td>
       </tr>
     </table>
-    ${ccy === "EUR" ? `<p style="color:#94a3b8;font-size:11px;margin:-16px 0 24px">Indicative EUR rate &mdash; invoice issued in GBP.</p>` : ""}
+    ${ccy === "EUR" ? `<p style="color:#94a3b8;font-size:11px;margin:-16px 0 24px">${t("emailIndicativeEur")}</p>` : ""}
 
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:12px 16px;margin-bottom:24px">
       <p style="color:#166534;font-size:13px;margin:0;line-height:1.6">
-        <strong>What happens next:</strong> You will receive an invoice within 24 hours.
-        Once payment is received, your order will move into production.
-        You will receive automated updates at each stage.
+        ${t("emailWhatHappensNextBody")}
       </p>
     </div>
 
     <p style="color:#64748b;font-size:13px;margin:0;line-height:1.8">
-      Questions? Contact the AJS Redzone team:<br>
+      ${t("emailQuestions")}<br>
       <a href="mailto:rz@ajsspalding.co.uk" style="color:#1886a1;text-decoration:none">rz@ajsspalding.co.uk</a>
       &nbsp;&middot;&nbsp; 01406&nbsp;424954
     </p>
   </div>
 
   <p style="color:#94a3b8;font-size:11px;text-align:center;margin:16px 0 0;line-height:1.6">
-    AJS Spalding Ltd &nbsp;&middot;&nbsp; Redzone Hardware Portal
+    ${t("emailFooterBody")}
   </p>
 </div>
 </body></html>`;
@@ -437,18 +443,19 @@ export async function sendOrderConfirmationEmails(
   const pdfItems = items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty, line_total_gbp_pence: i.line_total_gbp_pence }));
 
   const [confirmBuf, workOrderBuf] = await Promise.all([
-    tryGeneratePDF("order-confirmation", () => renderOrderConfirmationPDF(pdfQuote, pdfItems)),
+    tryGeneratePDF("order-confirmation", () => renderOrderConfirmationPDF({ ...pdfQuote, locale: quote.locale }, pdfItems)),
     tryGeneratePDF("work-order", () => renderWorkOrderPDF(pdfQuote, pdfItems)),
   ]);
   const confirmationPdf = confirmBuf ? [{ filename: `Order-${quote.ref}.pdf`, content: confirmBuf }] : undefined;
   const workOrderPdf    = workOrderBuf ? [{ filename: `Work-Order-${quote.ref}.pdf`, content: workOrderBuf }] : undefined;
 
+  const tConfirm = getT(getLocale(quote.locale));
   try {
     const [customerRes, workOrderRes] = await Promise.all([
       resend.emails.send({
         from: FROM,
         to: recipients(quote.contact_email),
-        subject: `Order confirmed: ${quote.ref} — AJS Redzone`,
+        subject: `${tConfirm("emailOrderConfirmedLabel")}: ${quote.ref} — AJS Redzone`,
         html: orderConfirmationHtml(quote, items),
         attachments: confirmationPdf,
       }),
@@ -534,13 +541,13 @@ export async function sendAccountsLinkEmail(
 
 // ─── Status update emails ─────────────────────────────────────────────────────
 
-const STATUS_SUBJECT: Partial<Record<string, string>> = {
-  order_confirmed: "Order confirmed",
-  in_build:        "Your order is in production",
-  ready_to_ship:   "Your order is ready to despatch",
-  shipped:         "Your order has been shipped",
-  complete:        "Your order is complete",
-  cancelled:       "Order update",
+const STATUS_SUBJECT_KEY: Partial<Record<string, MessageKey>> = {
+  order_confirmed: "emailStatusSubjectOrderConfirmed",
+  in_build:        "emailStatusSubjectInBuild",
+  ready_to_ship:   "emailStatusSubjectReadyToShip",
+  shipped:         "emailStatusSubjectShipped",
+  complete:        "emailStatusSubjectComplete",
+  cancelled:       "emailStatusSubjectCancelled",
 };
 
 const STATUS_COLOUR: Partial<Record<string, { bg: string; border: string; text: string }>> = {
@@ -552,34 +559,55 @@ const STATUS_COLOUR: Partial<Record<string, { bg: string; border: string; text: 
   cancelled:       { bg: "#fff1f2", border: "#fecdd3", text: "#be123c" },
 };
 
-const STATUS_BODY: Partial<Record<string, (ref: string, trackingRef?: string, trackingUrl?: string, cancellationReason?: string) => string>> = {
-  order_confirmed: (ref) =>
-    `Your order <strong>${ref}</strong> has been confirmed by the AJS Redzone team. An invoice will be issued within 24 hours, payable 100% prior to shipment. Once payment is received your order moves into production and you will receive further updates at each stage.`,
-  in_build: (ref) =>
-    `Your order <strong>${ref}</strong> is now in production. Our manufacturing team are building your hardware. We&rsquo;ll be in touch again when it&rsquo;s ready to despatch.`,
-  ready_to_ship: (ref) =>
-    `Great news &mdash; your order <strong>${ref}</strong> has been built and is ready to despatch. Our team will be in touch shortly to arrange delivery.`,
-  shipped: (ref, trackingRef, trackingUrl) =>
-    `Your order <strong>${ref}</strong> is on its way.${trackingRef ? ` Your tracking reference is <strong>${trackingRef}</strong>.` : ""}${trackingUrl ? ` <a href="${trackingUrl}" style="color:#b91c1c">Track your shipment &rarr;</a>` : ""} Delivery is on DAP terms. Please contact us if you have any questions.`,
-  complete: (ref) =>
-    `Your order <strong>${ref}</strong> is now complete. Thank you for your business &mdash; we hope everything arrived in perfect condition. Please don&rsquo;t hesitate to get in touch if you need anything.`,
-  cancelled: (ref, _trackingRef, _trackingUrl, cancellationReason) =>
-    `Your order <strong>${ref}</strong> has been cancelled.${cancellationReason ? ` Reason: ${cancellationReason}.` : ""} If you have any questions, please contact the AJS Redzone team directly.`,
-};
+function statusBody(
+  t: ReturnType<typeof getT>,
+  status: string,
+  ref: string,
+  trackingRef?: string,
+  trackingUrl?: string,
+  cancellationReason?: string,
+): string {
+  switch (status) {
+    case "order_confirmed":
+      return t("emailStatusBodyOrderConfirmed", { ref });
+    case "in_build":
+      return t("emailStatusBodyInBuild", { ref });
+    case "ready_to_ship":
+      return t("emailStatusBodyReadyToShip", { ref });
+    case "shipped": {
+      let trackingInfo = "";
+      if (trackingRef) trackingInfo += t("emailStatusBodyShippedTracking", { trackingRef });
+      if (trackingUrl) trackingInfo += ` <a href="${trackingUrl}" style="color:#b91c1c">${t("emailStatusBodyShippedTrackingLink")}</a>`;
+      return t("emailStatusBodyShipped", { ref, trackingInfo });
+    }
+    case "complete":
+      return t("emailStatusBodyComplete", { ref });
+    case "cancelled": {
+      const reasonSuffix = cancellationReason
+        ? t("emailStatusBodyCancelledReason", { reason: cancellationReason })
+        : "";
+      return t("emailStatusBodyCancelled", { ref, reasonSuffix });
+    }
+    default:
+      return t("emailStatusBodyFallback", { ref });
+  }
+}
 
 function statusUpdateHtml(
   contactName: string,
   ref: string,
   status: string,
+  locale: string,
   trackingRef?: string,
   trackingUrl?: string,
   cancellationReason?: string,
 ): string {
+  const t = getT(getLocale(locale));
   const first = contactName.trim().split(" ")[0] ?? "there";
-  const subject = STATUS_SUBJECT[status] ?? "Order update";
+  const subjectKey = STATUS_SUBJECT_KEY[status];
+  const subject = subjectKey ? t(subjectKey) : t("emailStatusSubjectCancelled");
   const colours = STATUS_COLOUR[status] ?? { bg: "#f8fafc", border: "#e2e8f0", text: "#334155" };
-  const bodyFn = STATUS_BODY[status];
-  const body = bodyFn ? bodyFn(ref, trackingRef, trackingUrl, cancellationReason) : `Your order <strong>${ref}</strong> has been updated. Status: ${status}.`;
+  const body = statusBody(t, status, ref, trackingRef, trackingUrl, cancellationReason);
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -594,14 +622,14 @@ function statusUpdateHtml(
       <p style="color:${colours.text};font-size:14px;margin:0;line-height:1.6">${body}</p>
     </div>
     <p style="color:#64748b;font-size:13px;margin:0;line-height:1.8">
-      Questions? Contact the AJS Redzone team:<br>
+      ${t("emailQuestions")}<br>
       <a href="mailto:rz@ajsspalding.co.uk" style="color:#1886a1;text-decoration:none">rz@ajsspalding.co.uk</a>
       &nbsp;&middot;&nbsp; 01406&nbsp;424954
     </p>
   </div>
 
   <p style="color:#94a3b8;font-size:11px;text-align:center;margin:16px 0 0;line-height:1.6">
-    AJS Spalding Ltd &nbsp;&middot;&nbsp; Redzone Hardware Portal
+    ${t("emailFooterBody")}
   </p>
 </div>
 </body></html>`;
@@ -616,12 +644,15 @@ export async function sendStatusUpdateEmail(
   trackingUrl?: string,
   rzPmEmail?: string,
   cancellationReason?: string,
+  locale?: string | null,
 ): Promise<void> {
   if (!process.env.RESEND_API_KEY) return;
-  if (!STATUS_SUBJECT[status]) return; // no email for quote_submitted
+  if (!STATUS_SUBJECT_KEY[status]) return; // no email for quote_submitted
 
+  const t = getT(getLocale(locale));
+  const subjectKey = STATUS_SUBJECT_KEY[status]!;
   const resend = new Resend(process.env.RESEND_API_KEY);
-  const subject = `${STATUS_SUBJECT[status]}: ${ref} — AJS Redzone`;
+  const subject = `${t(subjectKey)}: ${ref} — AJS Redzone`;
   const override = process.env.RESEND_TEST_TO?.trim();
   const cc = !override && rzPmEmail ? [rzPmEmail] : undefined;
 
@@ -631,7 +662,7 @@ export async function sendStatusUpdateEmail(
       to: recipients(contactEmail),
       cc,
       subject,
-      html: statusUpdateHtml(contactName, ref, status, trackingRef, trackingUrl, cancellationReason),
+      html: statusUpdateHtml(contactName, ref, status, locale ?? "en", trackingRef, trackingUrl, cancellationReason),
     });
     if (error) console.error("[email] status update failed:", error);
     else console.log(`[email] status update sent: ${status} → ${contactEmail}${rzPmEmail ? ` (CC: ${rzPmEmail})` : ""}`);
@@ -661,50 +692,51 @@ interface InstallBudgetEmailParams {
   containmentNotes: string | null;
   paymentTerms: string | null;
   items: InstallPDFItem[];
+  locale?: string | null;
 }
 
 function installBudgetHtml(p: InstallBudgetEmailParams): string {
+  const t = getT(getLocale(p.locale));
   const first = p.customerName.trim().split(" ")[0] ?? "there";
   const fmt = (pence: number) =>
     "£" + (pence / 100).toLocaleString("en-GB", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const introKey: MessageKey = p.hardwareRef ? "emailInstallBudgetIntroHardware" : "emailInstallBudgetIntro";
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
 <div style="max-width:600px;margin:0 auto;padding:24px 16px">
 
-  ${emailHeader("Installation Budget Estimate", p.quoteRef)}
+  ${emailHeader(t("emailInstallBudgetLabel"), p.quoteRef)}
 
   <div style="background:#fff;border-radius:0 0 12px 12px;padding:32px;border:1px solid #e6ebed;border-top:none">
     <p style="color:#1e293b;font-size:15px;margin:0 0 12px">Hi ${first},</p>
     <p style="color:#475569;font-size:14px;margin:0 0 24px;line-height:1.6">
-      Thank you for your interest in AJS Redzone installation services${p.hardwareRef ? ` alongside your hardware order <strong>${p.hardwareRef}</strong>` : ""}.
-      Based on the details you provided, we have prepared the following budget estimate for installation.
+      ${t(introKey, p.hardwareRef ? { ref: p.hardwareRef } : {})}
     </p>
 
     <div style="background:#f0f9ff;border:2px solid #1886a1;border-radius:10px;padding:24px;text-align:center;margin-bottom:24px">
-      <div style="color:#64748b;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">${p.budgetFromPence >= p.budgetToPence ? "Fixed Price (ex-VAT)" : "Budget Estimate (ex-VAT)"}</div>
+      <div style="color:#64748b;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">${p.budgetFromPence >= p.budgetToPence ? t("emailInstallFixedPriceLabel") : t("emailInstallBudgetEstimateLabel")}</div>
       <div style="color:#05618e;font-size:32px;font-weight:900">${p.budgetFromPence >= p.budgetToPence ? fmt(p.budgetFromPence) : `${fmt(p.budgetFromPence)} – ${fmt(p.budgetToPence)}`}</div>
     </div>
 
     ${p.containmentNotes ? `
     <div style="background:#f8fafc;border:1px solid #e6ebed;border-radius:8px;padding:16px;margin-bottom:16px">
-      <p style="color:#64748b;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin:0 0 6px">Containment</p>
+      <p style="color:#64748b;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin:0 0 6px">${t("emailInstallContainmentLabel")}</p>
       <p style="color:#475569;font-size:13px;line-height:1.6;margin:0">${p.containmentNotes.replace(/\n/g, "<br>")}</p>
     </div>` : ""}
 
     ${p.notes ? `
     <div style="background:#f8fafc;border:1px solid #e6ebed;border-radius:8px;padding:16px;margin-bottom:24px">
-      <p style="color:#64748b;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin:0 0 6px">Notes</p>
+      <p style="color:#64748b;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin:0 0 6px">${t("emailInstallNotesLabel")}</p>
       <p style="color:#475569;font-size:13px;line-height:1.6;margin:0">${p.notes.replace(/\n/g, "<br>")}</p>
     </div>` : ""}
 
     <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0 0 16px">
-      This is a <strong>budget estimate only</strong>. A detailed quotation will follow a site survey.
-      The final price may vary based on site conditions, access requirements, and confirmed scope of work.
+      ${t("emailInstallBudgetNotice")}
     </p>
     <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0 0 24px">
-      If you&apos;d like to discuss this further or arrange a site survey, please get in touch:
+      ${t("emailInstallDiscuss")}
     </p>
 
     <table cellpadding="0" cellspacing="0" style="margin-bottom:24px">
@@ -719,7 +751,7 @@ function installBudgetHtml(p: InstallBudgetEmailParams): string {
     </table>
 
     <p style="color:#94a3b8;font-size:11px;margin:0">
-      All prices ex-VAT &middot; Budget estimate only &middot; Subject to site survey &middot; ${p.quoteRef}
+      ${t("emailInstallBudgetFooter", { ref: p.quoteRef })}
     </p>
   </div>
 </div>
@@ -755,6 +787,7 @@ export async function sendInstallationBudgetEmail(p: InstallBudgetEmailParams): 
           ajs_notes: p.notes,
           containment_notes: p.containmentNotes,
           payment_terms: p.paymentTerms,
+          locale: p.locale,
         },
         p.items,
       ),
@@ -764,13 +797,14 @@ export async function sendInstallationBudgetEmail(p: InstallBudgetEmailParams): 
     console.error("[email] install PDF generation failed:", err);
   }
 
+  const tInstall = getT(getLocale(p.locale));
   try {
     const override = process.env.RESEND_TEST_TO?.trim();
     const { error } = await resend.emails.send({
       from: FROM,
       to: recipients(p.customerEmail),
       cc: override ? undefined : [AJS_NOTIFY],
-      subject: `Your Redzone Installation Budget Estimate — ${p.quoteRef}`,
+      subject: `${tInstall("emailInstallBudgetLabel")} — ${p.quoteRef}`,
       html: installBudgetHtml(p),
       attachments: pdfBuf ? [{ filename: `Install-Quote-${p.quoteRef}.pdf`, content: pdfBuf }] : undefined,
     });

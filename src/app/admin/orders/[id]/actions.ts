@@ -56,7 +56,7 @@ export async function updateStatusAction(
   // Fetch quote + assigned PM for notifications
   const { data: quote } = await supabase
     .from("quotes")
-    .select("ref, contact_name, contact_email, rz_pm_id, dataverse_opportunity_id")
+    .select("ref, contact_name, contact_email, rz_pm_id, dataverse_opportunity_id, locale")
     .eq("id", id)
     .single();
 
@@ -81,6 +81,7 @@ export async function updateStatusAction(
         trackingUrl ?? undefined,
         rzPmEmail,
         cancellationReason ?? undefined,
+        quote.locale,
       ),
       updateDataverseOpportunity(quote.dataverse_opportunity_id ?? "", status),
     ]);

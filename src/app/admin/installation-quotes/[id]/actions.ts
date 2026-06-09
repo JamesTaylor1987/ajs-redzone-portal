@@ -87,10 +87,17 @@ export async function sendInstallQuoteAction(formData: FormData) {
 
   if (!iq) return;
 
-  // Fetch hardware items for the PDF
-  const { data: itemRows } = iq.hardware_quote_id
-    ? await supabase.from("quote_items").select("sku, name, qty").eq("quote_id", iq.hardware_quote_id)
-    : { data: [] };
+  // Fetch hardware items + locale from the linked hardware quote
+  const [itemsResult, localeResult] = await Promise.all([
+    iq.hardware_quote_id
+      ? supabase.from("quote_items").select("sku, name, qty").eq("quote_id", iq.hardware_quote_id)
+      : Promise.resolve({ data: [] }),
+    iq.hardware_quote_id
+      ? supabase.from("quotes").select("locale").eq("id", iq.hardware_quote_id).single()
+      : Promise.resolve({ data: null }),
+  ]);
+  const itemRows = itemsResult.data;
+  const hardwareLocale = (localeResult.data as { locale?: string | null } | null)?.locale ?? null;
 
   await sendInstallationBudgetEmail({
     quoteRef: iq.quote_ref,
@@ -110,6 +117,7 @@ export async function sendInstallQuoteAction(formData: FormData) {
     notes,
     containmentNotes: iq.containment_notes ?? null,
     paymentTerms: payment_terms,
+    locale: hardwareLocale,
     items: (itemRows ?? []).map((i: { sku: string; name: string; qty: number }) => ({
       sku: i.sku, name: i.name, qty: i.qty,
     })),
