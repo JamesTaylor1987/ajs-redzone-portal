@@ -6,6 +6,7 @@ import type { Product, Currency, CartLine, StockColourSettings } from "@/lib/typ
 import { formatMoney } from "@/lib/format";
 import { getClasses } from "@/lib/stock-colours";
 import { Lightbox } from "./Lightbox";
+import { useT } from "./LocaleProvider";
 
 interface ProductGridProps {
   products: Product[];
@@ -18,6 +19,7 @@ interface ProductGridProps {
 
 
 export function ProductGrid({ products, productImages, currency, lines, onQtyChange, stockColours }: ProductGridProps) {
+  const t = useT();
   const [plcFilter, setPlcFilter] = useState<string>("All");
   const [matFilter, setMatFilter] = useState<string>("All");
 
@@ -45,12 +47,13 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
 
   return (
     <div className="space-y-6">
-      <Section title="Control Panels">
+      <Section title={t("sectionControlPanels")}>
         <FilterBar
           plcFilter={plcFilter}
           setPlcFilter={setPlcFilter}
           matFilter={matFilter}
           setMatFilter={setMatFilter}
+          filterAll={t("filterAll")}
         />
         <Grid>
           {filteredPanels.map((p) => (
@@ -62,17 +65,21 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
               qty={qtyFor(p.id)}
               onQtyChange={(q) => onQtyChange(p, q)}
               stockColours={stockColours}
+              prevLabel={t("prevPhoto")}
+              nextLabel={t("nextPhoto")}
+              decreaseLabel={t("decreaseQty")}
+              increaseLabel={t("increaseQty")}
             />
           ))}
           {filteredPanels.length === 0 && (
             <div className="col-span-full text-ajs-muted text-sm py-8 text-center">
-              No panels match those filters.
+              {t("noMatchingPanels")}
             </div>
           )}
         </Grid>
       </Section>
 
-      <Section title="Sensors, Software & Accessories">
+      <Section title={t("sectionSensors")}>
         <Grid>
           {addons.map((p) => (
             <Card
@@ -83,13 +90,17 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
               qty={qtyFor(p.id)}
               onQtyChange={(q) => onQtyChange(p, q)}
               stockColours={stockColours}
+              prevLabel={t("prevPhoto")}
+              nextLabel={t("nextPhoto")}
+              decreaseLabel={t("decreaseQty")}
+              increaseLabel={t("increaseQty")}
             />
           ))}
         </Grid>
       </Section>
 
       {visualFactory.length > 0 && (
-        <Section title="Visual Factory">
+        <Section title={t("sectionVisualFactory")}>
           <Grid>
             {visualFactory.map((p) => (
               <Card
@@ -100,6 +111,10 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
                 qty={qtyFor(p.id)}
                 onQtyChange={(q) => onQtyChange(p, q)}
                 stockColours={stockColours}
+                prevLabel={t("prevPhoto")}
+                nextLabel={t("nextPhoto")}
+                decreaseLabel={t("decreaseQty")}
+                increaseLabel={t("increaseQty")}
               />
             ))}
           </Grid>
@@ -125,22 +140,24 @@ function FilterBar({
   setPlcFilter,
   matFilter,
   setMatFilter,
+  filterAll,
 }: {
   plcFilter: string;
   setPlcFilter: (s: string) => void;
   matFilter: string;
   setMatFilter: (s: string) => void;
+  filterAll: string;
 }) {
   return (
     <div className="flex flex-wrap gap-2 items-center">
-      {["All", "Siemens", "Allen Bradley"].map((f) => (
-        <Chip key={f} active={plcFilter === f} onClick={() => setPlcFilter(f)}>
+      {[filterAll, "Siemens", "Allen Bradley"].map((f) => (
+        <Chip key={f} active={plcFilter === (f === filterAll ? "All" : f)} onClick={() => setPlcFilter(f === filterAll ? "All" : f)}>
           {f}
         </Chip>
       ))}
       <span className="w-px h-6 bg-ajs-light mx-1" aria-hidden />
-      {["All", "Mild Steel", "Stainless Steel"].map((f) => (
-        <Chip key={f} active={matFilter === f} onClick={() => setMatFilter(f)}>
+      {[filterAll, "Mild Steel", "Stainless Steel"].map((f) => (
+        <Chip key={f} active={matFilter === (f === filterAll ? "All" : f)} onClick={() => setMatFilter(f === filterAll ? "All" : f)}>
           {f}
         </Chip>
       ))}
@@ -186,6 +203,10 @@ function Card({
   qty,
   onQtyChange,
   stockColours,
+  prevLabel,
+  nextLabel,
+  decreaseLabel,
+  increaseLabel,
 }: {
   product: Product;
   images: string[];
@@ -193,6 +214,10 @@ function Card({
   qty: number;
   onQtyChange: (q: number) => void;
   stockColours: StockColourSettings;
+  prevLabel: string;
+  nextLabel: string;
+  decreaseLabel: string;
+  increaseLabel: string;
 }) {
   const active = qty > 0;
   const [imgIdx, setImgIdx] = useState(0);
@@ -235,14 +260,14 @@ function Card({
                 <button
                   onClick={prev}
                   className="absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 bg-black/50 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
-                  aria-label="Previous photo"
+                  aria-label={prevLabel}
                 >
                   ‹
                 </button>
                 <button
                   onClick={next}
                   className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 bg-black/50 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
-                  aria-label="Next photo"
+                  aria-label={nextLabel}
                 >
                   ›
                 </button>
@@ -292,7 +317,7 @@ function Card({
             onClick={() => onQtyChange(Math.max(0, qty - 1))}
             className="w-8 h-8 text-ajs-dark hover:bg-ajs-light/60 disabled:opacity-40"
             disabled={qty === 0}
-            aria-label="Decrease quantity"
+            aria-label={decreaseLabel}
           >
             −
           </button>
@@ -300,7 +325,7 @@ function Card({
           <button
             onClick={() => onQtyChange(qty + 1)}
             className="w-8 h-8 bg-ajs-primary text-white hover:bg-ajs-dark"
-            aria-label="Increase quantity"
+            aria-label={increaseLabel}
           >
             +
           </button>

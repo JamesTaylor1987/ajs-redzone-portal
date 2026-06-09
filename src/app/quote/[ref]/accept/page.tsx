@@ -6,6 +6,7 @@ import { AccountInfoForm } from "./AccountInfoForm";
 import { ForwardToAccounts } from "./ForwardToAccounts";
 import { SupportBanner } from "@/components/SupportBanner";
 import { formatMoneyAtRate } from "@/lib/format";
+import { getLocale, getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,8 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
     ? searchParams.token[0]
     : (searchParams.token ?? "");
 
+  const t = getT(getLocale(cookies().get("ajs_locale")?.value));
+
   const supabase = getServiceClient();
   const { data: quote } = await supabase
     .from("quotes")
@@ -30,44 +33,42 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
     .single();
 
   if (!quote || !token || quote.magic_token !== token) {
-    return <Invalid />;
+    return <Invalid t={t} />;
   }
 
   if (quote.magic_expires_at && new Date(quote.magic_expires_at) < new Date()) {
-    return <Invalid expired />;
+    return <Invalid expired t={t} />;
   }
 
-  // Must have verified email on the edit page first.
   const cookieVal = cookies().get(`rz_v_${quote.id.slice(0, 8)}`)?.value ?? "";
   if (cookieVal !== verificationHash(token, quote.contact_email)) {
     return (
       <main className="min-h-screen flex items-center justify-center p-6">
         <div className="max-w-md text-center space-y-3">
-          <h1 className="text-xl font-bold text-ajs-dark">Session expired</h1>
-          <p className="text-ajs-muted text-sm">Please return via your magic link to verify your email again.</p>
+          <h1 className="text-xl font-bold text-ajs-dark">{t("sessionExpiredTitle")}</h1>
+          <p className="text-ajs-muted text-sm">{t("sessionExpiredDesc")}</p>
           <Link
             href={`/quote/${encodeURIComponent(ref)}/edit?token=${token}`}
             className="inline-block bg-ajs-primary text-white font-bold rounded-lg px-5 py-2.5 text-sm"
           >
-            Back to your quote
+            {t("backToQuoteBtn")}
           </Link>
         </div>
       </main>
     );
   }
 
-  // Already accepted — send back to the confirmed view.
   if (quote.status !== "quote_submitted") {
     return (
       <main className="min-h-screen flex items-center justify-center p-6">
         <div className="max-w-md text-center space-y-3">
-          <h1 className="text-xl font-bold text-ajs-dark">Order already placed</h1>
-          <p className="text-ajs-muted text-sm">This quote has already been accepted.</p>
+          <h1 className="text-xl font-bold text-ajs-dark">{t("orderAlreadyPlacedTitle")}</h1>
+          <p className="text-ajs-muted text-sm">{t("orderAlreadyPlacedDesc")}</p>
           <Link
             href={`/quote/${encodeURIComponent(ref)}/edit?token=${token}`}
             className="inline-block bg-ajs-primary text-white font-bold rounded-lg px-5 py-2.5 text-sm"
           >
-            View your order
+            {t("viewOrderBtn")}
           </Link>
         </div>
       </main>
@@ -90,18 +91,15 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
     <main className="min-h-screen bg-slate-50">
       <div className="max-w-2xl mx-auto p-6">
 
-        {/* Header */}
         <div className="bg-white rounded-2xl shadow-md border border-ajs-light overflow-hidden mb-6">
           <div className="brand-gradient text-white p-6">
-            <div className="text-xs uppercase tracking-wide text-white/70">Accept &amp; place order</div>
+            <div className="text-xs uppercase tracking-wide text-white/70">{t("acceptAndPlaceTitle")}</div>
             <div className="text-3xl font-extrabold mt-1">{quote.ref}</div>
           </div>
           <div className="p-5">
             <p className="text-sm text-ajs-text leading-relaxed mb-4">
-              You are about to place a binding order for the items below. Please complete the
-              account information form so we can invoice you correctly.
+              {t("bindingOrderNote")}
             </p>
-            {/* Mini quote summary */}
             <ul className="divide-y divide-ajs-light text-sm mb-3">
               {(items ?? []).map((i) => (
                 <li key={i.id} className="py-2 flex justify-between gap-3">
@@ -114,23 +112,27 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
               ))}
             </ul>
             <div className="flex justify-between text-sm pt-2 border-t border-ajs-light text-ajs-muted">
-              <span>Subtotal</span>
+              <span>{t("subtotalLabel")}</span>
               <span className="font-semibold text-ajs-dark">{fmt(subtotalPence)}</span>
             </div>
             <div className="flex justify-between text-sm pt-1 text-ajs-muted">
-              <span>Shipping{quote.shipping_pallets ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})` : ""}</span>
+              <span>
+                {t("shippingLabel")}
+                {quote.shipping_pallets
+                  ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})`
+                  : ""}
+              </span>
               <span className={`font-semibold ${shippingPence === null ? "text-amber-600" : "text-ajs-dark"}`}>
                 {shippingPence !== null ? fmt(shippingPence) : "EXW"}
               </span>
             </div>
             <div className="flex justify-between font-bold text-sm pt-2 mt-1 border-t border-ajs-light">
-              <span>Total (ex-VAT)</span>
+              <span>{t("totalExVAT")}</span>
               <span>{fmt(grandTotalPence)}</span>
             </div>
           </div>
         </div>
 
-        {/* Account info form */}
         <AccountInfoForm
           quoteRef={ref}
           token={token}
@@ -141,7 +143,6 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
           }}
         />
 
-        {/* Forward to accounts */}
         {quote.accounts_token && (
           <div className="bg-white rounded-xl border border-ajs-light p-5">
             <ForwardToAccounts
@@ -158,7 +159,7 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
             href={`/quote/${encodeURIComponent(ref)}/edit?token=${token}`}
             className="text-sm text-ajs-muted underline"
           >
-            ← Back to quote
+            {t("backToQuoteLink")}
           </Link>
         </div>
       </div>
@@ -166,15 +167,15 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
   );
 }
 
-function Invalid({ expired }: { expired?: boolean }) {
+function Invalid({ expired, t }: { expired?: boolean; t: ReturnType<typeof getT> }) {
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
       <div className="max-w-md text-center space-y-3">
-        <h1 className="text-2xl font-bold text-ajs-dark">{expired ? "Link expired" : "Invalid link"}</h1>
+        <h1 className="text-2xl font-bold text-ajs-dark">
+          {expired ? t("linkExpiredTitle") : t("invalidLinkTitle")}
+        </h1>
         <p className="text-ajs-muted text-sm">
-          {expired
-            ? "Your magic link has expired after 90 days."
-            : "This link is invalid. Please check the email from AJS Redzone."}
+          {expired ? t("linkExpiredDescGeneric") : t("invalidLinkDesc")}
         </p>
         <p className="text-ajs-muted text-sm">
           <a href="mailto:rz@ajsspalding.co.uk" className="text-ajs-primary underline">

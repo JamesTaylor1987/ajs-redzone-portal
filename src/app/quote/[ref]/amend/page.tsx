@@ -1,6 +1,8 @@
+import { cookies } from "next/headers";
 import { getServiceClient } from "@/lib/supabase-server";
 import type { CartLine, CheckoutDetails } from "@/lib/types";
 import { RestoreBasket } from "./RestoreBasket";
+import { getLocale, getT } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,8 @@ export default async function AmendQuotePage({ params, searchParams }: PageProps
     ? searchParams.token[0]
     : (searchParams.token ?? "");
 
+  const t = getT(getLocale(cookies().get("ajs_locale")?.value));
+
   const supabase = getServiceClient();
   const { data: quote } = await supabase
     .from("quotes")
@@ -26,10 +30,8 @@ export default async function AmendQuotePage({ params, searchParams }: PageProps
     return (
       <main className="min-h-screen flex items-center justify-center p-6">
         <div className="max-w-md text-center space-y-3">
-          <h1 className="text-2xl font-bold text-ajs-dark">Invalid link</h1>
-          <p className="text-ajs-muted text-sm">
-            Please return via the link in your original quote email.
-          </p>
+          <h1 className="text-2xl font-bold text-ajs-dark">{t("invalidLinkTitle")}</h1>
+          <p className="text-ajs-muted text-sm">{t("invalidAmendLinkDesc")}</p>
         </div>
       </main>
     );
@@ -39,13 +41,13 @@ export default async function AmendQuotePage({ params, searchParams }: PageProps
     return (
       <main className="min-h-screen flex items-center justify-center p-6">
         <div className="max-w-md text-center space-y-3">
-          <h1 className="text-2xl font-bold text-ajs-dark">Link expired</h1>
+          <h1 className="text-2xl font-bold text-ajs-dark">{t("linkExpiredTitle")}</h1>
           <p className="text-ajs-muted text-sm">
-            Contact{" "}
+            {t("contactForNewLink")}{" "}
             <a href="mailto:rz@ajsspalding.co.uk" className="text-ajs-primary underline">
               rz@ajsspalding.co.uk
             </a>{" "}
-            or call 01406&nbsp;424954 to request a new link.
+            or call 01406&nbsp;424954
           </p>
         </div>
       </main>
@@ -56,13 +58,9 @@ export default async function AmendQuotePage({ params, searchParams }: PageProps
     return (
       <main className="min-h-screen flex items-center justify-center p-6">
         <div className="max-w-md text-center space-y-3">
-          <h1 className="text-xl font-bold text-ajs-dark">Order already placed</h1>
+          <h1 className="text-xl font-bold text-ajs-dark">{t("orderAlreadyPlacedTitle")}</h1>
           <p className="text-ajs-muted text-sm">
-            This quote has been accepted and can no longer be amended. Contact{" "}
-            <a href="mailto:rz@ajsspalding.co.uk" className="text-ajs-primary underline">
-              rz@ajsspalding.co.uk
-            </a>{" "}
-            if you need to make changes.
+            {t("orderAlreadyPlacedAmendDesc", { email: "rz@ajsspalding.co.uk" })}
           </p>
         </div>
       </main>

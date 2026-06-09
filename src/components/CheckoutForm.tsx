@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { CartLine, CheckoutDetails, Currency, CreateQuoteResponse } from "@/lib/types";
 import { formatMoney, getFxRate } from "@/lib/format";
 import { SHIPPING_OPTIONS, calcPallets, calcShippingPence } from "@/lib/shipping";
+import { useT } from "./LocaleProvider";
 
 interface CheckoutFormProps {
   lines: CartLine[];
@@ -33,6 +34,8 @@ const PREFILL_KEY = "ajs_redzone_prefill_v2";
 const AMEND_KEY   = "ajs_redzone_amend_ref_v1";
 
 export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFormProps) {
+  const t = useT();
+
   const [details, setDetails] = useState<CheckoutDetails>(() => {
     if (typeof window === "undefined") return EMPTY;
     try {
@@ -78,31 +81,31 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
     e.preventDefault();
     setError(null);
     if (!details.contactFirstName.trim() || !details.contactLastName.trim() || !details.contactEmail.trim()) {
-      setError("First name, last name and email are required.");
+      setError(t("errNameEmail"));
       return;
     }
     if (!details.contactCompany.trim()) {
-      setError("Company name is required.");
+      setError(t("errCompany"));
       return;
     }
     if (!details.contactPhone.trim()) {
-      setError("Phone number is required.");
+      setError(t("errPhone"));
       return;
     }
     if (!details.siteName.trim()) {
-      setError("Site name is required.");
+      setError(t("errSiteName"));
       return;
     }
     if (!details.projectDescription.trim()) {
-      setError("Project description is required.");
+      setError(t("errProjectDesc"));
       return;
     }
     if (!details.requiredDate) {
-      setError("Required delivery date is required.");
+      setError(t("errDate"));
       return;
     }
     if (lines.length === 0) {
-      setError("Basket is empty.");
+      setError(t("errBasketEmpty"));
       return;
     }
 
@@ -137,31 +140,31 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
     <form onSubmit={handleSubmit} className="space-y-5">
       {originalQuoteRef && (
         <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-lg px-4 py-3 leading-relaxed">
-          Amending <span className="font-mono font-bold">{originalQuoteRef}</span> — your details are pre-filled. Adjust your basket and submit to create a revised quote. The original will be marked as superseded.
+          {t("amendingNotice", { ref: originalQuoteRef })}
         </div>
       )}
       <div className="bg-white rounded-xl border border-ajs-light p-4">
-        <h2 className="font-bold text-lg mb-3 text-ajs-dark">Your details</h2>
+        <h2 className="font-bold text-lg mb-3 text-ajs-dark">{t("sectionYourDetails")}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="First name *" required value={details.contactFirstName} onChange={set("contactFirstName")} />
-          <Field label="Last name *" required value={details.contactLastName} onChange={set("contactLastName")} />
-          <Field label="Company *" required value={details.contactCompany} onChange={set("contactCompany")} className="sm:col-span-2" />
-          <Field label="Site name *" required value={details.siteName} onChange={set("siteName")} placeholder="e.g. Manchester Factory, Unit 4 Warehouse" className="sm:col-span-2" />
-          <Field label="Email *" type="email" required value={details.contactEmail} onChange={set("contactEmail")} />
-          <Field label="Phone *" type="tel" required value={details.contactPhone} onChange={set("contactPhone")} />
+          <Field label={`${t("fieldFirstName")} *`} required value={details.contactFirstName} onChange={set("contactFirstName")} />
+          <Field label={`${t("fieldLastName")} *`} required value={details.contactLastName} onChange={set("contactLastName")} />
+          <Field label={`${t("fieldCompany")} *`} required value={details.contactCompany} onChange={set("contactCompany")} className="sm:col-span-2" />
+          <Field label={`${t("fieldSiteName")} *`} required value={details.siteName} onChange={set("siteName")} placeholder={t("fieldSiteNamePlaceholder")} className="sm:col-span-2" />
+          <Field label={`${t("fieldEmail")} *`} type="email" required value={details.contactEmail} onChange={set("contactEmail")} />
+          <Field label={`${t("fieldPhone")} *`} type="tel" required value={details.contactPhone} onChange={set("contactPhone")} />
         </div>
       </div>
 
       <div className="bg-white rounded-xl border border-ajs-light p-4">
-        <h2 className="font-bold text-lg mb-3 text-ajs-dark">Delivery / site address</h2>
+        <h2 className="font-bold text-lg mb-3 text-ajs-dark">{t("sectionDeliveryAddress")}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Address line 1" value={details.siteAddressLine1} onChange={set("siteAddressLine1")} className="sm:col-span-2" />
-          <Field label="Address line 2" value={details.siteAddressLine2} onChange={set("siteAddressLine2")} className="sm:col-span-2" />
-          <Field label="Town / City" value={details.siteAddressCity} onChange={set("siteAddressCity")} />
-          <Field label="Postcode *" required value={details.siteAddressPostcode} onChange={set("siteAddressPostcode")} />
+          <Field label={t("fieldAddressLine1")} value={details.siteAddressLine1} onChange={set("siteAddressLine1")} className="sm:col-span-2" />
+          <Field label={t("fieldAddressLine2")} value={details.siteAddressLine2} onChange={set("siteAddressLine2")} className="sm:col-span-2" />
+          <Field label={t("fieldTownCity")} value={details.siteAddressCity} onChange={set("siteAddressCity")} />
+          <Field label={`${t("fieldPostcode")} *`} required value={details.siteAddressPostcode} onChange={set("siteAddressPostcode")} />
           <div className="sm:col-span-2">
             <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
-              Destination country
+              {t("fieldCountry")}
             </label>
             <select
               value={details.siteCountry}
@@ -170,7 +173,7 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
             >
               {SHIPPING_OPTIONS.map((o) => (
                 <option key={o.country} value={o.country}>
-                  {o.label}{o.ratePence !== null ? ` — £${(o.ratePence / 100).toFixed(0)}/pallet` : " — EXW (you arrange shipping)"}
+                  {o.label}{o.ratePence !== null ? ` — £${(o.ratePence / 100).toFixed(0)}/pallet` : t("shippingEXWOption")}
                 </option>
               ))}
             </select>
@@ -179,19 +182,19 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
       </div>
 
       <div className="bg-white rounded-xl border border-ajs-light p-4">
-        <h2 className="font-bold text-lg mb-3 text-ajs-dark">Project details</h2>
+        <h2 className="font-bold text-lg mb-3 text-ajs-dark">{t("sectionProjectDetails")}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Required delivery date *" type="date" required value={details.requiredDate} onChange={set("requiredDate")} />
+          <Field label={`${t("fieldRequiredDate")} *`} type="date" required value={details.requiredDate} onChange={set("requiredDate")} />
           <div className="sm:col-span-2">
             <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
-              Project description *
+              {t("fieldProjectDescription")} *
             </label>
             <textarea
               value={details.projectDescription}
               onChange={set("projectDescription")}
               rows={3}
               className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
-              placeholder="Site details, special requirements, anything else we should know…"
+              placeholder={t("fieldProjectDescriptionPlaceholder")}
             />
           </div>
           <label className="sm:col-span-2 flex items-start gap-2 text-sm text-ajs-text">
@@ -202,9 +205,9 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
               className="mt-0.5 accent-ajs-primary"
             />
             <span>
-              Request an installation quote alongside this order.
+              {t("fieldInstallRequest")}
               <span className="text-ajs-muted block text-xs mt-0.5">
-                Covers installation of all control panels, sensors, sensor cabling and commissioning, plus project management of Visual Factory items. Does not include physical installation of Visual Factory hardware itself.
+                {t("fieldInstallRequestDesc")}
               </span>
             </span>
           </label>
@@ -212,7 +215,7 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
       </div>
 
       <div className="bg-white rounded-xl border border-ajs-light p-4">
-        <h2 className="font-bold text-lg mb-3 text-ajs-dark">Order summary</h2>
+        <h2 className="font-bold text-lg mb-3 text-ajs-dark">{t("sectionOrderSummary")}</h2>
         <ul className="divide-y divide-ajs-light text-sm">
           {lines.map((l) => (
             <li key={l.productId} className="py-2 flex justify-between gap-2">
@@ -229,23 +232,23 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
 
         <div className="mt-3 pt-3 border-t border-ajs-light space-y-2 text-sm">
           <div className="flex justify-between text-ajs-muted">
-            <span>Products subtotal</span>
+            <span>{t("productsSubtotal")}</span>
             <span className="font-semibold text-ajs-dark">{formatMoney(subtotal, currency)}</span>
           </div>
           <div className="flex justify-between text-ajs-muted">
             <span>
-              Shipping
+              {t("shipping")}
               <span className="text-xs ml-1">
-                ({pallets} pallet{pallets !== 1 ? "s" : ""}, {details.siteCountry})
+                ({pallets} {pallets !== 1 ? t("pallets") : t("pallet")}, {details.siteCountry})
               </span>
             </span>
             <span className={`font-semibold ${isEXW ? "text-amber-600" : "text-ajs-dark"}`}>
-              {isEXW ? "EXW — you arrange" : formatMoney(shippingPence!, currency)}
+              {isEXW ? t("shippingEXW") : formatMoney(shippingPence!, currency)}
             </span>
           </div>
           {!isEXW && (
             <div className="flex justify-between font-bold text-lg pt-2 border-t border-ajs-light">
-              <span>Estimated total</span>
+              <span>{t("estimatedTotal")}</span>
               <span>{formatMoney(grandTotal, currency)}</span>
             </div>
           )}
@@ -253,15 +256,14 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
 
         <div className="text-xs text-ajs-muted mt-3 space-y-1 leading-relaxed">
           <p>
-            <strong className="text-ajs-text">All prices ex-VAT.</strong> VAT is applied on the
-            invoice based on your country and VAT registration status:
+            <strong className="text-ajs-text">{t("vatAllPricesExVat")}</strong> {t("vatAppliedBasedOn")}
           </p>
           <ul className="list-disc pl-4 space-y-0.5">
-            <li>UK customers — 20% VAT</li>
-            <li>EU VAT-registered businesses — zero-rated under reverse charge (VAT number required)</li>
-            <li>Non-EU customers — zero-rated export</li>
+            <li>{t("vatBulletUK")}</li>
+            <li>{t("vatBulletEU")}</li>
+            <li>{t("vatBulletNonEU")}</li>
           </ul>
-          <p>Shipping is estimated and confirmed on invoice. Hardware invoiced 100% prior to shipment. DAP delivery terms.</p>
+          <p>{t("shippingEstimateNote")}</p>
         </div>
       </div>
 
@@ -277,14 +279,14 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
           onClick={onBack}
           className="px-5 py-3 rounded-lg border border-ajs-light text-ajs-muted hover:bg-ajs-light"
         >
-          ← Back to basket
+          {t("backToBasket")}
         </button>
         <button
           type="submit"
           disabled={submitting}
           className="px-6 py-3 rounded-lg font-bold text-white bg-ajs-primary hover:bg-ajs-dark disabled:opacity-50"
         >
-          {submitting ? "Submitting…" : "Submit quote request"}
+          {submitting ? t("submittingLabel") : t("submitQuote")}
         </button>
       </div>
     </form>

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import type { Currency } from "@/lib/types";
+import { LanguageSelector } from "./LanguageSelector";
+import { useT } from "./LocaleProvider";
 
 interface HeaderProps {
   currency: Currency;
@@ -11,6 +13,8 @@ interface HeaderProps {
 }
 
 export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: HeaderProps) {
+  const t = useT();
+
   return (
     <header className="brand-gradient sticky top-0 z-30 shadow-md">
       <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
@@ -40,6 +44,8 @@ export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: H
         </div>
 
         <div className="flex items-center gap-2">
+          <LanguageSelector />
+
           <div className="flex bg-white/10 rounded-lg overflow-hidden border border-white/20 text-xs font-semibold">
             <button
               onClick={() => onCurrencyChange("GBP")}
@@ -62,7 +68,7 @@ export function Header({ currency, onCurrencyChange, cartCount, onCartClick }: H
             className="bg-white/15 border border-white/25 rounded-lg px-3 py-2 text-white text-sm font-semibold hover:bg-white/25 transition-colors flex items-center gap-2"
           >
             <span aria-hidden>🛒</span>
-            <span className="hidden sm:inline">Basket</span>
+            <span className="hidden sm:inline">{t("basketLabel")}</span>
             <span className="bg-white text-ajs-dark rounded-full px-2 py-0.5 text-xs font-bold min-w-[1.5rem] text-center">
               {cartCount}
             </span>

@@ -2,6 +2,7 @@
 
 import type { CartLine, Currency } from "@/lib/types";
 import { formatMoney } from "@/lib/format";
+import { useT } from "./LocaleProvider";
 
 interface CartDrawerProps {
   open: boolean;
@@ -20,6 +21,7 @@ export function CartDrawer({
   onContinue,
   onClear,
 }: CartDrawerProps) {
+  const t = useT();
   const subtotal = lines.reduce((s, l) => s + l.qty * l.unitPricePence, 0);
   const itemCount = lines.reduce((s, l) => s + l.qty, 0);
 
@@ -39,8 +41,8 @@ export function CartDrawer({
         aria-hidden={!open}
       >
         <header className="brand-gradient text-white p-4 flex items-center justify-between">
-          <h2 className="font-bold">Basket ({itemCount})</h2>
-          <button onClick={onClose} aria-label="Close basket" className="text-white/80 hover:text-white text-xl">
+          <h2 className="font-bold">{t("basketTitle", { count: itemCount })}</h2>
+          <button onClick={onClose} aria-label={t("closeBasket")} className="text-white/80 hover:text-white text-xl">
             ✕
           </button>
         </header>
@@ -48,7 +50,7 @@ export function CartDrawer({
         <div className="flex-1 overflow-y-auto p-4">
           {lines.length === 0 ? (
             <div className="text-center text-ajs-muted text-sm py-12">
-              Your basket is empty.
+              {t("basketEmpty")}
             </div>
           ) : (
             <ul className="divide-y divide-ajs-light">
@@ -74,26 +76,25 @@ export function CartDrawer({
 
         <footer className="border-t border-ajs-light p-4 space-y-3">
           <div className="flex justify-between font-bold text-lg">
-            <span>Subtotal</span>
+            <span>{t("subtotal")}</span>
             <span>{formatMoney(subtotal, currency)}</span>
           </div>
           <p className="text-xs text-ajs-muted leading-snug">
-            All prices ex-VAT. VAT applied on invoice based on your country and VAT
-            registration. Hardware invoiced 100% prior to shipment.
+            {t("cartVatNotice")}
           </p>
           <button
             onClick={onContinue}
             disabled={lines.length === 0}
             className="w-full py-3 rounded-lg font-bold text-white bg-ajs-primary hover:bg-ajs-dark disabled:bg-ajs-muted disabled:opacity-50 transition-colors"
           >
-            Continue to checkout →
+            {t("continueToCheckout")}
           </button>
           {lines.length > 0 && (
             <button
               onClick={onClear}
               className="w-full py-2 text-xs text-ajs-muted hover:text-ajs-danger"
             >
-              Clear basket
+              {t("clearBasket")}
             </button>
           )}
         </footer>
