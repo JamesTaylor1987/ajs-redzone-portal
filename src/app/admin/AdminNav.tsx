@@ -29,7 +29,7 @@ const NAV: NavItem[] = [
     label: "Users",
     children: [
       { href: "/admin/users", label: "AJS Users" },
-      { href: "/admin/redzone-pms", label: "Redzone PMs" },
+      { href: "/admin/redzone-pms", label: "Redzone Users" },
     ],
   },
   { href: "/admin/settings", label: "Settings" },
