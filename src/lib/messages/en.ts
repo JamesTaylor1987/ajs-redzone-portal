@@ -12,6 +12,15 @@ export const messages = {
   clearBasket: "Clear basket",
   cartVatNotice: "All prices ex-VAT. VAT applied on invoice based on your country and VAT registration. Hardware invoiced 100% prior to shipment.",
 
+  // Product filter chips
+  filterMildSteel: "Mild Steel",
+  filterStainlessSteel: "Stainless Steel",
+
+  // Stock status labels
+  stockInStock: "In Stock",
+  stockLimitedStock: "Limited Stock",
+  stockOnOrder: "On Order",
+
   // Product grid sections
   sectionControlPanels: "Control Panels",
   sectionSensors: "Sensors, Software & Accessories",

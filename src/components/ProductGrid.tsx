@@ -23,6 +23,12 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
   const [plcFilter, setPlcFilter] = useState<string>("All");
   const [matFilter, setMatFilter] = useState<string>("All");
 
+  const stockLabels = {
+    "In Stock": t("stockInStock"),
+    "Limited Stock": t("stockLimitedStock"),
+    "On Order": t("stockOnOrder"),
+  };
+
   const panels = useMemo(
     () => products.filter((p) => p.category === "panel"),
     [products]
@@ -54,6 +60,8 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
           matFilter={matFilter}
           setMatFilter={setMatFilter}
           filterAll={t("filterAll")}
+          filterMildSteel={t("filterMildSteel")}
+          filterStainlessSteel={t("filterStainlessSteel")}
         />
         <Grid>
           {filteredPanels.map((p) => (
@@ -69,6 +77,7 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
               nextLabel={t("nextPhoto")}
               decreaseLabel={t("decreaseQty")}
               increaseLabel={t("increaseQty")}
+              stockLabels={stockLabels}
             />
           ))}
           {filteredPanels.length === 0 && (
@@ -94,6 +103,7 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
               nextLabel={t("nextPhoto")}
               decreaseLabel={t("decreaseQty")}
               increaseLabel={t("increaseQty")}
+              stockLabels={stockLabels}
             />
           ))}
         </Grid>
@@ -115,6 +125,7 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
                 nextLabel={t("nextPhoto")}
                 decreaseLabel={t("decreaseQty")}
                 increaseLabel={t("increaseQty")}
+                stockLabels={stockLabels}
               />
             ))}
           </Grid>
@@ -141,24 +152,39 @@ function FilterBar({
   matFilter,
   setMatFilter,
   filterAll,
+  filterMildSteel,
+  filterStainlessSteel,
 }: {
   plcFilter: string;
   setPlcFilter: (s: string) => void;
   matFilter: string;
   setMatFilter: (s: string) => void;
   filterAll: string;
+  filterMildSteel: string;
+  filterStainlessSteel: string;
 }) {
+  const plcOptions = [
+    { value: "All", label: filterAll },
+    { value: "Siemens", label: "Siemens" },
+    { value: "Allen Bradley", label: "Allen Bradley" },
+  ];
+  const matOptions = [
+    { value: "All", label: filterAll },
+    { value: "Mild Steel", label: filterMildSteel },
+    { value: "Stainless Steel", label: filterStainlessSteel },
+  ];
+
   return (
     <div className="flex flex-wrap gap-2 items-center">
-      {[filterAll, "Siemens", "Allen Bradley"].map((f) => (
-        <Chip key={f} active={plcFilter === (f === filterAll ? "All" : f)} onClick={() => setPlcFilter(f === filterAll ? "All" : f)}>
-          {f}
+      {plcOptions.map(({ value, label }) => (
+        <Chip key={value} active={plcFilter === value} onClick={() => setPlcFilter(value)}>
+          {label}
         </Chip>
       ))}
       <span className="w-px h-6 bg-ajs-light mx-1" aria-hidden />
-      {[filterAll, "Mild Steel", "Stainless Steel"].map((f) => (
-        <Chip key={f} active={matFilter === (f === filterAll ? "All" : f)} onClick={() => setMatFilter(f === filterAll ? "All" : f)}>
-          {f}
+      {matOptions.map(({ value, label }) => (
+        <Chip key={value} active={matFilter === value} onClick={() => setMatFilter(value)}>
+          {label}
         </Chip>
       ))}
     </div>
@@ -207,6 +233,7 @@ function Card({
   nextLabel,
   decreaseLabel,
   increaseLabel,
+  stockLabels,
 }: {
   product: Product;
   images: string[];
@@ -218,6 +245,7 @@ function Card({
   nextLabel: string;
   decreaseLabel: string;
   increaseLabel: string;
+  stockLabels: Record<string, string>;
 }) {
   const active = qty > 0;
   const [imgIdx, setImgIdx] = useState(0);
@@ -227,6 +255,7 @@ function Card({
     product.stock_status === "Limited Stock" ? getClasses(stockColours.lowStock) :
     product.stock_status === "On Order"      ? getClasses(stockColours.outOfStock) :
     "bg-slate-100 text-slate-500";
+  const stockLabel = stockLabels[product.stock_status] ?? product.stock_status;
 
   const prev = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -305,7 +334,7 @@ function Card({
         </div>
         <div className="flex items-center justify-between flex-wrap gap-1">
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${stockClass}`}>
-            {product.stock_status} · {product.lead_time}
+            {stockLabel} · {product.lead_time}
           </span>
         </div>
         <div className="text-base font-extrabold text-ajs-dark">

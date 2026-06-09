@@ -12,6 +12,13 @@ export const messages: typeof en = {
   clearBasket: "Warenkorb leeren",
   cartVatNotice: "Alle Preise zzgl. MwSt. Die MwSt. wird auf der Rechnung gemäß Ihrem Land und Ihrer MwSt.-Registrierung ausgewiesen. Hardware wird zu 100 % vor dem Versand fakturiert.",
 
+  filterMildSteel: "Baustahl",
+  filterStainlessSteel: "Edelstahl",
+
+  stockInStock: "Auf Lager",
+  stockLimitedStock: "Begrenzte Verfügbarkeit",
+  stockOnOrder: "Auf Bestellung",
+
   sectionControlPanels: "Schalttafeln",
   sectionSensors: "Sensoren, Software & Zubehör",
   sectionVisualFactory: "Visual Factory",

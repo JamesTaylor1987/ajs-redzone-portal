@@ -12,6 +12,13 @@ export const messages: typeof en = {
   clearBasket: "Vider le panier",
   cartVatNotice: "Tous les prix sont hors TVA. La TVA est appliquée sur la facture selon votre pays et votre statut TVA. Le matériel est facturé à 100 % avant expédition.",
 
+  filterMildSteel: "Acier doux",
+  filterStainlessSteel: "Acier inoxydable",
+
+  stockInStock: "En stock",
+  stockLimitedStock: "Stock limité",
+  stockOnOrder: "Sur commande",
+
   sectionControlPanels: "Panneaux de commande",
   sectionSensors: "Capteurs, logiciels et accessoires",
   sectionVisualFactory: "Visual Factory",

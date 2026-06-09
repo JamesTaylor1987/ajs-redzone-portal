@@ -173,7 +173,7 @@ export function CheckoutForm({ lines, currency, onBack, onSuccess }: CheckoutFor
             >
               {SHIPPING_OPTIONS.map((o) => (
                 <option key={o.country} value={o.country}>
-                  {o.label}{o.ratePence !== null ? ` — £${(o.ratePence / 100).toFixed(0)}/pallet` : t("shippingEXWOption")}
+                  {o.label}{o.ratePence !== null ? ` — £${(o.ratePence / 100).toFixed(0)}/${t("pallet")}` : t("shippingEXWOption")}
                 </option>
               ))}
             </select>
