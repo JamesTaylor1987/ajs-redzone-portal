@@ -134,11 +134,21 @@ export function ProductForm({ product, currentPosition, sectionSize }: Props) {
             <option>On Order</option>
           </select>
         </div>
-        <Field
-          label="Lead time"
-          name="lead_time"
-          defaultValue={product?.lead_time ?? "4–6 weeks"}
-        />
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
+            Lead time
+          </label>
+          <select
+            name="lead_time"
+            defaultValue={product?.lead_time ?? ""}
+            className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
+          >
+            <option value="">— Not specified —</option>
+            <option value="Ships next working day">Ships next working day</option>
+            <option value="3–5 working days">3–5 working days</option>
+            <option value="10+ working days">10+ working days</option>
+          </select>
+        </div>
         <div>
           <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
             Position in section

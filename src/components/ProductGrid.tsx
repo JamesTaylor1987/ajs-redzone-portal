@@ -334,7 +334,7 @@ function Card({
         </div>
         <div className="flex items-center justify-between flex-wrap gap-1">
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${stockClass}`}>
-            {stockLabel} · {product.lead_time}
+            {stockLabel}{product.lead_time ? ` · ${product.lead_time}` : ""}
           </span>
         </div>
         <div className="text-base font-extrabold text-ajs-dark">
