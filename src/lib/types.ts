@@ -24,7 +24,7 @@ export interface Product {
   io_count: number | null;
   price_gbp_pence: number;
   stock_status: string;
-  lead_time: string;
+  lead_time: string | null;
   image_url: string | null;
   sort_order: number;
   active: boolean;

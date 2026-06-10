@@ -17,7 +17,7 @@ export async function upsertProductAction(formData: FormData) {
   const io_count = g("io_count") ? parseInt(g("io_count"), 10) : null;
   const price_gbp_pence = Math.round(parseFloat(g("price_gbp")) * 100);
   const stock_status = g("stock_status");
-  const lead_time = g("lead_time");
+  const lead_time = g("lead_time") || null;
   let sort_order = parseInt(g("sort_order") || "0", 10);
   const active = formData.get("active") === "on";
 

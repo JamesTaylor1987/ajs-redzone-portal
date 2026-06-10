@@ -334,9 +334,12 @@ function Card({
         </div>
         <div className="flex items-center justify-between flex-wrap gap-1">
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${stockClass}`}>
-            {stockLabel}{product.lead_time ? ` · ${product.lead_time}` : ""}
+            {stockLabel}
           </span>
         </div>
+        {product.lead_time && (
+          <div className="text-[10px] text-ajs-muted">{product.lead_time}</div>
+        )}
         <div className="text-base font-extrabold text-ajs-dark">
           {formatMoney(product.price_gbp_pence, currency)}
         </div>
