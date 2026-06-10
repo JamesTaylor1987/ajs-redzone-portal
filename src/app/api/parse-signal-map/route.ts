@@ -53,7 +53,14 @@ function skipSensor(label: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Visual Factory device matching — maps file label → catalogue VF product
+// Visual Factory device matching — uses SKU patterns (reliable, name-agnostic)
+//
+// Known SKU conventions:
+//   AJS-STREAM         → Google Streamer (was Apple TV Box)
+//   AJS-55-DISPLAY     → 55" TV / display
+//   AJS-65-DISPLAY     → 65" TV / display
+//   AJS-DISPLAY-ENC    → IP rated enclosure (Protech)
+//   AJS-TABLET-*       → tablets (skipped)
 // ---------------------------------------------------------------------------
 
 function findVfProduct(deviceLabel: string, vfProducts: DbProduct[]): DbProduct | null {
@@ -62,33 +69,29 @@ function findVfProduct(deviceLabel: string, vfProducts: DbProduct[]): DbProduct 
   // Skip tablets — separate purchasing decision
   if (l.includes("ipad") || l.includes("tablet")) return null;
 
-  // Apple TV Box → Google Chromecast / streaming device
+  // Apple TV Box → streaming device (SKU contains STREAM)
   if (l.includes("apple tv") || l.includes("appletv")) {
-    return (
-      vfProducts.find((p) => /stream|chrome|google|stick/i.test(p.name)) ??
-      vfProducts.find((p) => /box/i.test(p.name) && !/enclosure|protech/i.test(p.name)) ??
-      null
-    );
+    return vfProducts.find((p) => /stream/i.test(p.sku)) ?? null;
   }
 
-  // Enclosures — match size-specific product first, then generic; no cross-size fallback
+  // Enclosures — SKU contains ENC; size-specific first, no cross-size fallback
   if (l.includes("enclosure")) {
-    const sizeRe = l.includes("65") ? /65/ : /55/;
+    const size = l.includes("65") ? "65" : "55";
     return (
-      vfProducts.find((p) => /enclosure|protech/i.test(p.name) && sizeRe.test(p.name)) ??
-      (l.includes("65") ? null : vfProducts.find((p) => /enclosure|protech/i.test(p.name))) ??
+      vfProducts.find((p) => /enc/i.test(p.sku) && p.sku.includes(size)) ??
+      (l.includes("65") ? null : vfProducts.find((p) => /enc/i.test(p.sku))) ??
       null
     );
   }
 
-  // 55" display
+  // 55" TV / display — SKU contains 55, not ENC
   if (l.includes("55")) {
-    return vfProducts.find((p) => /55/.test(p.name) && /display|tv|screen|monitor/i.test(p.name)) ?? null;
+    return vfProducts.find((p) => p.sku.includes("55") && !/enc/i.test(p.sku)) ?? null;
   }
 
-  // 65" display
+  // 65" TV / display — SKU contains 65, not ENC
   if (l.includes("65")) {
-    return vfProducts.find((p) => /65/.test(p.name) && /display|tv|screen|monitor/i.test(p.name)) ?? null;
+    return vfProducts.find((p) => p.sku.includes("65") && !/enc/i.test(p.sku)) ?? null;
   }
 
   return null;
