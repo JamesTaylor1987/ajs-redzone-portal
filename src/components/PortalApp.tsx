@@ -8,6 +8,7 @@ import { ProductGrid } from "./ProductGrid";
 import { CartDrawer } from "./CartDrawer";
 import { CheckoutForm } from "./CheckoutForm";
 import { SupportBanner } from "./SupportBanner";
+import { SignalMapUpload } from "./SignalMapUpload";
 
 interface PortalAppProps {
   products: Product[];
@@ -57,6 +58,24 @@ export function PortalApp({ products, productImages, stockColours }: PortalAppPr
 
   const itemCount = lines.reduce((s, l) => s + l.qty, 0);
 
+  const vfProducts = products.filter((p) => p.category === "visual_factory");
+
+  const handleAddToBasket = (newItems: CartLine[]) => {
+    setLines((current) => {
+      const merged = [...current];
+      for (const item of newItems) {
+        const existing = merged.find((l) => l.productId === item.productId);
+        if (existing) {
+          existing.qty += item.qty;
+        } else {
+          merged.push(item);
+        }
+      }
+      return merged;
+    });
+    setCartOpen(true);
+  };
+
   const handleQtyChange = (product: Product, qty: number) => {
     setLines((current) => {
       const without = current.filter((l) => l.productId !== product.id);
@@ -95,14 +114,17 @@ export function PortalApp({ products, productImages, stockColours }: PortalAppPr
 
       <main className="mx-auto max-w-6xl px-4 py-6">
         {step === "browse" && (
-          <ProductGrid
-            products={products}
-            productImages={productImages}
-            currency={currency}
-            lines={lines}
-            onQtyChange={handleQtyChange}
-            stockColours={stockColours}
-          />
+          <>
+            <SignalMapUpload vfProducts={vfProducts} onAddToBasket={handleAddToBasket} />
+            <ProductGrid
+              products={products}
+              productImages={productImages}
+              currency={currency}
+              lines={lines}
+              onQtyChange={handleQtyChange}
+              stockColours={stockColours}
+            />
+          </>
         )}
         {step === "checkout" && (
           <CheckoutForm

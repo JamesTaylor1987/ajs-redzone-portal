@@ -16,7 +16,8 @@
     "pdfmake": "^0.3.9",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "resend": "^6.12.4"
+    "resend": "^6.12.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^20",
