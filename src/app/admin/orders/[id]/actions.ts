@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getServiceClient } from "@/lib/supabase-server";
 import { sendStatusUpdateEmail } from "@/lib/email";
-import { updateDataverseOpportunity } from "@/lib/dataverse";
+import { updateDataverseOpportunity, updateDataverseProbability } from "@/lib/dataverse";
 
 const VALID_STATUSES = [
   "quote_submitted",
@@ -146,6 +146,17 @@ export async function updateWinProbabilityAction(
     .eq("id", id);
 
   if (error) return { error: "Failed to save — please try again" };
+
+  if (probability !== null) {
+    const { data: quote } = await supabase
+      .from("quotes")
+      .select("dataverse_opportunity_id")
+      .eq("id", id)
+      .single();
+    if (quote?.dataverse_opportunity_id) {
+      await updateDataverseProbability(quote.dataverse_opportunity_id, probability);
+    }
+  }
 
   revalidatePath(`/admin/orders/${id}`);
   return { success: true };

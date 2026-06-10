@@ -290,6 +290,31 @@ export async function createDataverseOpportunity(
   return oppGuid;
 }
 
+export async function updateDataverseProbability(
+  dataverseId: string,
+  probability: number,
+): Promise<void> {
+  if (!isConfigured() || !dataverseId) return;
+
+  try {
+    const token = await getAccessToken();
+    const { url } = cfg();
+    const res = await fetch(
+      `${url}/api/data/v9.2/cr49c_opportunitieses(${dataverseId})`,
+      {
+        method: "PATCH",
+        headers: dvHeaders(token),
+        body: JSON.stringify({ cr49c_probability: Math.round(probability) }),
+      },
+    );
+    if (!res.ok) {
+      console.error("[dataverse] updateProbability failed:", res.status, await res.text());
+    }
+  } catch (err) {
+    console.error("[dataverse] updateProbability error:", err);
+  }
+}
+
 export async function updateDataverseOpportunity(
   dataverseId: string,
   portalStatus: string,
