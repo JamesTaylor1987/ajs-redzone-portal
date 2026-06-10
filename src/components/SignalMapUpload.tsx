@@ -19,7 +19,9 @@ interface ParseResult {
   customerName: string;
   siteName: string;
   items: ParsedItem[];
+  vfItems: ParsedItem[];
   unmatchedSensors: string[];
+  unmatchedDevices: string[];
   notInCatalogue: string[];
 }
 
@@ -32,7 +34,7 @@ interface VfQty {
 }
 
 interface Props {
-  vfProducts: Product[];
+  vfProducts: Product[];           // fallback when file has no VF data
   onAddToBasket: (items: CartLine[]) => void;
 }
 
@@ -92,9 +94,23 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
         return;
       }
 
-      setParseResult(data as ParseResult);
-      setIncludeVf(false);
-      setVfQtys(initialVfQtys);
+      const parsed = data as ParseResult;
+      setParseResult(parsed);
+
+      // Pre-fill VF qtys from file; fall back to vfProducts with qty=0
+      if (parsed.vfItems.length > 0) {
+        setVfQtys(parsed.vfItems.map((i) => ({
+          productId: i.productId,
+          sku: i.sku,
+          name: i.name,
+          unitPricePence: i.unitPricePence,
+          qty: i.qty,
+        })));
+        setIncludeVf(true);
+      } else {
+        setVfQtys(initialVfQtys);
+        setIncludeVf(false);
+      }
       setState("parsed");
     } catch (err) {
       setParseError(
@@ -229,6 +245,14 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
             </div>
           )}
 
+          {/* Unmatched devices */}
+          {parseResult.unmatchedDevices.length > 0 && (
+            <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
+              <p className="text-xs font-semibold text-amber-700 mb-1">Could not match devices</p>
+              <p className="text-xs text-amber-700">{parseResult.unmatchedDevices.join(", ")}</p>
+            </div>
+          )}
+
           {/* Not in catalogue */}
           {parseResult.notInCatalogue.length > 0 && (
             <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
@@ -244,7 +268,9 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
             <div className="border-t border-ajs-light pt-3">
               <div className="flex items-center gap-3 mb-3">
                 <p className="text-sm font-semibold text-ajs-text">
-                  Include Visual Factory hardware?
+                  {parseResult.vfItems.length > 0
+                    ? "Visual Factory hardware detected — include?"
+                    : "Include Visual Factory hardware?"}
                 </p>
                 <div className="flex rounded-md border border-ajs-light overflow-hidden text-xs font-semibold">
                   <button

@@ -20,64 +20,91 @@ interface ParseResult {
   customerName: string;
   siteName: string;
   items: ParsedItem[];
+  vfItems: ParsedItem[];
   unmatchedSensors: string[];
+  unmatchedDevices: string[];
   notInCatalogue: string[];
 }
 
+type DbProduct = { id: string; sku: string; name: string; price_gbp_pence: number };
+
 // ---------------------------------------------------------------------------
-// SKU derivation helpers
+// Panel / sensor SKU derivation
 // ---------------------------------------------------------------------------
 
 function panelSku(inputCount: number, plcMaker: string, ssFlag: number): string {
   const size = inputCount <= 8 ? 8 : inputCount <= 16 ? 16 : 24;
-  const makerLower = plcMaker.toLowerCase();
-  let plc: string;
-  if (makerLower.includes("siemens")) {
-    plc = "SI";
-  } else if (makerLower.includes("allen") || makerLower.includes("bradley")) {
-    plc = "AB";
-  } else {
-    plc = "SI"; // fallback
-  }
-  const mat = ssFlag === 1 ? "SS" : "MS";
-  return `AJS-${plc}-${mat}-${size}`;
+  const m = plcMaker.toLowerCase();
+  const plc = m.includes("siemens") ? "SI" : (m.includes("allen") || m.includes("bradley")) ? "AB" : "SI";
+  return `AJS-${plc}-${ssFlag === 1 ? "SS" : "MS"}-${size}`;
 }
 
 function sensorSku(label: string): string | null {
-  const lower = label.toLowerCase();
-  if (lower.includes("lr-z") || lower.includes("laser")) return "AJS-LRZ-SENSOR";
-  if (lower.includes("pz-v") || lower.includes("photoeye") || lower.includes("photo eye")) return "AJS-PZV-SENSOR";
-  if (lower.includes("prox") || lower.includes("proximity")) return "AJS-4MM-SENSOR";
-  if (lower.includes("relay")) return "AJS-RELAY";
-  return null; // unmatched
+  const l = label.toLowerCase();
+  if (l.includes("lr-z") || l.includes("laser"))                      return "AJS-LRZ-SENSOR";
+  if (l.includes("pz-v") || l.includes("photoeye") || l.includes("photo eye")) return "AJS-PZV-SENSOR";
+  if (l.includes("prox"))                                               return "AJS-4MM-SENSOR";
+  if (l.includes("relay"))                                              return "AJS-RELAY";
+  return null;
 }
 
-function shouldSkipSensor(label: string): boolean {
-  const lower = label.toLowerCase();
-  return (
-    lower.includes("customer sensor") ||
-    lower.includes("push button") ||
-    lower.includes("plc counter") ||
-    lower.includes("totalizer") ||
-    lower.includes("manual") ||
-    lower.includes("no sensor")
-  );
+function skipSensor(label: string): boolean {
+  return /customer sensor|push button|plc counter|totalizer|manual|no sensor/i.test(label);
 }
 
 // ---------------------------------------------------------------------------
-// Cell reader helpers
+// Visual Factory device matching — maps file label → catalogue VF product
+// ---------------------------------------------------------------------------
+
+function findVfProduct(deviceLabel: string, vfProducts: DbProduct[]): DbProduct | null {
+  const l = deviceLabel.toLowerCase().trim();
+
+  // Skip tablets — separate purchasing decision
+  if (l.includes("ipad") || l.includes("tablet")) return null;
+
+  // Apple TV Box → Google Chromecast / streaming device
+  if (l.includes("apple tv") || l.includes("appletv")) {
+    return (
+      vfProducts.find((p) => /stream|chrome|google|stick/i.test(p.name)) ??
+      vfProducts.find((p) => /box/i.test(p.name) && !/enclosure|protech/i.test(p.name)) ??
+      null
+    );
+  }
+
+  // Enclosures (Protech) — match size if mentioned
+  if (l.includes("enclosure")) {
+    const sizeRe = l.includes("65") ? /65/ : /55/;
+    return (
+      vfProducts.find((p) => /enclosure|protech/i.test(p.name) && sizeRe.test(p.name)) ??
+      vfProducts.find((p) => /enclosure|protech/i.test(p.name)) ??
+      null
+    );
+  }
+
+  // 55" display
+  if (l.includes("55")) {
+    return vfProducts.find((p) => /55/.test(p.name) && /display|tv|screen|monitor/i.test(p.name)) ?? null;
+  }
+
+  // 65" display
+  if (l.includes("65")) {
+    return vfProducts.find((p) => /65/.test(p.name) && /display|tv|screen|monitor/i.test(p.name)) ?? null;
+  }
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Cell helpers
 // ---------------------------------------------------------------------------
 
 function cellStr(ws: XLSX.WorkSheet, col: string, row: number): string {
-  const addr = `${col}${row}`;
-  const cell = ws[addr];
-  if (!cell) return "";
-  return String(cell.v ?? "").trim();
+  const cell = ws[`${col}${row}`];
+  return cell ? String(cell.v ?? "").trim() : "";
 }
 
 function cellNum(ws: XLSX.WorkSheet, col: string, row: number): number {
-  const addr = `${col}${row}`;
-  const cell = ws[addr];
+  const cell = ws[`${col}${row}`];
   if (!cell) return 0;
   const n = Number(cell.v);
   return isNaN(n) ? 0 : n;
@@ -92,7 +119,7 @@ export async function POST(request: Request) {
   try {
     formData = await request.formData();
   } catch {
-    return NextResponse.json({ error: "Invalid multipart form data" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
   }
 
   const file = formData.get("file");
@@ -100,53 +127,47 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
-  let workbook: XLSX.WorkBook;
+  let wb: XLSX.WorkBook;
   try {
-    const arrayBuffer = await (file as File).arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    workbook = XLSX.read(buffer, { type: "buffer" });
+    const buf = Buffer.from(await (file as File).arrayBuffer());
+    wb = XLSX.read(buf, { type: "buffer" });
   } catch (err) {
     return NextResponse.json(
-      { error: `Could not read Excel file: ${err instanceof Error ? err.message : String(err)}` },
+      { error: `Could not read file: ${err instanceof Error ? err.message : String(err)}` },
       { status: 422 }
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // General sheet — B3 = customer name, B4 = site location
-  // ---------------------------------------------------------------------------
-  const generalSheet = workbook.Sheets["General"] ?? workbook.Sheets[workbook.SheetNames[0]];
-  const customerName = generalSheet ? cellStr(generalSheet, "B", 3) : "";
-  const siteName = generalSheet ? cellStr(generalSheet, "B", 4) : "";
+  const genSheet  = wb.Sheets["General"] ?? wb.Sheets[wb.SheetNames[0]];
+  const hwSheet   = wb.Sheets["Hardware Summary"];
 
-  // ---------------------------------------------------------------------------
-  // Hardware Summary sheet
-  // ---------------------------------------------------------------------------
-  const hwSheet = workbook.Sheets["Hardware Summary"];
   if (!hwSheet) {
-    return NextResponse.json({ error: 'Sheet "Hardware Summary" not found in workbook' }, { status: 422 });
+    return NextResponse.json(
+      { error: 'Sheet "Hardware Summary" not found — is this a Redzone Signal Map?' },
+      { status: 422 }
+    );
   }
 
-  // Panel SKUs — rows 3-12, cols C (inputs), D (maker), E (SS flag)
-  const panelSkuMap = new Map<string, number>(); // sku → qty
+  const customerName = genSheet ? cellStr(genSheet, "B", 3) : "";
+  const siteName     = genSheet ? cellStr(genSheet, "B", 4) : "";
+
+  // ── Panels (cols C/D/E, rows 3-12) ──────────────────────────────────────
+  const panelSkuMap = new Map<string, number>();
   for (let row = 3; row <= 12; row++) {
-    const inputCount = cellNum(hwSheet, "C", row);
-    if (inputCount <= 0) continue; // unused PLC slot
-    const plcMaker = cellStr(hwSheet, "D", row);
-    const ssFlag = cellNum(hwSheet, "E", row);
-    const sku = panelSku(inputCount, plcMaker, ssFlag);
+    const inputs = cellNum(hwSheet, "C", row);
+    if (inputs <= 0) continue;
+    const sku = panelSku(inputs, cellStr(hwSheet, "D", row), cellNum(hwSheet, "E", row));
     panelSkuMap.set(sku, (panelSkuMap.get(sku) ?? 0) + 1);
   }
 
-  // Sensor SKUs — rows 3-12, cols H (label), I (qty)
-  const sensorSkuMap = new Map<string, number>(); // sku → qty
+  // ── Sensors (cols H/I, rows 3-12) ────────────────────────────────────────
+  const sensorSkuMap   = new Map<string, number>();
   const unmatchedSensors: string[] = [];
   for (let row = 3; row <= 12; row++) {
     const label = cellStr(hwSheet, "H", row);
     if (!label) continue;
     const qty = cellNum(hwSheet, "I", row);
-    if (qty <= 0) continue;
-    if (shouldSkipSensor(label)) continue;
+    if (qty <= 0 || skipSensor(label)) continue;
     const sku = sensorSku(label);
     if (sku) {
       sensorSkuMap.set(sku, (sensorSkuMap.get(sku) ?? 0) + qty);
@@ -155,70 +176,74 @@ export async function POST(request: Request) {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // DB lookup for all matched SKUs
-  // ---------------------------------------------------------------------------
-  const allSkus = [...panelSkuMap.keys(), ...sensorSkuMap.keys()];
-
-  if (allSkus.length === 0) {
-    const result: ParseResult = {
-      customerName,
-      siteName,
-      items: [],
-      unmatchedSensors,
-      notInCatalogue: [],
-    };
-    return NextResponse.json(result);
-  }
-
-  const supabase = getServiceClient();
-  const { data: productRows, error: prodError } = await supabase
-    .from("products")
-    .select("id, sku, name, price_gbp_pence")
-    .in("sku", allSkus)
-    .eq("active", true);
-
-  if (prodError) {
-    return NextResponse.json(
-      { error: `Product lookup failed: ${prodError.message}` },
-      { status: 500 }
-    );
-  }
-
-  const dbMap = new Map<string, { id: string; sku: string; name: string; price_gbp_pence: number }>(
-    (productRows ?? []).map((p) => [p.sku, p])
-  );
-
-  const items: ParsedItem[] = [];
-  const notInCatalogue: string[] = [];
-
-  for (const [sku, qty] of panelSkuMap.entries()) {
-    const product = dbMap.get(sku);
-    if (!product) {
-      notInCatalogue.push(sku);
+  // ── VF devices (cols K/N, rows 3-15, N = total qty) ──────────────────────
+  // K = device label, N = total (shopfloor + admin)
+  const vfDeviceMap   = new Map<string, { label: string; qty: number }>();
+  for (let row = 3; row <= 15; row++) {
+    const label = cellStr(hwSheet, "K", row);
+    if (!label) continue;
+    const qty = cellNum(hwSheet, "N", row);
+    if (qty <= 0) continue;
+    // Aggregate by label (some rows repeat the same device across size variants — keep separate)
+    const key = label.toLowerCase().trim();
+    const existing = vfDeviceMap.get(key);
+    if (existing) {
+      existing.qty += qty;
     } else {
-      items.push({
-        productId: product.id,
-        sku: product.sku,
-        name: product.name,
-        qty,
-        unitPricePence: product.price_gbp_pence,
-      });
+      vfDeviceMap.set(key, { label, qty });
     }
   }
 
-  for (const [sku, qty] of sensorSkuMap.entries()) {
-    const product = dbMap.get(sku);
-    if (!product) {
-      notInCatalogue.push(sku);
+  // ── DB lookup ────────────────────────────────────────────────────────────
+  const hwSkus = [...panelSkuMap.keys(), ...sensorSkuMap.keys()];
+
+  const supabase = getServiceClient();
+  const [hwResult, vfResult] = await Promise.all([
+    hwSkus.length > 0
+      ? supabase.from("products").select("id, sku, name, price_gbp_pence").in("sku", hwSkus).eq("active", true)
+      : Promise.resolve({ data: [] as DbProduct[], error: null }),
+    supabase.from("products").select("id, sku, name, price_gbp_pence").eq("category", "visual_factory").eq("active", true),
+  ]);
+
+  if (hwResult.error) {
+    return NextResponse.json({ error: `DB error: ${hwResult.error.message}` }, { status: 500 });
+  }
+
+  const dbHw  = new Map((hwResult.data  ?? []).map((p) => [p.sku, p]));
+  const vfProducts: DbProduct[] = vfResult.data ?? [];
+
+  const items: ParsedItem[]       = [];
+  const notInCatalogue: string[]  = [];
+
+  for (const [sku, qty] of panelSkuMap) {
+    const p = dbHw.get(sku);
+    p ? items.push({ productId: p.id, sku: p.sku, name: p.name, qty, unitPricePence: p.price_gbp_pence })
+      : notInCatalogue.push(sku);
+  }
+  for (const [sku, qty] of sensorSkuMap) {
+    const p = dbHw.get(sku);
+    p ? items.push({ productId: p.id, sku: p.sku, name: p.name, qty, unitPricePence: p.price_gbp_pence })
+      : notInCatalogue.push(sku);
+  }
+
+  // Match VF devices
+  const vfItems: ParsedItem[]          = [];
+  const unmatchedDevices: string[]     = [];
+
+  for (const { label, qty } of vfDeviceMap.values()) {
+    const p = findVfProduct(label, vfProducts);
+    if (!p) {
+      // Only flag as unmatched if it's not a tablet (which we intentionally skip)
+      if (!/ipad|tablet/i.test(label)) {
+        unmatchedDevices.push(`${qty}× ${label}`);
+      }
+      continue;
+    }
+    const existing = vfItems.find((i) => i.productId === p.id);
+    if (existing) {
+      existing.qty += qty;
     } else {
-      items.push({
-        productId: product.id,
-        sku: product.sku,
-        name: product.name,
-        qty,
-        unitPricePence: product.price_gbp_pence,
-      });
+      vfItems.push({ productId: p.id, sku: p.sku, name: p.name, qty, unitPricePence: p.price_gbp_pence });
     }
   }
 
@@ -226,7 +251,9 @@ export async function POST(request: Request) {
     customerName,
     siteName,
     items,
+    vfItems,
     unmatchedSensors,
+    unmatchedDevices,
     notInCatalogue,
   };
 
