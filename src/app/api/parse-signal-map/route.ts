@@ -71,12 +71,12 @@ function findVfProduct(deviceLabel: string, vfProducts: DbProduct[]): DbProduct 
     );
   }
 
-  // Enclosures (Protech) — match size if mentioned
+  // Enclosures — match size-specific product first, then generic; no cross-size fallback
   if (l.includes("enclosure")) {
     const sizeRe = l.includes("65") ? /65/ : /55/;
     return (
       vfProducts.find((p) => /enclosure|protech/i.test(p.name) && sizeRe.test(p.name)) ??
-      vfProducts.find((p) => /enclosure|protech/i.test(p.name)) ??
+      (l.includes("65") ? null : vfProducts.find((p) => /enclosure|protech/i.test(p.name))) ??
       null
     );
   }
