@@ -29,6 +29,12 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
     "On Order": t("stockOnOrder"),
   };
 
+  const leadTimeLabels: Record<string, string> = {
+    "Ships next working day": t("leadTimeNext"),
+    "3–5 working days":       t("leadTime3to5"),
+    "10+ working days":       t("leadTime10plus"),
+  };
+
   const panels = useMemo(
     () => products.filter((p) => p.category === "panel"),
     [products]
@@ -78,6 +84,7 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
               decreaseLabel={t("decreaseQty")}
               increaseLabel={t("increaseQty")}
               stockLabels={stockLabels}
+              leadTimeLabels={leadTimeLabels}
             />
           ))}
           {filteredPanels.length === 0 && (
@@ -104,6 +111,7 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
               decreaseLabel={t("decreaseQty")}
               increaseLabel={t("increaseQty")}
               stockLabels={stockLabels}
+              leadTimeLabels={leadTimeLabels}
             />
           ))}
         </Grid>
@@ -126,6 +134,7 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
                 decreaseLabel={t("decreaseQty")}
                 increaseLabel={t("increaseQty")}
                 stockLabels={stockLabels}
+                leadTimeLabels={leadTimeLabels}
               />
             ))}
           </Grid>
@@ -234,6 +243,7 @@ function Card({
   decreaseLabel,
   increaseLabel,
   stockLabels,
+  leadTimeLabels,
 }: {
   product: Product;
   images: string[];
@@ -246,6 +256,7 @@ function Card({
   decreaseLabel: string;
   increaseLabel: string;
   stockLabels: Record<string, string>;
+  leadTimeLabels: Record<string, string>;
 }) {
   const active = qty > 0;
   const [imgIdx, setImgIdx] = useState(0);
@@ -338,7 +349,9 @@ function Card({
           </span>
         </div>
         {product.lead_time && (
-          <div className="text-[10px] text-ajs-muted">{product.lead_time}</div>
+          <div className="text-[10px] text-ajs-muted">
+            {leadTimeLabels[product.lead_time] ?? product.lead_time}
+          </div>
         )}
         <div className="text-base font-extrabold text-ajs-dark">
           {formatMoney(product.price_gbp_pence, currency)}

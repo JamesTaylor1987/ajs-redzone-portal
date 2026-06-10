@@ -251,4 +251,29 @@ export const messages = {
   pdfInstallExclusionsSection: "EXCLUSIONS",
   pdfInstallPaymentTermsSection: "PAYMENT TERMS",
   pdfInstallFooterText: "All prices ex-VAT. Subject to survey and final agreement.",
+
+  // Lead times (product card)
+  leadTimeNext:   "Ships next working day",
+  leadTime3to5:   "3–5 working days",
+  leadTime10plus: "10+ working days",
+
+  // Signal map upload
+  signalMapBanner:           "Have a Redzone signal map? Upload it to auto-fill your basket.",
+  signalMapUploadBtn:        "Upload file",
+  signalMapReading:          "Reading signal map...",
+  signalMapParsed:           "Signal map parsed",
+  signalMapStartAgain:       "Start again",
+  signalMapItemsToAdd:       "Items to add",
+  signalMapNoItems:          "No catalogue items were matched from this file.",
+  signalMapUnmatched:        "Could not auto-match",
+  signalMapUnmatchedDevices: "Could not match devices",
+  signalMapNotInCatalogue:   "Not found in catalogue",
+  signalMapVfDetected:       "Visual Factory hardware detected — include?",
+  signalMapVfQuestion:       "Include Visual Factory hardware?",
+  signalMapVfNo:             "No",
+  signalMapVfYes:            "Yes",
+  signalMapAddToBasket:      "Add to basket",
+  signalMapAdded:            "Added to basket",
+  signalMapInvalidFile:      "Please select an .xlsx or .xlsm file.",
+  signalMapErrorFallback:    "An unexpected error occurred.",
 };

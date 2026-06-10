@@ -236,4 +236,29 @@ export const messages: typeof en = {
   pdfInstallExclusionsSection: "AUSSCHLÜSSE",
   pdfInstallPaymentTermsSection: "ZAHLUNGSBEDINGUNGEN",
   pdfInstallFooterText: "Alle Preise zzgl. MwSt. Vorbehaltlich Besichtigung und endgültiger Vereinbarung.",
+
+  // Lead times (product card)
+  leadTimeNext:   "Versand am nächsten Werktag",
+  leadTime3to5:   "3–5 Werktage",
+  leadTime10plus: "10+ Werktage",
+
+  // Signal map upload
+  signalMapBanner:           "Haben Sie eine Redzone-Signalkarte? Laden Sie sie hoch, um Ihren Warenkorb automatisch zu befüllen.",
+  signalMapUploadBtn:        "Datei hochladen",
+  signalMapReading:          "Signalkarte wird gelesen...",
+  signalMapParsed:           "Signalkarte ausgelesen",
+  signalMapStartAgain:       "Neu beginnen",
+  signalMapItemsToAdd:       "Hinzuzufügende Artikel",
+  signalMapNoItems:          "Aus dieser Datei konnten keine Katalogartikel zugeordnet werden.",
+  signalMapUnmatched:        "Automatische Zuordnung nicht möglich",
+  signalMapUnmatchedDevices: "Geräte konnten nicht zugeordnet werden",
+  signalMapNotInCatalogue:   "Nicht im Katalog gefunden",
+  signalMapVfDetected:       "Visual Factory-Hardware erkannt — einschließen?",
+  signalMapVfQuestion:       "Visual Factory-Hardware einschließen?",
+  signalMapVfNo:             "Nein",
+  signalMapVfYes:            "Ja",
+  signalMapAddToBasket:      "In den Warenkorb",
+  signalMapAdded:            "Zum Warenkorb hinzugefügt",
+  signalMapInvalidFile:      "Bitte wählen Sie eine .xlsx- oder .xlsm-Datei aus.",
+  signalMapErrorFallback:    "Ein unerwarteter Fehler ist aufgetreten.",
 };

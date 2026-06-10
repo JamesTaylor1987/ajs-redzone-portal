@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { CartLine, Product } from "@/lib/types";
+import { useT } from "./LocaleProvider";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -49,6 +50,7 @@ type UploadState = "idle" | "loading" | "parsed" | "done";
 // ---------------------------------------------------------------------------
 
 export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<UploadState>("idle");
   const [dragOver, setDragOver] = useState(false);
@@ -74,7 +76,7 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
 
   async function processFile(file: File) {
     if (!file.name.match(/\.(xlsx|xlsm)$/i)) {
-      setParseError("Please select an .xlsx or .xlsm file.");
+      setParseError(t("signalMapInvalidFile"));
       setState("idle");
       return;
     }
@@ -89,7 +91,7 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        setParseError(data.error ?? "An unexpected error occurred.");
+        setParseError(data.error ?? t("signalMapErrorFallback"));
         setState("idle");
         return;
       }
@@ -187,7 +189,7 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
   if (state === "done") {
     return (
       <div className="mb-4 px-4 py-3 rounded-lg border border-ajs-primary/30 bg-ajs-primary/5 text-ajs-primary text-sm font-semibold text-center">
-        Added to basket
+        {t("signalMapAdded")}
       </div>
     );
   }
@@ -197,7 +199,7 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
       <div className="mb-4 rounded-xl border border-ajs-light bg-white shadow-sm overflow-hidden">
         <header className="px-4 py-3 bg-ajs-primary/10 border-b border-ajs-light flex items-center justify-between gap-2">
           <div>
-            <span className="font-bold text-ajs-dark text-sm">Signal map parsed</span>
+            <span className="font-bold text-ajs-dark text-sm">{t("signalMapParsed")}</span>
             {(parseResult.customerName || parseResult.siteName) && (
               <p className="text-xs text-ajs-muted mt-0.5">
                 {[parseResult.customerName, parseResult.siteName].filter(Boolean).join(" — ")}
@@ -208,7 +210,7 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
             onClick={reset}
             className="text-xs text-ajs-muted hover:text-ajs-dark underline underline-offset-2 shrink-0"
           >
-            Start again
+            {t("signalMapStartAgain")}
           </button>
         </header>
 
@@ -217,7 +219,7 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
           {parseResult.items.length > 0 ? (
             <div>
               <p className="text-xs font-semibold text-ajs-muted uppercase tracking-wide mb-2">
-                Items to add
+                {t("signalMapItemsToAdd")}
               </p>
               <ul className="space-y-1">
                 {parseResult.items.map((item) => (
@@ -232,13 +234,13 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
               </ul>
             </div>
           ) : (
-            <p className="text-sm text-ajs-muted">No catalogue items were matched from this file.</p>
+            <p className="text-sm text-ajs-muted">{t("signalMapNoItems")}</p>
           )}
 
           {/* Unmatched sensors */}
           {parseResult.unmatchedSensors.length > 0 && (
             <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
-              <p className="text-xs font-semibold text-amber-700 mb-1">Could not auto-match</p>
+              <p className="text-xs font-semibold text-amber-700 mb-1">{t("signalMapUnmatched")}</p>
               <p className="text-xs text-amber-700">
                 {parseResult.unmatchedSensors.join(", ")}
               </p>
@@ -248,7 +250,7 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
           {/* Unmatched devices */}
           {parseResult.unmatchedDevices.length > 0 && (
             <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
-              <p className="text-xs font-semibold text-amber-700 mb-1">Could not match devices</p>
+              <p className="text-xs font-semibold text-amber-700 mb-1">{t("signalMapUnmatchedDevices")}</p>
               <p className="text-xs text-amber-700">{parseResult.unmatchedDevices.join(", ")}</p>
             </div>
           )}
@@ -256,7 +258,7 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
           {/* Not in catalogue */}
           {parseResult.notInCatalogue.length > 0 && (
             <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2">
-              <p className="text-xs font-semibold text-amber-700 mb-1">Not found in catalogue</p>
+              <p className="text-xs font-semibold text-amber-700 mb-1">{t("signalMapNotInCatalogue")}</p>
               <p className="text-xs font-mono text-amber-700">
                 {parseResult.notInCatalogue.join(", ")}
               </p>
@@ -269,8 +271,8 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
               <div className="flex items-center gap-3 mb-3">
                 <p className="text-sm font-semibold text-ajs-text">
                   {parseResult.vfItems.length > 0
-                    ? "Visual Factory hardware detected — include?"
-                    : "Include Visual Factory hardware?"}
+                    ? t("signalMapVfDetected")
+                    : t("signalMapVfQuestion")}
                 </p>
                 <div className="flex rounded-md border border-ajs-light overflow-hidden text-xs font-semibold">
                   <button
@@ -281,7 +283,7 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
                         : "bg-white text-ajs-muted hover:bg-ajs-light/60"
                     }`}
                   >
-                    No
+                    {t("signalMapVfNo")}
                   </button>
                   <button
                     onClick={() => setIncludeVf(true)}
@@ -291,7 +293,7 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
                         : "bg-white text-ajs-muted hover:bg-ajs-light/60"
                     }`}
                   >
-                    Yes
+                    {t("signalMapVfYes")}
                   </button>
                 </div>
               </div>
@@ -332,7 +334,7 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
             disabled={!hasItems}
             className="w-full py-2.5 rounded-lg bg-ajs-primary text-white font-bold text-sm hover:bg-ajs-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Add to basket
+            {t("signalMapAddToBasket")}
           </button>
         </div>
       </div>
@@ -353,7 +355,7 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
     >
       <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
         <p className="flex-1 text-sm text-ajs-muted">
-          Have a Redzone signal map? Upload it to auto-fill your basket.
+          {t("signalMapBanner")}
         </p>
 
         <div className="flex items-center gap-3 shrink-0">
@@ -379,14 +381,14 @@ export function SignalMapUpload({ vfProducts, onAddToBasket }: Props) {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              Reading signal map...
+              {t("signalMapReading")}
             </span>
           ) : (
             <button
               onClick={() => inputRef.current?.click()}
               className="px-4 py-2 rounded-lg bg-ajs-primary text-white text-sm font-semibold hover:bg-ajs-dark transition-colors"
             >
-              Upload file
+              {t("signalMapUploadBtn")}
             </button>
           )}
         </div>
