@@ -10,7 +10,7 @@ export const messages = {
   subtotal: "Subtotal",
   continueToCheckout: "Continue to checkout →",
   clearBasket: "Clear basket",
-  cartVatNotice: "All prices ex-VAT. VAT applied on invoice based on your country and VAT registration. Hardware invoiced 100% prior to shipment.",
+  cartVatNotice: "All prices ex-VAT. VAT applied on invoice — UK customers 20%, EU VAT-registered businesses zero-rated under reverse charge (VAT number required), non-EU customers zero-rated export. Hardware invoiced 100% prior to shipment. DAP delivery terms.",
 
   // Product filter chips
   filterMildSteel: "Mild Steel",
@@ -87,7 +87,7 @@ export const messages = {
 
   // Quote confirmation page
   confirmationBadge: "Quote submitted",
-  confirmationThanks: "Thanks {{name}} — we've received your request. A confirmation email with your magic link has been sent to {{email}}. Use that link to amend or accept your quote once it's been priced.",
+  confirmationThanks: "Thanks {{name}} — we've received your request. A confirmation email with your magic link has been sent to {{email}}. Use the link to review, amend, or accept your quote once pricing has been completed.",
   companyLabel: "Company:",
   siteLabel: "Site:",
   itemsLabel: "Items",
@@ -111,7 +111,7 @@ export const messages = {
   statusCancelled: "Cancelled",
 
   // Quote edit page content
-  editGreeting: "Hi {{name}} — here is your current quote. The AJS Redzone team will be in touch to confirm final pricing and lead times. Use the buttons below to amend or accept.",
+  editGreeting: "Hi {{name}} — here is your current quote. Use the buttons below to amend or accept.",
   yourDetailsHeading: "Your details",
   nameLabel: "Name:",
   emailLabel: "Email:",
@@ -161,7 +161,7 @@ export const messages = {
 
   // Customer-facing email — quote submission
   emailYourQuoteRequest: "Your quote request",
-  emailQuoteIntroBody: "Thanks for your quote request — reference {{ref}} has been assigned. The AJS Redzone team will review your request and be in touch shortly to confirm pricing and lead times.",
+  emailQuoteIntroBody: "Thanks for your quote request — reference {{ref}} has been assigned. The AJS Redzone team will review your request and send you a priced quote.",
   emailItemsRequested: "Items Requested",
   emailSubtotalExVat: "Subtotal (ex-VAT)",
   emailTotalExVat: "Total (ex-VAT)",
@@ -233,7 +233,7 @@ export const messages = {
   pdfTotalExVat: "Total (ex-VAT)",
   pdfIndicativeEur: "Indicative EUR rate — invoice issued in GBP",
   pdfTermsText: "All prices ex-VAT. VAT applied on invoice based on registration status.\nHardware invoiced 100% prior to shipment. DAP delivery terms.",
-  pdfQuoteNoticeText: "This confirms receipt of your quote request. Prices are indicative and subject to confirmation by the AJS Redzone team. You will receive your priced quote by email shortly.",
+  pdfQuoteNoticeText: "This confirms receipt of your quote request. Prices are indicative and subject to confirmation by the AJS Redzone team.",
   pdfOrderNoticeHeading: "What happens next",
   pdfOrderNoticeText: "An invoice will be issued within 24 hours, payable 100% prior to shipment. Once payment is received your order moves into production. You will receive automated updates at each stage.",
   pdfOrderConfirmedBadge: "ORDER CONFIRMED",

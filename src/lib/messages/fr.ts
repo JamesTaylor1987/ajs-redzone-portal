@@ -10,7 +10,7 @@ export const messages: typeof en = {
   subtotal: "Sous-total",
   continueToCheckout: "Passer à la commande →",
   clearBasket: "Vider le panier",
-  cartVatNotice: "Tous les prix sont hors TVA. La TVA est appliquée sur la facture selon votre pays et votre statut TVA. Le matériel est facturé à 100 % avant expédition.",
+  cartVatNotice: "Tous les prix sont hors TVA. La TVA est appliquée sur la facture — clients britanniques 20 %, entreprises enregistrées à la TVA dans l'UE exonérées sous auto-liquidation (numéro TVA requis), clients hors UE exonérés à l'exportation. Le matériel est facturé à 100 % avant expédition. Conditions de livraison DAP.",
 
   filterMildSteel: "Acier doux",
   filterStainlessSteel: "Acier inoxydable",
@@ -79,7 +79,7 @@ export const messages: typeof en = {
   errBasketEmpty: "Le panier est vide.",
 
   confirmationBadge: "Devis soumis",
-  confirmationThanks: "Merci {{name}} — nous avons bien reçu votre demande. Un e-mail de confirmation avec votre lien magique a été envoyé à {{email}}. Utilisez ce lien pour modifier ou accepter votre devis une fois qu'il aura été chiffré.",
+  confirmationThanks: "Merci {{name}} — nous avons bien reçu votre demande. Un e-mail de confirmation avec votre lien magique a été envoyé à {{email}}. Utilisez ce lien pour consulter, modifier ou accepter votre devis une fois la tarification finalisée.",
   companyLabel: "Société :",
   siteLabel: "Site :",
   itemsLabel: "Articles",
@@ -101,7 +101,7 @@ export const messages: typeof en = {
   statusComplete: "Terminé",
   statusCancelled: "Annulé",
 
-  editGreeting: "Bonjour {{name}} — voici votre devis actuel. L'équipe AJS Redzone vous contactera pour confirmer la tarification finale et les délais. Utilisez les boutons ci-dessous pour modifier ou accepter le devis.",
+  editGreeting: "Bonjour {{name}} — voici votre devis actuel. Utilisez les boutons ci-dessous pour modifier ou accepter le devis.",
   yourDetailsHeading: "Vos coordonnées",
   nameLabel: "Nom :",
   emailLabel: "E-mail :",
@@ -146,7 +146,7 @@ export const messages: typeof en = {
 
   // Customer-facing email — quote submission
   emailYourQuoteRequest: "Votre demande de devis",
-  emailQuoteIntroBody: "Merci pour votre demande de devis — la référence {{ref}} vous a été attribuée. L'équipe AJS Redzone examinera votre demande et vous contactera sous peu pour confirmer les prix et délais.",
+  emailQuoteIntroBody: "Merci pour votre demande de devis — la référence {{ref}} vous a été attribuée. L'équipe AJS Redzone examinera votre demande et vous enverra un devis chiffré.",
   emailItemsRequested: "Articles demandés",
   emailSubtotalExVat: "Sous-total (HT)",
   emailTotalExVat: "Total (HT)",
@@ -218,7 +218,7 @@ export const messages: typeof en = {
   pdfTotalExVat: "Total (HT)",
   pdfIndicativeEur: "Taux EUR indicatif — facture émise en GBP",
   pdfTermsText: "Tous les prix sont HT. La TVA est appliquée sur la facture selon le statut d'enregistrement.\nMatériel facturé à 100 % avant expédition. Conditions de livraison DAP.",
-  pdfQuoteNoticeText: "Ceci confirme la réception de votre demande de devis. Les prix sont indicatifs et doivent être confirmés par l'équipe AJS Redzone. Vous recevrez votre devis chiffré par e-mail sous peu.",
+  pdfQuoteNoticeText: "Ceci confirme la réception de votre demande de devis. Les prix sont indicatifs et doivent être confirmés par l'équipe AJS Redzone.",
   pdfOrderNoticeHeading: "Prochaines étapes",
   pdfOrderNoticeText: "Une facture sera émise dans les 24 heures, payable à 100 % avant l'expédition. Une fois le paiement reçu, votre commande passera en production. Vous recevrez des mises à jour automatiques à chaque étape.",
   pdfOrderConfirmedBadge: "COMMANDE CONFIRMÉE",

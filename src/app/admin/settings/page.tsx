@@ -30,17 +30,18 @@ export default async function AdminSettingsPage() {
   const p = (k: string, def: number) => { const v = parseInt(kv[k]); return isNaN(v) ? def : v; };
 
   const installRates: InstallRates = {
-    engineer_day_rate:       p("install_engineer_day_rate",       INSTALL_CONFIG.engineer_day_rate_pence)      / 100,
+    pair_day_rate:           p("install_pair_day_rate",           INSTALL_CONFIG.pair_day_rate_pence)          / 100,
     hotel_rate:              p("install_hotel_rate",              INSTALL_CONFIG.hotel_rate_pence)             / 100,
     mileage_rate:            p("install_mileage_rate",            INSTALL_CONFIG.mileage_rate_pence_per_mile),
-    sensors_per_day:         p("install_sensors_per_day",         INSTALL_CONFIG.sensors_per_engineer_per_day),
+    sensors_per_day:         p("install_sensors_per_day",         INSTALL_CONFIG.sensors_per_pair_per_day),
+    displays_per_day:        p("install_displays_per_day",        INSTALL_CONFIG.displays_per_pair_per_day),
+    eurotunnel:              p("install_eurotunnel",              INSTALL_CONFIG.eurotunnel_pence)             / 100,
     contingency_low:         p("install_contingency_low",         Math.round(INSTALL_CONFIG.contingency_low * 100)),
     contingency_high:        p("install_contingency_high",        Math.round(INSTALL_CONFIG.contingency_high * 100)),
     out_of_hours_multiplier: p("install_out_of_hours_multiplier", Math.round(INSTALL_CONFIG.out_of_hours_multiplier * 100)),
     partial_infra_uplift:    p("install_partial_infra_uplift",    INSTALL_CONFIG.partial_infra_uplift_pence)   / 100,
     no_infra_uplift:         p("install_no_infra_uplift",         INSTALL_CONFIG.no_infra_uplift_pence)        / 100,
     flight_europe:           p("install_flight_europe",           INSTALL_CONFIG.flight_estimate_europe_pence) / 100,
-    flight_long_haul:        p("install_flight_long_haul",        INSTALL_CONFIG.flight_estimate_long_haul_pence) / 100,
   };
 
   return (

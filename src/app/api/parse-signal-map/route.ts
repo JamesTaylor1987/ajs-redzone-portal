@@ -43,7 +43,7 @@ function sensorSku(label: string): string | null {
   const l = label.toLowerCase();
   if (l.includes("lr-z") || l.includes("laser"))                      return "AJS-LRZ-SENSOR";
   if (l.includes("pz-v") || l.includes("photoeye") || l.includes("photo eye")) return "AJS-PZV-SENSOR";
-  if (l.includes("prox"))                                               return "AJS-4MM-SENSOR";
+  if (l.includes("prox"))                                               return "AJS-8MM-SENSOR";
   if (l.includes("relay"))                                              return "AJS-RELAY";
   return null;
 }

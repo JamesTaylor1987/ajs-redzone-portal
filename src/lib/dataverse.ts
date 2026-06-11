@@ -181,6 +181,7 @@ const STATUS_MAP: Record<string, string> = {
   complete:        "Complete",
   cancelled:       "Cancelled",
   expired:         "Expired",
+  revised:         "Revised",
 };
 
 export async function createDataverseOpportunity(
@@ -243,7 +244,6 @@ export async function createDataverseOpportunity(
     cr49c_quoteref: quote.ref,
     cr49c_dealvalue: totalGbp,
     cr49c_docstatus: "Quoted",
-    cr49c_probability: 20,
     cr49c_projecttype: 774710007,
     cr49c_closedate: (quote.submitted_at ?? new Date().toISOString()).split("T")[0],
     new_estimatedprojectdurationmonths: 1,

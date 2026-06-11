@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase-server";
 import { generateMagicToken, magicLinkExpiry, buildMagicUrl } from "@/lib/magic-link";
 import { sendQuoteEmails } from "@/lib/email";
-import { createDataverseOpportunity } from "@/lib/dataverse";
+import { createDataverseOpportunity, updateDataverseOpportunity } from "@/lib/dataverse";
 import { getLocale } from "@/lib/i18n";
 import type { CreateQuoteRequest, CreateQuoteResponse } from "@/lib/types";
 
@@ -146,13 +146,25 @@ export async function POST(request: Request) {
     );
   }
 
-  // 5. Mark the original quote as revised (non-blocking).
+  // 5. Mark the original quote as revised and update Dataverse (non-blocking).
   if (body.originalQuoteRef) {
+    const { data: origQuote } = await supabase
+      .from("quotes")
+      .select("dataverse_opportunity_id")
+      .eq("ref", body.originalQuoteRef)
+      .single();
+
     await supabase
       .from("quotes")
       .update({ status: "revised" })
       .eq("ref", body.originalQuoteRef)
       .eq("status", "quote_submitted"); // only if still open — don't overwrite accepted orders
+
+    if (origQuote?.dataverse_opportunity_id) {
+      updateDataverseOpportunity(origQuote.dataverse_opportunity_id, "revised").catch(
+        (err) => console.error("[quotes] updateDataverseOpportunity (revised) failed:", err),
+      );
+    }
   }
 
   // 6. If installation requested, create an installation_quote row (non-blocking).

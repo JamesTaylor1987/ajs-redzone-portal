@@ -17,17 +17,18 @@ function SaveButton() {
 }
 
 export interface InstallRates {
-  engineer_day_rate: number;
+  pair_day_rate: number;
   hotel_rate: number;
   mileage_rate: number;
   sensors_per_day: number;
+  displays_per_day: number;
+  eurotunnel: number;
   contingency_low: number;
   contingency_high: number;
   out_of_hours_multiplier: number;
   partial_infra_uplift: number;
   no_infra_uplift: number;
   flight_europe: number;
-  flight_long_haul: number;
 }
 
 interface Props { current: InstallRates }
@@ -54,17 +55,18 @@ export function InstallRatesPicker({ current }: Props) {
       )}
 
       <form action={action} className="space-y-6">
-        <Section label="Labour">
-          <RateField name="engineer_day_rate" label="Engineer day rate" unit="£ / day" defaultValue={current.engineer_day_rate} />
-          <RateField name="sensors_per_day" label="Sensors per engineer per day" unit="units" defaultValue={current.sensors_per_day} />
-          <RateField name="out_of_hours_multiplier" label="Out-of-hours multiplier" unit="%" defaultValue={current.out_of_hours_multiplier} hint="100 = standard rate, 150 = 1.5×" />
+        <Section label="Labour (2-engineer team)">
+          <RateField name="pair_day_rate" label="Team (pair) day rate" unit="£ / day" defaultValue={current.pair_day_rate} hint="Rate for the full 2-person team per day" />
+          <RateField name="sensors_per_day" label="Sensors per team per day" unit="units" defaultValue={current.sensors_per_day} />
+          <RateField name="displays_per_day" label="VF displays per team per day" unit="units" defaultValue={current.displays_per_day} />
+          <RateField name="out_of_hours_multiplier" label="Out-of-hours multiplier" unit="%" defaultValue={current.out_of_hours_multiplier} hint="e.g. 175 = 1.75× (evenings/weekends)" />
         </Section>
 
         <Section label="Travel & accommodation">
           <RateField name="mileage_rate" label="Mileage rate" unit="p / mile" defaultValue={current.mileage_rate} />
-          <RateField name="hotel_rate" label="Hotel &amp; stop out per night" unit="£ / night" defaultValue={current.hotel_rate} />
+          <RateField name="hotel_rate" label="Hotel &amp; stop out per engineer per night" unit="£ / night" defaultValue={current.hotel_rate} />
+          <RateField name="eurotunnel" label="Eurotunnel (per vehicle, one way)" unit="£" defaultValue={current.eurotunnel} />
           <RateField name="flight_europe" label="EU / domestic flight (per engineer)" unit="£" defaultValue={current.flight_europe} />
-          <RateField name="flight_long_haul" label="Long-haul flight (per engineer)" unit="£" defaultValue={current.flight_long_haul} />
         </Section>
 
         <Section label="Site infrastructure uplifts (flat fees)">

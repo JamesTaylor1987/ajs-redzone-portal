@@ -126,13 +126,25 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
           <input type="hidden" name="id" value={iq.id} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
+            <label className="sm:col-span-2 flex items-center gap-2 text-sm text-ajs-text cursor-pointer">
+              <input
+                type="checkbox"
+                name="is_international"
+                defaultChecked={a?.is_international ?? false}
+                className="accent-ajs-primary"
+              />
+              <span>International job (non-UK) — containment uplift excluded</span>
+            </label>
+
             <SelectField name="travel_method" label="Travel method" defaultValue={a?.travel_method ?? "drive"}>
               <option value="drive">Drive</option>
+              <option value="eurotunnel">Eurotunnel (drive + tunnel)</option>
               <option value="fly">Fly</option>
               <option value="not_sure">Not sure (TBC)</option>
             </SelectField>
 
-            <NumberField name="drive_miles" label="Drive miles (one way)" defaultValue={a?.drive_miles ?? 0} min={0} />
+            <NumberField name="drive_miles" label="Drive miles (one way)" defaultValue={a?.drive_miles ?? 0} min={0}
+              hint="Used for drive & Eurotunnel options" />
 
             <SelectField name="travel_days_one_way" label="Travel days (one way)" defaultValue={String(a?.travel_days_one_way ?? 0)}>
               <option value="0">Same day (0 nights)</option>
@@ -140,14 +152,7 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
               <option value="2">2 days travel</option>
             </SelectField>
 
-            <SelectField name="engineer_count" label="Engineers on site" defaultValue={String(a?.engineer_count ?? 1)}>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-            </SelectField>
-
-            <NumberField name="sensor_count" label="Sensor / unit count" defaultValue={a?.sensor_count ?? autoSensorCount ?? 1} min={1}
+            <NumberField name="sensor_count" label="Sensor / unit count" defaultValue={a?.sensor_count ?? autoSensorCount ?? 0} min={0}
               hint={autoSensorCount > 0 && !a ? `Auto-counted ${autoSensorCount} from this order` : undefined} />
 
             <SelectField name="working_hours" label="Working hours" defaultValue={a?.working_hours ?? "standard"}>
@@ -165,12 +170,15 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
             <label className="sm:col-span-2 flex items-center gap-2 text-sm text-ajs-text cursor-pointer">
               <input
                 type="checkbox"
-                name="long_haul"
-                defaultChecked={a?.long_haul ?? false}
+                name="include_vf"
+                defaultChecked={a?.include_vf ?? false}
                 className="accent-ajs-primary"
               />
-              <span>Long-haul flight (if flying — affects flight cost estimate)</span>
+              <span>Includes Visual Factory installation (mounting TVs &amp; setting up Google Streamers)</span>
             </label>
+
+            <NumberField name="vf_item_count" label="VF displays / streamers" defaultValue={a?.vf_item_count ?? 0} min={0}
+              hint="Number of screens + streamers to mount and commission" />
           </div>
 
           <div>

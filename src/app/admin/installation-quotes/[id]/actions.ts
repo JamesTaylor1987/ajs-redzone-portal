@@ -15,11 +15,12 @@ export async function saveAssessmentAction(formData: FormData) {
     travel_method: g("travel_method") as AssessmentInputs["travel_method"],
     drive_miles: parseInt(g("drive_miles") || "0", 10),
     travel_days_one_way: parseInt(g("travel_days_one_way") || "0", 10) as 0 | 1 | 2,
-    engineer_count: parseInt(g("engineer_count") || "1", 10),
-    sensor_count: parseInt(g("sensor_count") || "1", 10),
+    is_international: formData.get("is_international") === "on",
+    sensor_count: parseInt(g("sensor_count") || "0", 10),
+    include_vf: formData.get("include_vf") === "on",
+    vf_item_count: parseInt(g("vf_item_count") || "0", 10),
     working_hours: g("working_hours") as AssessmentInputs["working_hours"],
     site_infrastructure: g("site_infrastructure") as AssessmentInputs["site_infrastructure"],
-    long_haul: formData.get("long_haul") === "on",
   };
 
   const supabase = getServiceClient();
@@ -30,18 +31,18 @@ export async function saveAssessmentAction(formData: FormData) {
   const rn = (k: string, def: number) => { const v = parseInt(r[k]); return isNaN(v) ? def : v; };
 
   const config: InstallConfig = {
-    engineer_day_rate_pence:        rn("install_engineer_day_rate",       INSTALL_CONFIG.engineer_day_rate_pence),
-    hotel_rate_pence:               rn("install_hotel_rate",              INSTALL_CONFIG.hotel_rate_pence),
-    mileage_rate_pence_per_mile:    rn("install_mileage_rate",            INSTALL_CONFIG.mileage_rate_pence_per_mile),
-    sensors_per_engineer_per_day:   rn("install_sensors_per_day",         INSTALL_CONFIG.sensors_per_engineer_per_day),
-    commissioning_days_per_engineer: INSTALL_CONFIG.commissioning_days_per_engineer,
-    contingency_low:                rn("install_contingency_low",         Math.round(INSTALL_CONFIG.contingency_low * 100)) / 100,
-    contingency_high:               rn("install_contingency_high",        Math.round(INSTALL_CONFIG.contingency_high * 100)) / 100,
-    out_of_hours_multiplier:        rn("install_out_of_hours_multiplier", Math.round(INSTALL_CONFIG.out_of_hours_multiplier * 100)) / 100,
-    partial_infra_uplift_pence:     rn("install_partial_infra_uplift",    INSTALL_CONFIG.partial_infra_uplift_pence),
-    no_infra_uplift_pence:          rn("install_no_infra_uplift",         INSTALL_CONFIG.no_infra_uplift_pence),
-    flight_estimate_europe_pence:   rn("install_flight_europe",           INSTALL_CONFIG.flight_estimate_europe_pence),
-    flight_estimate_long_haul_pence: rn("install_flight_long_haul",       INSTALL_CONFIG.flight_estimate_long_haul_pence),
+    pair_day_rate_pence:         rn("install_pair_day_rate",          INSTALL_CONFIG.pair_day_rate_pence),
+    hotel_rate_pence:            rn("install_hotel_rate",             INSTALL_CONFIG.hotel_rate_pence),
+    mileage_rate_pence_per_mile: rn("install_mileage_rate",           INSTALL_CONFIG.mileage_rate_pence_per_mile),
+    sensors_per_pair_per_day:    rn("install_sensors_per_day",        INSTALL_CONFIG.sensors_per_pair_per_day),
+    displays_per_pair_per_day:   rn("install_displays_per_day",       INSTALL_CONFIG.displays_per_pair_per_day),
+    eurotunnel_pence:            rn("install_eurotunnel",             INSTALL_CONFIG.eurotunnel_pence),
+    flight_estimate_europe_pence: rn("install_flight_europe",         INSTALL_CONFIG.flight_estimate_europe_pence),
+    contingency_low:             rn("install_contingency_low",        Math.round(INSTALL_CONFIG.contingency_low * 100)) / 100,
+    contingency_high:            rn("install_contingency_high",       Math.round(INSTALL_CONFIG.contingency_high * 100)) / 100,
+    out_of_hours_multiplier:     rn("install_out_of_hours_multiplier", Math.round(INSTALL_CONFIG.out_of_hours_multiplier * 100)) / 100,
+    partial_infra_uplift_pence:  rn("install_partial_infra_uplift",   INSTALL_CONFIG.partial_infra_uplift_pence),
+    no_infra_uplift_pence:       rn("install_no_infra_uplift",        INSTALL_CONFIG.no_infra_uplift_pence),
   };
 
   const containment_notes = (formData.get("containment_notes") as string ?? "").trim() || null;
@@ -87,7 +88,6 @@ export async function sendInstallQuoteAction(formData: FormData) {
 
   if (!iq) return;
 
-  // Fetch hardware items + locale from the linked hardware quote
   const [itemsResult, localeResult] = await Promise.all([
     iq.hardware_quote_id
       ? supabase.from("quote_items").select("sku, name, qty").eq("quote_id", iq.hardware_quote_id)
@@ -135,4 +135,3 @@ export async function sendInstallQuoteAction(formData: FormData) {
 
   revalidatePath(`/admin/installation-quotes/${id}`);
 }
-

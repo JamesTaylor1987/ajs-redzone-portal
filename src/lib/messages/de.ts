@@ -10,7 +10,7 @@ export const messages: typeof en = {
   subtotal: "Zwischensumme",
   continueToCheckout: "Zur Kasse →",
   clearBasket: "Warenkorb leeren",
-  cartVatNotice: "Alle Preise zzgl. MwSt. Die MwSt. wird auf der Rechnung gemäß Ihrem Land und Ihrer MwSt.-Registrierung ausgewiesen. Hardware wird zu 100 % vor dem Versand fakturiert.",
+  cartVatNotice: "Alle Preise zzgl. MwSt. Die MwSt. wird auf der Rechnung ausgewiesen — UK-Kunden 20 %, EU-MwSt.-registrierte Unternehmen nullbesteuert im Reverse-Charge-Verfahren (MwSt.-Nummer erforderlich), Kunden außerhalb der EU nullbesteuerter Export. Hardware wird zu 100 % vor dem Versand fakturiert. Lieferbedingungen DAP.",
 
   filterMildSteel: "Baustahl",
   filterStainlessSteel: "Edelstahl",
@@ -79,7 +79,7 @@ export const messages: typeof en = {
   errBasketEmpty: "Warenkorb ist leer.",
 
   confirmationBadge: "Angebot eingereicht",
-  confirmationThanks: "Vielen Dank, {{name}} – wir haben Ihre Anfrage erhalten. Eine Bestätigungs-E-Mail mit Ihrem Magic Link wurde an {{email}} gesendet. Nutzen Sie diesen Link, um Ihr Angebot zu ändern oder anzunehmen, sobald es kalkuliert wurde.",
+  confirmationThanks: "Vielen Dank, {{name}} – wir haben Ihre Anfrage erhalten. Eine Bestätigungs-E-Mail mit Ihrem Magic Link wurde an {{email}} gesendet. Nutzen Sie den Link, um Ihr Angebot einzusehen, zu ändern oder anzunehmen, sobald die Preisgestaltung abgeschlossen ist.",
   companyLabel: "Unternehmen:",
   siteLabel: "Standort:",
   itemsLabel: "Artikel",
@@ -101,7 +101,7 @@ export const messages: typeof en = {
   statusComplete: "Abgeschlossen",
   statusCancelled: "Storniert",
 
-  editGreeting: "Hallo {{name}} – hier ist Ihr aktuelles Angebot. Das AJS-Redzone-Team wird sich mit Ihnen in Verbindung setzen, um endgültige Preise und Lieferzeiten zu bestätigen. Nutzen Sie die Schaltflächen unten, um das Angebot zu ändern oder anzunehmen.",
+  editGreeting: "Hallo {{name}} – hier ist Ihr aktuelles Angebot. Nutzen Sie die Schaltflächen unten, um das Angebot zu ändern oder anzunehmen.",
   yourDetailsHeading: "Ihre Angaben",
   nameLabel: "Name:",
   emailLabel: "E-Mail:",
@@ -146,7 +146,7 @@ export const messages: typeof en = {
 
   // Customer-facing email — quote submission
   emailYourQuoteRequest: "Ihre Angebotsanfrage",
-  emailQuoteIntroBody: "Vielen Dank für Ihre Angebotsanfrage — die Referenz {{ref}} wurde zugewiesen. Das AJS-Redzone-Team wird Ihre Anfrage prüfen und sich in Kürze mit Ihnen in Verbindung setzen, um Preise und Lieferzeiten zu bestätigen.",
+  emailQuoteIntroBody: "Vielen Dank für Ihre Angebotsanfrage — die Referenz {{ref}} wurde zugewiesen. Das AJS-Redzone-Team wird Ihre Anfrage prüfen und Ihnen ein kalkuliertes Angebot zusenden.",
   emailItemsRequested: "Angeforderte Artikel",
   emailSubtotalExVat: "Zwischensumme (zzgl. MwSt.)",
   emailTotalExVat: "Gesamt (zzgl. MwSt.)",
@@ -218,7 +218,7 @@ export const messages: typeof en = {
   pdfTotalExVat: "Gesamt (zzgl. MwSt.)",
   pdfIndicativeEur: "Indikativer EUR-Kurs — Rechnung wird in GBP ausgestellt",
   pdfTermsText: "Alle Preise zzgl. MwSt. Die MwSt. wird auf der Rechnung gemäß Registrierungsstatus ausgewiesen.\nHardware wird zu 100 % vor dem Versand fakturiert. Lieferbedingungen DAP.",
-  pdfQuoteNoticeText: "Dies bestätigt den Eingang Ihrer Angebotsanfrage. Preise sind indikativ und bedürfen der Bestätigung durch das AJS-Redzone-Team. Sie erhalten Ihr kalkuliertes Angebot in Kürze per E-Mail.",
+  pdfQuoteNoticeText: "Dies bestätigt den Eingang Ihrer Angebotsanfrage. Preise sind indikativ und bedürfen der Bestätigung durch das AJS-Redzone-Team.",
   pdfOrderNoticeHeading: "Was passiert als Nächstes",
   pdfOrderNoticeText: "Eine Rechnung wird innerhalb von 24 Stunden ausgestellt, zahlbar zu 100 % vor dem Versand. Sobald die Zahlung eingegangen ist, wird Ihre Bestellung in die Produktion aufgenommen. Sie erhalten automatische Updates zu jedem Schritt.",
   pdfOrderConfirmedBadge: "AUFTRAG BESTÄTIGT",
