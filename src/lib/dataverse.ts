@@ -174,14 +174,16 @@ export interface QuoteForDataverse {
 }
 
 const STATUS_MAP: Record<string, string> = {
-  order_confirmed: "Order Confirmed",
-  in_build:        "In Build",
-  ready_to_ship:   "Ready to Ship",
-  shipped:         "Shipped",
-  complete:        "Complete",
-  cancelled:       "Cancelled",
-  expired:         "Expired",
-  revised:         "Revised",
+  order_confirmed:  "Order Confirmed",
+  in_build:         "In Build",
+  invoiced:         "Invoiced",
+  payment_received: "Payment Received",
+  ready_to_ship:    "Ready to Ship",
+  shipped:          "Shipped",
+  complete:         "Complete",
+  cancelled:        "Cancelled",
+  expired:          "Expired",
+  revised:          "Revised",
 };
 
 export async function createDataverseOpportunity(

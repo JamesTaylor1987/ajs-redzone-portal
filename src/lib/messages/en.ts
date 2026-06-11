@@ -109,6 +109,8 @@ export const messages = {
   statusShipped: "Shipped",
   statusComplete: "Complete",
   statusCancelled: "Cancelled",
+  statusInvoiced: "Invoiced",
+  statusPaymentReceived: "Payment received",
 
   // Quote edit page content
   editGreeting: "Hi {{name}} — here is your current quote. Use the buttons below to amend or accept.",
@@ -137,7 +139,7 @@ export const messages = {
   verifyEmailPrompt: "To view your quote, please confirm the email address you used when submitting it.",
   fieldEmailAddress: "Email address",
   fieldEmailPlaceholder: "The email you used when requesting this quote",
-  confirmEmailBtn: "Confirm email",
+  confirmEmailBtn: "Login",
 
   // Accept page
   acceptAndPlaceTitle: "Accept & place order",
@@ -188,7 +190,7 @@ export const messages = {
   emailStatusSubjectCancelled: "Order update",
   emailStatusBodyOrderConfirmed: "Your order <strong>{{ref}}</strong> has been confirmed by the AJS Redzone team. An invoice will be issued within 24 hours, payable 100% prior to shipment. Once payment is received your order moves into production and you will receive further updates at each stage.",
   emailStatusBodyInBuild: "Your order <strong>{{ref}}</strong> is now in production. Our manufacturing team are building your hardware. We&rsquo;ll be in touch again when it&rsquo;s ready to despatch.",
-  emailStatusBodyReadyToShip: "Great news &mdash; your order <strong>{{ref}}</strong> has been built and is ready to despatch. Our team will be in touch shortly to arrange delivery.",
+  emailStatusBodyReadyToShip: "Great news &mdash; your order <strong>{{ref}}</strong> has been built and is ready to despatch. Our team will be in touch shortly to arrange delivery. If you have not yet completed payment, please do so now to avoid any delays.",
   emailStatusBodyShipped: "Your order <strong>{{ref}}</strong> is on its way.{{trackingInfo}} Delivery is on DAP terms. Please contact us if you have any questions.",
   emailStatusBodyShippedTracking: " Your tracking reference is <strong>{{trackingRef}}</strong>.",
   emailStatusBodyShippedTrackingLink: "Track your shipment &rarr;",
@@ -196,6 +198,10 @@ export const messages = {
   emailStatusBodyCancelled: "Your order <strong>{{ref}}</strong> has been cancelled.{{reasonSuffix}} If you have any questions, please contact the AJS Redzone team directly.",
   emailStatusBodyCancelledReason: " Reason: {{reason}}.",
   emailStatusBodyFallback: "Your order <strong>{{ref}}</strong> has been updated.",
+  emailStatusSubjectInvoiced: "Invoice issued for your order",
+  emailStatusSubjectPaymentReceived: "Payment received — thank you",
+  emailStatusBodyInvoiced: "An invoice has been issued for your order <strong>{{ref}}</strong>. Payment is required in full prior to shipment &mdash; please refer to the invoice for payment details.",
+  emailStatusBodyPaymentReceived: "We have received payment for your order <strong>{{ref}}</strong>. Your order is now confirmed for production and you will receive further updates at each stage.",
 
   // Customer-facing email — installation budget
   emailInstallBudgetLabel: "Installation Budget Estimate",

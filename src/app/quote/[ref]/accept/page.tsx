@@ -133,6 +133,16 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
           </div>
         </div>
 
+        {quote.accounts_token && (
+          <div className="bg-white rounded-xl border border-ajs-light p-5 mb-6">
+            <ForwardToAccounts
+              quoteRef={ref}
+              token={token}
+              accountsUrl={buildAccountsUrl(ref, quote.accounts_token)}
+            />
+          </div>
+        )}
+
         <AccountInfoForm
           quoteRef={ref}
           token={token}
@@ -142,16 +152,6 @@ export default async function AcceptQuotePage({ params, searchParams }: PageProp
             contactEmail: quote.contact_email,
           }}
         />
-
-        {quote.accounts_token && (
-          <div className="bg-white rounded-xl border border-ajs-light p-5">
-            <ForwardToAccounts
-              quoteRef={ref}
-              token={token}
-              accountsUrl={buildAccountsUrl(ref, quote.accounts_token)}
-            />
-          </div>
-        )}
 
         <div className="mt-4 space-y-4">
           <SupportBanner />

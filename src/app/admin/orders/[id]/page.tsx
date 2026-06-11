@@ -4,6 +4,7 @@ import { getServiceClient } from "@/lib/supabase-server";
 import { StatusUpdateForm } from "./StatusUpdateForm";
 import { AssignPMForm } from "./AssignPMForm";
 import { WinProbabilityForm } from "./WinProbabilityForm";
+import { AdminNotesForm } from "./AdminNotesForm";
 
 export const dynamic = "force-dynamic";
 
@@ -196,6 +197,9 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
           )}
         </Card>
       )}
+
+      {/* Internal notes */}
+      <AdminNotesForm quoteId={quote.id} currentNotes={quote.admin_notes ?? null} />
 
       {/* Dates */}
       <Card title="Timestamps">

@@ -100,6 +100,8 @@ export const messages: typeof en = {
   statusShipped: "Versandt",
   statusComplete: "Abgeschlossen",
   statusCancelled: "Storniert",
+  statusInvoiced: "Fakturiert",
+  statusPaymentReceived: "Zahlung eingegangen",
 
   editGreeting: "Hallo {{name}} – hier ist Ihr aktuelles Angebot. Nutzen Sie die Schaltflächen unten, um das Angebot zu ändern oder anzunehmen.",
   yourDetailsHeading: "Ihre Angaben",
@@ -125,7 +127,7 @@ export const messages: typeof en = {
   verifyEmailPrompt: "Um Ihr Angebot einzusehen, bestätigen Sie bitte die E-Mail-Adresse, die Sie bei der Anfrage verwendet haben.",
   fieldEmailAddress: "E-Mail-Adresse",
   fieldEmailPlaceholder: "Die E-Mail, die Sie für diese Angebotsanfrage verwendet haben",
-  confirmEmailBtn: "E-Mail bestätigen",
+  confirmEmailBtn: "Anmelden",
 
   acceptAndPlaceTitle: "Annehmen & Bestellen",
   bindingOrderNote: "Sie sind dabei, eine verbindliche Bestellung für die folgenden Artikel aufzugeben. Bitte füllen Sie das Kontoinformationsformular aus, damit wir Sie korrekt fakturieren können.",
@@ -173,7 +175,7 @@ export const messages: typeof en = {
   emailStatusSubjectCancelled: "Bestellungsupdate",
   emailStatusBodyOrderConfirmed: "Ihr Auftrag <strong>{{ref}}</strong> wurde vom AJS-Redzone-Team bestätigt. Eine Rechnung wird innerhalb von 24 Stunden ausgestellt, zahlbar zu 100 % vor dem Versand. Sobald die Zahlung eingegangen ist, wird Ihre Bestellung in die Produktion aufgenommen und Sie erhalten weitere Updates zu jedem Schritt.",
   emailStatusBodyInBuild: "Ihre Bestellung <strong>{{ref}}</strong> befindet sich nun in der Produktion. Unser Fertigungsteam baut Ihre Hardware. Wir melden uns wieder, wenn sie versandbereit ist.",
-  emailStatusBodyReadyToShip: "Gute Neuigkeiten &mdash; Ihre Bestellung <strong>{{ref}}</strong> ist fertiggestellt und versandbereit. Unser Team wird sich in Kürze mit Ihnen in Verbindung setzen, um die Lieferung zu arrangieren.",
+  emailStatusBodyReadyToShip: "Gute Neuigkeiten &mdash; Ihre Bestellung <strong>{{ref}}</strong> ist fertiggestellt und versandbereit. Unser Team wird sich in Kürze mit Ihnen in Verbindung setzen, um die Lieferung zu arrangieren. Falls Sie die Zahlung noch nicht abgeschlossen haben, bitten wir Sie, dies jetzt zu tun, um Verzögerungen zu vermeiden.",
   emailStatusBodyShipped: "Ihre Bestellung <strong>{{ref}}</strong> ist unterwegs.{{trackingInfo}} Lieferbedingungen DAP. Bitte kontaktieren Sie uns, wenn Sie Fragen haben.",
   emailStatusBodyShippedTracking: " Ihre Sendungsnummer lautet <strong>{{trackingRef}}</strong>.",
   emailStatusBodyShippedTrackingLink: "Sendung verfolgen &rarr;",
@@ -181,6 +183,10 @@ export const messages: typeof en = {
   emailStatusBodyCancelled: "Ihre Bestellung <strong>{{ref}}</strong> wurde storniert.{{reasonSuffix}} Bei Fragen wenden Sie sich bitte direkt an das AJS-Redzone-Team.",
   emailStatusBodyCancelledReason: " Grund: {{reason}}.",
   emailStatusBodyFallback: "Ihre Bestellung <strong>{{ref}}</strong> wurde aktualisiert.",
+  emailStatusSubjectInvoiced: "Rechnung für Ihre Bestellung ausgestellt",
+  emailStatusSubjectPaymentReceived: "Zahlung eingegangen — vielen Dank",
+  emailStatusBodyInvoiced: "Eine Rechnung wurde für Ihre Bestellung <strong>{{ref}}</strong> ausgestellt. Die Zahlung ist vollständig vor dem Versand erforderlich &mdash; bitte entnehmen Sie die Zahlungsdetails der Rechnung.",
+  emailStatusBodyPaymentReceived: "Wir haben die Zahlung für Ihre Bestellung <strong>{{ref}}</strong> erhalten. Ihre Bestellung ist nun für die Produktion bestätigt und Sie erhalten weitere Updates zu jedem Schritt.",
 
   // Customer-facing email — installation budget
   emailInstallBudgetLabel: "Installationskosten-Schätzung",

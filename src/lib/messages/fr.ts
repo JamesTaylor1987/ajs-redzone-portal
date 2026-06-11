@@ -100,6 +100,8 @@ export const messages: typeof en = {
   statusShipped: "Expédié",
   statusComplete: "Terminé",
   statusCancelled: "Annulé",
+  statusInvoiced: "Facturé",
+  statusPaymentReceived: "Paiement reçu",
 
   editGreeting: "Bonjour {{name}} — voici votre devis actuel. Utilisez les boutons ci-dessous pour modifier ou accepter le devis.",
   yourDetailsHeading: "Vos coordonnées",
@@ -125,7 +127,7 @@ export const messages: typeof en = {
   verifyEmailPrompt: "Pour consulter votre devis, veuillez confirmer l'adresse e-mail que vous avez utilisée lors de la soumission.",
   fieldEmailAddress: "Adresse e-mail",
   fieldEmailPlaceholder: "L'e-mail utilisé lors de la demande de devis",
-  confirmEmailBtn: "Confirmer l'e-mail",
+  confirmEmailBtn: "Se connecter",
 
   acceptAndPlaceTitle: "Accepter et commander",
   bindingOrderNote: "Vous êtes sur le point de passer une commande ferme pour les articles ci-dessous. Veuillez compléter le formulaire de coordonnées de facturation afin que nous puissions vous facturer correctement.",
@@ -173,7 +175,7 @@ export const messages: typeof en = {
   emailStatusSubjectCancelled: "Mise à jour de commande",
   emailStatusBodyOrderConfirmed: "Votre commande <strong>{{ref}}</strong> a été confirmée par l'équipe AJS Redzone. Une facture sera émise dans les 24 heures, payable à 100 % avant l'expédition. Une fois le paiement reçu, votre commande passera en production et vous recevrez des mises à jour supplémentaires à chaque étape.",
   emailStatusBodyInBuild: "Votre commande <strong>{{ref}}</strong> est maintenant en production. Notre équipe de fabrication assemble votre matériel. Nous vous recontacterons dès qu'elle sera prête à être expédiée.",
-  emailStatusBodyReadyToShip: "Bonne nouvelle &mdash; votre commande <strong>{{ref}}</strong> a été assemblée et est prête à être expédiée. Notre équipe vous contactera sous peu pour organiser la livraison.",
+  emailStatusBodyReadyToShip: "Bonne nouvelle &mdash; votre commande <strong>{{ref}}</strong> a été assemblée et est prête à être expédiée. Notre équipe vous contactera sous peu pour organiser la livraison. Si vous n'avez pas encore effectué le paiement, veuillez le faire maintenant afin d'éviter tout retard.",
   emailStatusBodyShipped: "Votre commande <strong>{{ref}}</strong> est en route.{{trackingInfo}} Conditions de livraison DAP. Veuillez nous contacter si vous avez des questions.",
   emailStatusBodyShippedTracking: " Votre numéro de suivi est <strong>{{trackingRef}}</strong>.",
   emailStatusBodyShippedTrackingLink: "Suivre votre envoi &rarr;",
@@ -181,6 +183,10 @@ export const messages: typeof en = {
   emailStatusBodyCancelled: "Votre commande <strong>{{ref}}</strong> a été annulée.{{reasonSuffix}} Si vous avez des questions, veuillez contacter directement l'équipe AJS Redzone.",
   emailStatusBodyCancelledReason: " Motif : {{reason}}.",
   emailStatusBodyFallback: "Votre commande <strong>{{ref}}</strong> a été mise à jour.",
+  emailStatusSubjectInvoiced: "Facture émise pour votre commande",
+  emailStatusSubjectPaymentReceived: "Paiement reçu — merci",
+  emailStatusBodyInvoiced: "Une facture a été émise pour votre commande <strong>{{ref}}</strong>. Le paiement intégral est requis avant expédition &mdash; veuillez vous référer à la facture pour les détails de paiement.",
+  emailStatusBodyPaymentReceived: "Nous avons reçu le paiement pour votre commande <strong>{{ref}}</strong>. Votre commande est maintenant confirmée pour la production et vous recevrez des mises à jour supplémentaires à chaque étape.",
 
   // Customer-facing email — installation budget
   emailInstallBudgetLabel: "Estimation budgétaire d'installation",

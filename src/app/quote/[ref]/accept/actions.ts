@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase-server";
 import { verificationHash, buildAccountsUrl } from "@/lib/magic-link";
 import { sendOrderConfirmationEmails, sendAccountsLinkEmail } from "@/lib/email";
-import { updateDataverseOpportunity } from "@/lib/dataverse";
+import { updateDataverseOpportunity, updateDataverseProbability } from "@/lib/dataverse";
 
 export type AcceptState = { error: string } | null;
 
@@ -162,7 +162,10 @@ export async function acceptQuoteAction(
 
   // ── Sync to Dataverse ────────────────────────────────────────────────────────
   if (quote.dataverse_opportunity_id) {
-    await updateDataverseOpportunity(quote.dataverse_opportunity_id, "order_confirmed");
+    await Promise.all([
+      updateDataverseOpportunity(quote.dataverse_opportunity_id, "order_confirmed"),
+      updateDataverseProbability(quote.dataverse_opportunity_id, 100),
+    ]);
   }
 
   // ── Send emails ──────────────────────────────────────────────────────────────

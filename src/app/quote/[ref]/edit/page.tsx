@@ -28,7 +28,6 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
     ? searchParams.token[0]
     : (searchParams.token ?? "");
   const errKey = Array.isArray(searchParams.err) ? searchParams.err[0] : searchParams.err;
-  const justAccepted = searchParams.accepted === "1";
 
   const t = getT(getLocale(cookies().get("ajs_locale")?.value));
 
@@ -92,13 +91,15 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
   const fmt = (pence: number | string) => formatMoneyAtRate(Number(pence), ccy, fx);
 
   const statusLabel: Record<string, string> = {
-    quote_submitted: t("statusQuoteSubmitted"),
-    order_confirmed: t("statusOrderConfirmed"),
-    in_build: t("statusInBuild"),
-    ready_to_ship: t("statusReadyToShip"),
-    shipped: t("statusShipped"),
-    complete: t("statusComplete"),
-    cancelled: t("statusCancelled"),
+    quote_submitted:  t("statusQuoteSubmitted"),
+    order_confirmed:  t("statusOrderConfirmed"),
+    in_build:         t("statusInBuild"),
+    invoiced:         t("statusInvoiced"),
+    payment_received: t("statusPaymentReceived"),
+    ready_to_ship:    t("statusReadyToShip"),
+    shipped:          t("statusShipped"),
+    complete:         t("statusComplete"),
+    cancelled:        t("statusCancelled"),
   };
 
   const firstName = quote.contact_name?.trim().split(" ")[0] ?? "there";
@@ -117,9 +118,15 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
           </div>
 
           <div className="p-6 space-y-6">
-            <p className="text-ajs-text text-sm leading-relaxed">
-              {t("editGreeting", { name: firstName })}
-            </p>
+            {quote.status === "quote_submitted" ? (
+              <p className="text-ajs-text text-sm leading-relaxed">
+                {t("editGreeting", { name: firstName })}
+              </p>
+            ) : (
+              <div className="bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg p-4 leading-relaxed">
+                <strong>{t("orderConfirmedBanner")}</strong>
+              </div>
+            )}
 
             <div>
               <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark mb-2">{t("itemsLabel")}</h2>
@@ -184,13 +191,7 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
             </p>
 
             <div className="border-t border-ajs-light pt-5 space-y-3">
-              {justAccepted && (
-                <div className="bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg p-4 leading-relaxed">
-                  <strong>{t("orderConfirmedBanner")}</strong>
-                </div>
-              )}
-
-              {quote.status === "quote_submitted" && !justAccepted && (
+              {quote.status === "quote_submitted" && (
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Link
                     href={`/quote/${encodeURIComponent(ref)}/amend?token=${token}`}
@@ -207,7 +208,7 @@ export default async function QuoteEditPage({ params, searchParams }: PageProps)
                 </div>
               )}
 
-              {quote.status !== "quote_submitted" && !justAccepted && (
+              {quote.status !== "quote_submitted" && (
                 <p className="text-sm text-ajs-muted">
                   {t("orderPlacedNote", { email: "rz@ajsspalding.co.uk" })
                     .split("rz@ajsspalding.co.uk")

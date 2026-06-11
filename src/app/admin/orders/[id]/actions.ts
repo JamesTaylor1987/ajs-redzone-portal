@@ -9,6 +9,8 @@ const VALID_STATUSES = [
   "quote_submitted",
   "order_confirmed",
   "in_build",
+  "invoiced",
+  "payment_received",
   "ready_to_ship",
   "shipped",
   "complete",
@@ -117,6 +119,32 @@ export async function assignPMAction(
 
   revalidatePath(`/admin/orders/${id}`);
   revalidatePath("/admin/orders");
+  return { success: true };
+}
+
+export interface AdminNotesState {
+  success?: boolean;
+  error?: string;
+}
+
+export async function saveAdminNotesAction(
+  _prev: AdminNotesState,
+  formData: FormData,
+): Promise<AdminNotesState> {
+  const id = (formData.get("id") as string) ?? "";
+  const adminNotes = ((formData.get("admin_notes") as string) ?? "").trim() || null;
+
+  if (!id) return { error: "Missing order id" };
+
+  const supabase = getServiceClient();
+  const { error } = await supabase
+    .from("quotes")
+    .update({ admin_notes: adminNotes })
+    .eq("id", id);
+
+  if (error) return { error: "Failed to save — please try again" };
+
+  revalidatePath(`/admin/orders/${id}`);
   return { success: true };
 }
 

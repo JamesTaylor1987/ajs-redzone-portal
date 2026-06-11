@@ -5,14 +5,16 @@ import { useFormState, useFormStatus } from "react-dom";
 import { updateStatusAction, type StatusUpdateState } from "./actions";
 
 const STATUSES = [
-  { value: "quote_submitted", label: "Quote submitted" },
-  { value: "order_confirmed", label: "Order confirmed" },
-  { value: "in_build",        label: "In build" },
-  { value: "ready_to_ship",   label: "Ready to ship" },
-  { value: "shipped",         label: "Shipped" },
-  { value: "complete",        label: "Complete" },
-  { value: "cancelled",       label: "Cancelled" },
-  { value: "expired",         label: "Expired" },
+  { value: "quote_submitted",  label: "Quote submitted" },
+  { value: "order_confirmed",  label: "Order confirmed" },
+  { value: "in_build",         label: "In build" },
+  { value: "invoiced",         label: "Invoiced" },
+  { value: "payment_received", label: "Payment received" },
+  { value: "ready_to_ship",    label: "Ready to ship" },
+  { value: "shipped",          label: "Shipped" },
+  { value: "complete",         label: "Complete" },
+  { value: "cancelled",        label: "Cancelled" },
+  { value: "expired",          label: "Expired" },
 ];
 
 function SubmitButton() {
@@ -87,7 +89,7 @@ export function StatusUpdateForm({ quoteId, currentStatus, currentTrackingRef, c
               Tracking link <span className="text-ajs-light">(optional URL)</span>
             </label>
             <input
-              type="url"
+              type="text"
               name="tracking_url"
               defaultValue={currentTrackingUrl ?? ""}
               placeholder="https://track.dpd.co.uk/…"

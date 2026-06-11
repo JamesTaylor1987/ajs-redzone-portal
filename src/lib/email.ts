@@ -318,12 +318,6 @@ function orderConfirmationHtml(quote: OrderQuoteRow, items: EmailItemRow[]): str
     </table>
     ${ccy === "EUR" ? `<p style="color:#94a3b8;font-size:11px;margin:-16px 0 24px">${t("emailIndicativeEur")}</p>` : ""}
 
-    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:12px 16px;margin-bottom:24px">
-      <p style="color:#166534;font-size:13px;margin:0;line-height:1.6">
-        ${t("emailWhatHappensNextBody")}
-      </p>
-    </div>
-
     <p style="color:#64748b;font-size:13px;margin:0;line-height:1.8">
       ${t("emailQuestions")}<br>
       <a href="mailto:rz@ajsspalding.co.uk" style="color:#1886a1;text-decoration:none">rz@ajsspalding.co.uk</a>
@@ -542,21 +536,25 @@ export async function sendAccountsLinkEmail(
 // ─── Status update emails ─────────────────────────────────────────────────────
 
 const STATUS_SUBJECT_KEY: Partial<Record<string, MessageKey>> = {
-  order_confirmed: "emailStatusSubjectOrderConfirmed",
-  in_build:        "emailStatusSubjectInBuild",
-  ready_to_ship:   "emailStatusSubjectReadyToShip",
-  shipped:         "emailStatusSubjectShipped",
-  complete:        "emailStatusSubjectComplete",
-  cancelled:       "emailStatusSubjectCancelled",
+  order_confirmed:  "emailStatusSubjectOrderConfirmed",
+  in_build:         "emailStatusSubjectInBuild",
+  invoiced:         "emailStatusSubjectInvoiced",
+  payment_received: "emailStatusSubjectPaymentReceived",
+  ready_to_ship:    "emailStatusSubjectReadyToShip",
+  shipped:          "emailStatusSubjectShipped",
+  complete:         "emailStatusSubjectComplete",
+  cancelled:        "emailStatusSubjectCancelled",
 };
 
 const STATUS_COLOUR: Partial<Record<string, { bg: string; border: string; text: string }>> = {
-  order_confirmed: { bg: "#eff6ff", border: "#bfdbfe", text: "#1e40af" },
-  in_build:        { bg: "#f5f3ff", border: "#ddd6fe", text: "#5b21b6" },
-  ready_to_ship:   { bg: "#f0fdfa", border: "#99f6e4", text: "#0f766e" },
-  shipped:         { bg: "#f0fdf4", border: "#bbf7d0", text: "#166534" },
-  complete:        { bg: "#f8fafc", border: "#e2e8f0", text: "#334155" },
-  cancelled:       { bg: "#fff1f2", border: "#fecdd3", text: "#be123c" },
+  order_confirmed:  { bg: "#eff6ff", border: "#bfdbfe", text: "#1e40af" },
+  in_build:         { bg: "#f5f3ff", border: "#ddd6fe", text: "#5b21b6" },
+  invoiced:         { bg: "#fefce8", border: "#fde68a", text: "#92400e" },
+  payment_received: { bg: "#f0fdf4", border: "#bbf7d0", text: "#166534" },
+  ready_to_ship:    { bg: "#f0fdfa", border: "#99f6e4", text: "#0f766e" },
+  shipped:          { bg: "#f0fdf4", border: "#bbf7d0", text: "#166534" },
+  complete:         { bg: "#f8fafc", border: "#e2e8f0", text: "#334155" },
+  cancelled:        { bg: "#fff1f2", border: "#fecdd3", text: "#be123c" },
 };
 
 function statusBody(
@@ -572,6 +570,10 @@ function statusBody(
       return t("emailStatusBodyOrderConfirmed", { ref });
     case "in_build":
       return t("emailStatusBodyInBuild", { ref });
+    case "invoiced":
+      return t("emailStatusBodyInvoiced", { ref });
+    case "payment_received":
+      return t("emailStatusBodyPaymentReceived", { ref });
     case "ready_to_ship":
       return t("emailStatusBodyReadyToShip", { ref });
     case "shipped": {
