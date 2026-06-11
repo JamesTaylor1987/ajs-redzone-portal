@@ -130,6 +130,16 @@ export const messages: typeof en = {
   confirmEmailBtn: "Se connecter",
 
   acceptAndPlaceTitle: "Accepter et commander",
+  acceptConfirmBtn: "Confirmer et commander",
+  acceptPlacingOrder: "Commande en cours…",
+  acceptBindingNote: "En soumettant ce formulaire vous passez une commande ferme. Une facture sera émise dans les 24 heures, payable à 100 % avant expédition. Conditions de livraison DAP.",
+  forwardToAccountsTitle: "Transmettre à la comptabilité",
+  forwardToAccountsDesc: "Quelqu'un d'autre (ex. votre équipe finance ou comptabilité) doit compléter les informations ci-dessus ? Partagez ce lien — il accède directement au formulaire sans vérification d'e-mail.",
+  forwardCopyLink: "Copier le lien",
+  forwardCopied: "Copié",
+  forwardSendLink: "Envoyer le lien",
+  forwardSending: "Envoi…",
+  forwardEmailPlaceholder: "comptabilite@votreentreprise.fr",
   bindingOrderNote: "Vous êtes sur le point de passer une commande ferme pour les articles ci-dessous. Veuillez compléter le formulaire de coordonnées de facturation afin que nous puissions vous facturer correctement.",
   sessionExpiredTitle: "Session expirée",
   sessionExpiredDesc: "Veuillez revenir via votre lien magique pour vérifier à nouveau votre e-mail.",
@@ -148,7 +158,7 @@ export const messages: typeof en = {
 
   // Customer-facing email — quote submission
   emailYourQuoteRequest: "Votre demande de devis",
-  emailQuoteIntroBody: "Merci pour votre demande de devis — la référence {{ref}} vous a été attribuée. L'équipe AJS Redzone examinera votre demande et vous enverra un devis chiffré.",
+  emailQuoteIntroBody: "Merci pour votre demande de devis — la référence {{ref}} vous a été attribuée. Un membre de l'équipe l'examinera et vous contactera pour confirmer la tarification.",
   emailItemsRequested: "Articles demandés",
   emailSubtotalExVat: "Sous-total (HT)",
   emailTotalExVat: "Total (HT)",

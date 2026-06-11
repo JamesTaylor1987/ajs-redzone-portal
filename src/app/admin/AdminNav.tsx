@@ -104,7 +104,7 @@ export function AdminNav({ email }: Props) {
   }
 
   return (
-    <nav className="brand-gradient text-white shadow">
+    <nav className="brand-gradient text-white shadow sticky top-0 z-40">
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-5">
           {/* eslint-disable-next-line @next/next/no-img-element */}

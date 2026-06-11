@@ -38,6 +38,18 @@ export async function updateStatusAction(
   }
 
   const supabase = getServiceClient();
+
+  if (status === "expired") {
+    const { data: current } = await supabase
+      .from("quotes")
+      .select("status")
+      .eq("id", id)
+      .single();
+    if (current?.status !== "quote_submitted") {
+      return { error: "Only open (unconfirmed) quotes can be expired" };
+    }
+  }
+
   const now = new Date().toISOString();
 
   const { error } = await supabase

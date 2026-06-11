@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { acceptQuoteAction, type AcceptState } from "./actions";
+import { useT } from "@/components/LocaleProvider";
 
 interface Prefill {
   contactName: string;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function AccountInfoForm({ quoteRef, token, prefill }: Props) {
+  const t = useT();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [invoiceAddressDifferent, setInvoiceAddressDifferent] = useState(false);
@@ -164,16 +166,14 @@ export function AccountInfoForm({ quoteRef, token, prefill }: Props) {
 
       <div className="border-t border-ajs-light pt-5">
         <p className="text-xs text-ajs-muted mb-4 leading-relaxed">
-          By clicking <strong>Confirm &amp; Place Order</strong> you are placing a binding order.
-          An invoice will be issued within 24 hours, payable 100% prior to shipment. DAP delivery
-          terms apply.
+          {t("acceptBindingNote")}
         </p>
         <button
           type="submit"
           disabled={submitting}
           className="w-full sm:w-auto px-8 py-3 rounded-lg font-bold text-white bg-ajs-primary hover:bg-ajs-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {submitting ? "Placing order…" : "Confirm & Place Order"}
+          {submitting ? t("acceptPlacingOrder") : t("acceptConfirmBtn")}
         </button>
       </div>
     </form>

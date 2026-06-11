@@ -6,27 +6,31 @@ import { InlineProbabilityForm } from "./InlineProbabilityForm";
 export const dynamic = "force-dynamic";
 
 const STATUS_LABEL: Record<string, string> = {
-  quote_submitted: "Quote submitted",
-  order_confirmed: "Order confirmed",
-  in_build: "In build",
-  ready_to_ship: "Ready to ship",
-  shipped: "Shipped",
-  complete: "Complete",
-  cancelled: "Cancelled",
-  expired:  "Expired",
-  revised:  "Superseded",
+  quote_submitted:  "Quote submitted",
+  order_confirmed:  "Order confirmed",
+  in_build:         "In build",
+  invoiced:         "Invoiced",
+  payment_received: "Payment received",
+  ready_to_ship:    "Ready to ship",
+  shipped:          "Shipped",
+  complete:         "Complete",
+  cancelled:        "Cancelled",
+  expired:          "Expired",
+  revised:          "Superseded",
 };
 
 const STATUS_COLOUR: Record<string, string> = {
-  quote_submitted: "bg-amber-100 text-amber-700",
-  order_confirmed: "bg-blue-100 text-blue-700",
-  in_build: "bg-purple-100 text-purple-700",
-  ready_to_ship: "bg-teal-100 text-teal-700",
-  shipped: "bg-green-100 text-green-700",
-  complete: "bg-slate-100 text-slate-600",
-  cancelled: "bg-rose-100 text-rose-600",
-  expired:  "bg-orange-100 text-orange-600",
-  revised:  "bg-slate-100 text-slate-400",
+  quote_submitted:  "bg-amber-100 text-amber-700",
+  order_confirmed:  "bg-blue-100 text-blue-700",
+  in_build:         "bg-purple-100 text-purple-700",
+  invoiced:         "bg-yellow-100 text-yellow-700",
+  payment_received: "bg-emerald-100 text-emerald-700",
+  ready_to_ship:    "bg-teal-100 text-teal-700",
+  shipped:          "bg-green-100 text-green-700",
+  complete:         "bg-slate-100 text-slate-600",
+  cancelled:        "bg-rose-100 text-rose-600",
+  expired:          "bg-orange-100 text-orange-600",
+  revised:          "bg-slate-100 text-slate-400",
 };
 
 interface PageProps {
@@ -39,7 +43,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
   let query = supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_company, contact_email, subtotal_gbp_pence, created_at, original_quote_ref, win_probability, win_probability_set_at",
+      "id, ref, status, contact_name, contact_company, contact_email, subtotal_gbp_pence, shipping_gbp_pence, created_at, original_quote_ref, win_probability, win_probability_set_at",
     )
     .order("created_at", { ascending: false });
 
@@ -119,7 +123,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                     )}
                   </td>
                   <td className="px-4 py-3 font-semibold">
-                    {gbp(o.subtotal_gbp_pence)}
+                    {gbp(Number(o.subtotal_gbp_pence ?? 0) + Number(o.shipping_gbp_pence ?? 0))}
                   </td>
                   <td className="px-4 py-3 text-ajs-muted text-xs">
                     {new Date(o.created_at).toLocaleDateString("en-GB", {

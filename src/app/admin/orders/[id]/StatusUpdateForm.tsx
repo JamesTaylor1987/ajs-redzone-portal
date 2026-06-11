@@ -41,6 +41,10 @@ export function StatusUpdateForm({ quoteId, currentStatus, currentTrackingRef, c
   const [state, action] = useFormState<StatusUpdateState, FormData>(updateStatusAction, {});
   const [selectedStatus, setSelectedStatus] = useState(currentStatus);
 
+  const availableStatuses = currentStatus === "quote_submitted"
+    ? STATUSES
+    : STATUSES.filter((s) => s.value !== "expired");
+
   return (
     <div className="bg-white rounded-xl border border-ajs-light p-5">
       <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark mb-3">Status</h2>
@@ -67,7 +71,7 @@ export function StatusUpdateForm({ quoteId, currentStatus, currentTrackingRef, c
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
             >
-              {STATUSES.map((s) => (
+              {availableStatuses.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>

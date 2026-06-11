@@ -143,6 +143,18 @@ export const messages = {
 
   // Accept page
   acceptAndPlaceTitle: "Accept & place order",
+  acceptConfirmBtn: "Confirm & Place Order",
+  acceptPlacingOrder: "Placing order…",
+  acceptBindingNote: "By submitting this form you are placing a binding order. An invoice will be issued within 24 hours, payable 100% prior to shipment. DAP delivery terms apply.",
+
+  // Forward to accounts
+  forwardToAccountsTitle: "Forward to accounts",
+  forwardToAccountsDesc: "Need someone else (e.g. your finance or accounts team) to complete the details above? Share this link — it goes directly to the form without requiring email verification.",
+  forwardCopyLink: "Copy link",
+  forwardCopied: "Copied",
+  forwardSendLink: "Send link",
+  forwardSending: "Sending…",
+  forwardEmailPlaceholder: "accounts@yourcompany.com",
   bindingOrderNote: "You are about to place a binding order for the items below. Please complete the account information form so we can invoice you correctly.",
   sessionExpiredTitle: "Session expired",
   sessionExpiredDesc: "Please return via your magic link to verify your email again.",
@@ -163,7 +175,7 @@ export const messages = {
 
   // Customer-facing email — quote submission
   emailYourQuoteRequest: "Your quote request",
-  emailQuoteIntroBody: "Thanks for your quote request — reference {{ref}} has been assigned. The AJS Redzone team will review your request and send you a priced quote.",
+  emailQuoteIntroBody: "Thanks for your quote request — reference {{ref}} has been assigned. A member of the team will review it and be in touch to confirm pricing.",
   emailItemsRequested: "Items Requested",
   emailSubtotalExVat: "Subtotal (ex-VAT)",
   emailTotalExVat: "Total (ex-VAT)",

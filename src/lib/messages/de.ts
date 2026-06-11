@@ -130,6 +130,16 @@ export const messages: typeof en = {
   confirmEmailBtn: "Anmelden",
 
   acceptAndPlaceTitle: "Annehmen & Bestellen",
+  acceptConfirmBtn: "Verbindlich bestellen",
+  acceptPlacingOrder: "Bestellung wird aufgegeben…",
+  acceptBindingNote: "Mit dem Absenden dieses Formulars geben Sie eine verbindliche Bestellung auf. Eine Rechnung wird innerhalb von 24 Stunden ausgestellt, zahlbar zu 100 % vor dem Versand. Lieferbedingungen DAP.",
+  forwardToAccountsTitle: "An Buchhaltung weiterleiten",
+  forwardToAccountsDesc: "Muss jemand anderes (z. B. Ihr Finanz- oder Buchhaltungsteam) die obigen Angaben ausfüllen? Teilen Sie diesen Link — er führt direkt zum Formular ohne E-Mail-Verifizierung.",
+  forwardCopyLink: "Link kopieren",
+  forwardCopied: "Kopiert",
+  forwardSendLink: "Link senden",
+  forwardSending: "Sende…",
+  forwardEmailPlaceholder: "buchhaltung@ihrefirma.de",
   bindingOrderNote: "Sie sind dabei, eine verbindliche Bestellung für die folgenden Artikel aufzugeben. Bitte füllen Sie das Kontoinformationsformular aus, damit wir Sie korrekt fakturieren können.",
   sessionExpiredTitle: "Sitzung abgelaufen",
   sessionExpiredDesc: "Bitte kehren Sie über Ihren Magic Link zurück, um Ihre E-Mail erneut zu bestätigen.",
@@ -148,7 +158,7 @@ export const messages: typeof en = {
 
   // Customer-facing email — quote submission
   emailYourQuoteRequest: "Ihre Angebotsanfrage",
-  emailQuoteIntroBody: "Vielen Dank für Ihre Angebotsanfrage — die Referenz {{ref}} wurde zugewiesen. Das AJS-Redzone-Team wird Ihre Anfrage prüfen und Ihnen ein kalkuliertes Angebot zusenden.",
+  emailQuoteIntroBody: "Vielen Dank für Ihre Angebotsanfrage — die Referenz {{ref}} wurde zugewiesen. Ein Teammitglied wird Ihre Anfrage prüfen und sich in Kürze zur Preisgestaltung bei Ihnen melden.",
   emailItemsRequested: "Angeforderte Artikel",
   emailSubtotalExVat: "Zwischensumme (zzgl. MwSt.)",
   emailTotalExVat: "Gesamt (zzgl. MwSt.)",

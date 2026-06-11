@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { sendAccountsLinkAction, type SendAccountsLinkState } from "./actions";
+import { useT } from "@/components/LocaleProvider";
 
 interface Props {
   quoteRef: string;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function ForwardToAccounts({ quoteRef, token, accountsUrl }: Props) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
@@ -41,10 +43,9 @@ export function ForwardToAccounts({ quoteRef, token, accountsUrl }: Props) {
 
   return (
     <div className="mt-6 border-t border-ajs-light pt-6">
-      <h3 className="text-sm font-bold text-ajs-dark mb-1">Forward to accounts</h3>
+      <h3 className="text-sm font-bold text-ajs-dark mb-1">{t("forwardToAccountsTitle")}</h3>
       <p className="text-xs text-ajs-muted mb-4 leading-relaxed">
-        Need someone else (e.g. your finance or accounts team) to complete the details above?
-        Share this link — it goes directly to the form without requiring email verification.
+        {t("forwardToAccountsDesc")}
       </p>
 
       {/* Copy link */}
@@ -59,7 +60,7 @@ export function ForwardToAccounts({ quoteRef, token, accountsUrl }: Props) {
           onClick={handleCopy}
           className="shrink-0 px-4 py-2 rounded-md border border-ajs-light text-sm font-semibold text-ajs-dark bg-white hover:bg-ajs-light transition-colors"
         >
-          {copied ? "Copied ✓" : "Copy link"}
+          {copied ? t("forwardCopied") : t("forwardCopyLink")}
         </button>
       </div>
 
@@ -74,7 +75,7 @@ export function ForwardToAccounts({ quoteRef, token, accountsUrl }: Props) {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="accounts@yourcompany.com"
+            placeholder={t("forwardEmailPlaceholder")}
             required
             className="flex-1 text-sm border border-ajs-light rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
           />
@@ -83,7 +84,7 @@ export function ForwardToAccounts({ quoteRef, token, accountsUrl }: Props) {
             disabled={sending}
             className="shrink-0 px-4 py-2 rounded-md bg-ajs-primary text-white text-sm font-semibold hover:bg-ajs-dark disabled:opacity-50 transition-colors whitespace-nowrap"
           >
-            {sending ? "Sending…" : "Send link"}
+            {sending ? t("forwardSending") : t("forwardSendLink")}
           </button>
         </form>
       )}

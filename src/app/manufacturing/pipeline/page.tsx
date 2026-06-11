@@ -56,7 +56,7 @@ export default async function ManufacturingPipelinePage() {
       confirmedQty,
       forecastQty: Math.round((open?.forecast ?? 0) + confirmedQty),
     };
-  }).sort((a, b) => (b.confirmedQty + b.openQty) - (a.confirmedQty + a.openQty));
+  }).sort((a, b) => a.sku.localeCompare(b.sku));
 
   return (
     <div className="space-y-5">

@@ -12,9 +12,9 @@ export function MfgNav({ isAdmin }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="bg-ajs-dark text-white shadow">
+    <header className="bg-ajs-dark text-white shadow sticky top-0 z-40">
       {/* Top bar */}
-      <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-14">
+      <div className="px-4 flex items-center justify-between h-14">
         <div className="flex items-center gap-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="https://cdn.prod.website-files.com/6977ae7685a0199da7148962/699860f91ee461dc0f2bde24_redzone-favicon.svg" alt="" aria-hidden="true" className="h-5 w-5" />
@@ -66,7 +66,7 @@ export function MfgNav({ isAdmin }: Props) {
 
       {/* Mobile menu */}
       {open && (
-        <div className="sm:hidden border-t border-white/20 px-4 py-3 space-y-1 max-w-5xl mx-auto">
+        <div className="sm:hidden border-t border-white/20 px-4 py-3 space-y-1">
           <Link href="/manufacturing/orders" onClick={() => setOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 hover:bg-white/10 transition-colors">
             Work orders
           </Link>

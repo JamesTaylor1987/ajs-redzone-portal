@@ -14,8 +14,8 @@ export function RedzoneNav({ name }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="bg-[#7f1d1d] text-white shadow">
-      <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-14">
+    <header className="bg-[#7f1d1d] text-white shadow sticky top-0 z-40">
+      <div className="px-4 flex items-center justify-between h-14">
         <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={RZ_ICON} alt="Redzone" className="h-6 w-6" />
@@ -55,7 +55,7 @@ export function RedzoneNav({ name }: Props) {
       </div>
 
       {open && (
-        <div className="sm:hidden border-t border-white/20 px-4 py-3 space-y-1 max-w-5xl mx-auto">
+        <div className="sm:hidden border-t border-white/20 px-4 py-3 space-y-1">
           <Link href="/redzone/quotes" onClick={() => setOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 hover:bg-white/10 transition-colors">
             My Quotes
           </Link>
