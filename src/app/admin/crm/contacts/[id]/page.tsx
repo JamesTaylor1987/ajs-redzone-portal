@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase-server";
+
+function waHref(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  return `https://wa.me/${digits.startsWith("0") ? "44" + digits.slice(1) : digits}`;
+}
 import {
   updateRZContactAction,
   deleteRZContactAction,
@@ -22,17 +27,19 @@ const ACTIVITY_LABEL: Record<string, string> = {
 };
 
 const REGIONS = [
-  "UK & Ireland",
-  "France",
-  "DACH",
-  "Benelux",
-  "Nordics",
-  "Southern Europe",
-  "Eastern Europe",
-  "Middle East & Africa",
-  "North America",
-  "Latin America",
+  "EMEA",
+  "Americas",
   "APAC",
+  "Other",
+];
+
+const COUNTRIES = [
+  "England",
+  "Ireland",
+  "France",
+  "Germany",
+  "Poland",
+  "America",
   "Other",
 ];
 
@@ -99,6 +106,7 @@ export default async function RZContactDetailPage({ params }: Props) {
           {contact.country && <span>{contact.country}</span>}
           {contact.email && <a href={`mailto:${contact.email}`} className="text-ajs-primary hover:underline break-all">{contact.email}</a>}
           {contact.phone && <a href={`tel:${contact.phone}`} className="text-ajs-primary hover:underline">{contact.phone}</a>}
+          {contact.phone && <a href={waHref(contact.phone)} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline font-semibold">WhatsApp</a>}
           {contact.linkedin && <a href={contact.linkedin} target="_blank" rel="noopener noreferrer" className="text-ajs-primary hover:underline">LinkedIn</a>}
         </div>
         {contact.notes && <p className="text-xs text-ajs-muted mt-2 italic break-words">{contact.notes}</p>}
@@ -242,8 +250,11 @@ export default async function RZContactDetailPage({ params }: Props) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Country</label>
-              <input name="country" defaultValue={contact.country ?? ""} className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary" />
+              <label className="block text-xs font-semibold text-ajs-dark mb-1">Country Residing</label>
+              <select name="country" defaultValue={contact.country ?? ""} className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary bg-white">
+                <option value="">Select...</option>
+                {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
             </div>
             <div>
               <label className="block text-xs font-semibold text-ajs-dark mb-1">Phone</label>

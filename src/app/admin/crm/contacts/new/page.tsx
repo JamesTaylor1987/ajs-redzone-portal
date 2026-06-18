@@ -2,17 +2,19 @@ import Link from "next/link";
 import { createRZContactAction } from "../../actions";
 
 const REGIONS = [
-  "UK & Ireland",
-  "France",
-  "DACH",
-  "Benelux",
-  "Nordics",
-  "Southern Europe",
-  "Eastern Europe",
-  "Middle East & Africa",
-  "North America",
-  "Latin America",
+  "EMEA",
+  "Americas",
   "APAC",
+  "Other",
+];
+
+const COUNTRIES = [
+  "England",
+  "Ireland",
+  "France",
+  "Germany",
+  "Poland",
+  "America",
   "Other",
 ];
 
@@ -63,12 +65,14 @@ export default function NewRZContactPage() {
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Country</label>
-              <input
+              <label className="block text-xs font-semibold text-ajs-dark mb-1">Country Residing</label>
+              <select
                 name="country"
-                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-                placeholder="e.g. France"
-              />
+                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary bg-white"
+              >
+                <option value="">Select...</option>
+                {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
             </div>
           </div>
         </div>
