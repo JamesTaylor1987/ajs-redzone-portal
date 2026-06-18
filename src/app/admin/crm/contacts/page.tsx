@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getServiceClient } from "@/lib/supabase-server";
+import { ContactCardActions } from "./ContactCardActions";
 
 function waHref(phone: string) {
   const digits = phone.replace(/\D/g, "");
@@ -89,25 +90,7 @@ export default async function RZContactsPage() {
                       Follow up: {new Date(c.follow_up_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                     </div>
                   )}
-                  {(c.email || c.phone) && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {c.email && (
-                        <a href={`mailto:${c.email}`} onClick={(e) => e.stopPropagation()} className="text-xs font-semibold text-ajs-primary bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full hover:bg-blue-100">
-                          ✉ Email
-                        </a>
-                      )}
-                      {c.phone && (
-                        <a href={`tel:${c.phone}`} onClick={(e) => e.stopPropagation()} className="text-xs font-semibold text-ajs-dark bg-slate-100 border border-ajs-light px-2.5 py-1 rounded-full hover:bg-slate-200">
-                          📞 Call
-                        </a>
-                      )}
-                      {c.phone && (
-                        <a href={waHref(c.phone)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full hover:bg-emerald-100">
-                          WhatsApp
-                        </a>
-                      )}
-                    </div>
-                  )}
+                  <ContactCardActions email={c.email ?? null} phone={c.phone ?? null} />
                   <div className="flex gap-3 text-xs text-ajs-muted mt-2">
                     <span>{actCounts[c.id] || 0} interactions</span>
                     {leadCounts[c.id] ? <span className="text-ajs-primary font-medium">{leadCounts[c.id]} active lead{leadCounts[c.id] > 1 ? "s" : ""}</span> : null}
