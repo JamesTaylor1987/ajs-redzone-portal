@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase-server";
-
-function waHref(phone: string) {
-  const digits = phone.replace(/\D/g, "");
-  return `https://wa.me/${digits.startsWith("0") ? "44" + digits.slice(1) : digits}`;
-}
 import {
   updateRZContactAction,
   deleteRZContactAction,
   logRZActivityAction,
   deleteRZActivityAction,
 } from "../../actions";
+
+function waHref(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  return `https://wa.me/${digits.startsWith("0") ? "44" + digits.slice(1) : digits}`;
+}
 
 export const dynamic = "force-dynamic";
 
