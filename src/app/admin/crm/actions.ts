@@ -10,17 +10,21 @@ export async function createRZContactAction(formData: FormData) {
   const g = (k: string) => (formData.get(k) as string ?? "").trim();
   const supabase = getServiceClient();
 
+  const langs = formData.getAll("languages").filter((v): v is string => typeof v === "string");
+
   const { data: contact } = await supabase
     .from("crm_rz_contacts")
     .insert({
-      name:     g("name"),
-      role:     g("role")     || null,
-      region:   g("region")   || null,
-      country:  g("country")  || null,
-      email:    g("email")    || null,
-      phone:    g("phone")    || null,
-      linkedin: g("linkedin") || null,
-      notes:    g("notes")    || null,
+      name:        g("name"),
+      role:        g("role")        || null,
+      region:      g("region")      || null,
+      country:     g("country")     || null,
+      nationality: g("nationality") || null,
+      languages:   langs.length > 0 ? langs : null,
+      email:       g("email")       || null,
+      phone:       g("phone")       || null,
+      linkedin:    g("linkedin")    || null,
+      notes:       g("notes")       || null,
     })
     .select("id")
     .single();
@@ -32,22 +36,26 @@ export async function createRZContactAction(formData: FormData) {
 export async function updateRZContactAction(formData: FormData) {
   const id = formData.get("id") as string;
   const g = (k: string) => (formData.get(k) as string ?? "").trim();
+  const langs = formData.getAll("languages").filter((v): v is string => typeof v === "string");
   const supabase = getServiceClient();
 
   await supabase.from("crm_rz_contacts").update({
-    name:       g("name"),
-    role:       g("role")     || null,
-    region:     g("region")   || null,
-    country:    g("country")  || null,
-    email:      g("email")    || null,
-    phone:      g("phone")    || null,
-    linkedin:   g("linkedin") || null,
-    notes:      g("notes")    || null,
-    updated_at: new Date().toISOString(),
+    name:        g("name"),
+    role:        g("role")        || null,
+    region:      g("region")      || null,
+    country:     g("country")     || null,
+    nationality: g("nationality") || null,
+    languages:   langs.length > 0 ? langs : null,
+    email:       g("email")       || null,
+    phone:       g("phone")       || null,
+    linkedin:    g("linkedin")    || null,
+    notes:       g("notes")       || null,
+    updated_at:  new Date().toISOString(),
   }).eq("id", id);
 
   revalidatePath(`/admin/crm/contacts/${id}`);
   revalidatePath("/admin/crm/contacts");
+  redirect(`/admin/crm/contacts/${id}`);
 }
 
 export async function deleteRZContactAction(formData: FormData) {

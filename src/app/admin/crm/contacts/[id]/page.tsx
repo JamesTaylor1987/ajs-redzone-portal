@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase-server";
 import {
-  updateRZContactAction,
   deleteRZContactAction,
   logRZActivityAction,
   deleteRZActivityAction,
@@ -25,23 +24,6 @@ const ACTIVITY_LABEL: Record<string, string> = {
   conference: "Conference",
   other:      "Other",
 };
-
-const REGIONS = [
-  "EMEA",
-  "Americas",
-  "APAC",
-  "Other",
-];
-
-const COUNTRIES = [
-  "England",
-  "Ireland",
-  "France",
-  "Germany",
-  "Poland",
-  "America",
-  "Other",
-];
 
 const STATUS_COLOUR: Record<string, string> = {
   new:          "bg-amber-100 text-amber-700",
@@ -96,14 +78,26 @@ export default async function RZContactDetailPage({ params }: Props) {
     <div className="space-y-5 overflow-x-hidden">
       {/* Header */}
       <div>
-        <Link href="/admin/crm/contacts" className="text-ajs-muted hover:text-ajs-primary text-sm">
-          ← Redzone People
-        </Link>
+        <div className="flex items-center justify-between gap-4">
+          <Link href="/admin/crm/contacts" className="text-ajs-muted hover:text-ajs-primary text-sm">
+            ← Redzone People
+          </Link>
+          <Link
+            href={`/admin/crm/contacts/${params.id}/edit`}
+            className="text-xs font-semibold text-ajs-primary border border-ajs-primary/30 px-3 py-1.5 rounded-lg hover:bg-ajs-primary/5 transition-colors"
+          >
+            Edit details
+          </Link>
+        </div>
         <h1 className="text-xl font-extrabold text-ajs-dark mt-2">{contact.name}</h1>
         <div className="flex gap-x-3 gap-y-1 mt-1 text-xs text-ajs-muted flex-wrap">
           {contact.role && <span>{contact.role}</span>}
           {contact.region && <span>{contact.region}</span>}
           {contact.country && <span>{contact.country}</span>}
+          {contact.nationality && <span>{contact.nationality}</span>}
+          {(contact.languages ?? []).length > 0 && (
+            <span>{(contact.languages as string[]).join(", ")}</span>
+          )}
           {contact.email && <a href={`mailto:${contact.email}`} className="text-ajs-primary hover:underline break-all">{contact.email}</a>}
           {contact.phone && <a href={`tel:${contact.phone}`} className="text-ajs-primary hover:underline">{contact.phone}</a>}
           {contact.phone && <a href={waHref(contact.phone)} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline font-semibold">WhatsApp</a>}
@@ -225,61 +219,6 @@ export default async function RZContactDetailPage({ params }: Props) {
           </div>
         </div>
       )}
-
-      {/* Edit details */}
-      <div className="bg-white rounded-xl border border-ajs-light overflow-hidden">
-        <SectionHeader>Edit details</SectionHeader>
-        <form action={updateRZContactAction} className="px-4 py-4 space-y-3">
-          <input type="hidden" name="id" value={contact.id} />
-          <div>
-            <label className="block text-xs font-semibold text-ajs-dark mb-1">Name</label>
-            <input name="name" defaultValue={contact.name} required className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Role</label>
-              <input name="role" defaultValue={contact.role ?? ""} className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary" />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Region</label>
-              <select name="region" defaultValue={contact.region ?? ""} className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary bg-white">
-                <option value="">Select...</option>
-                {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Country Residing</label>
-              <select name="country" defaultValue={contact.country ?? ""} className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary bg-white">
-                <option value="">Select...</option>
-                {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Phone</label>
-              <input name="phone" type="tel" defaultValue={contact.phone ?? ""} className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">Email</label>
-              <input name="email" type="email" defaultValue={contact.email ?? ""} className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary" />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">LinkedIn</label>
-              <input name="linkedin" type="url" defaultValue={contact.linkedin ?? ""} className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary" placeholder="https://..." />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-ajs-dark mb-1">Notes</label>
-            <textarea name="notes" defaultValue={contact.notes ?? ""} rows={2} className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary resize-none" />
-          </div>
-          <button type="submit" className="bg-ajs-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
-            Save changes
-          </button>
-        </form>
-      </div>
 
       {/* Delete */}
       <div className="bg-white rounded-xl border border-rose-200 overflow-hidden">
