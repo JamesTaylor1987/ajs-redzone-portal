@@ -8,12 +8,30 @@ export interface PMActionState {
   error?: string;
 }
 
+export async function savePMPhoneAction(
+  _prev: PMActionState,
+  formData: FormData,
+): Promise<PMActionState> {
+  const id = ((formData.get("pm_id") as string) ?? "").trim();
+  const phone = ((formData.get("phone") as string) ?? "").trim() || null;
+
+  if (!id) return { error: "Missing PM id" };
+
+  const supabase = getServiceClient();
+  const { error } = await supabase.from("rz_pms").update({ phone }).eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/admin/redzone-pms");
+  return { success: true };
+}
+
 export async function invitePMAction(
   _prev: PMActionState,
   formData: FormData,
 ): Promise<PMActionState> {
   const name = ((formData.get("name") as string) ?? "").trim();
   const email = ((formData.get("email") as string) ?? "").trim().toLowerCase();
+  const phone = ((formData.get("phone") as string) ?? "").trim() || null;
   const type = (formData.get("type") as string) ?? "pm";
 
   if (!name) return { error: "Name is required" };
@@ -43,6 +61,7 @@ export async function invitePMAction(
       const { error: insertError } = await supabase.from("rz_pms").insert({
         name,
         email,
+        phone,
         auth_user_id: inviteData.user.id,
       });
       if (insertError) return { error: insertError.message };

@@ -2,6 +2,7 @@ import { getServiceClient } from "@/lib/supabase-server";
 import { InvitePMForm } from "./InvitePMForm";
 import { RemovePMButton } from "./RemovePMButton";
 import { RemoveAdminButton } from "./RemoveAdminButton";
+import { PMPhoneCell } from "./PMPhoneCell";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,7 @@ export default async function RedzonePMsPage() {
   const supabase = getServiceClient();
 
   const [{ data: pms }, { data: { users: allUsers } }] = await Promise.all([
-    supabase.from("rz_pms").select("id, name, email, created_at").order("created_at", { ascending: true }),
+    supabase.from("rz_pms").select("id, name, email, phone, created_at").order("created_at", { ascending: true }),
     supabase.auth.admin.listUsers({ perPage: 500 }),
   ]);
 
@@ -36,6 +37,7 @@ export default async function RedzonePMsPage() {
               <tr>
                 <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Name</th>
                 <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Email</th>
+                <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Phone / WhatsApp</th>
                 <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Added</th>
                 <th className="px-4 py-2.5" />
               </tr>
@@ -44,7 +46,14 @@ export default async function RedzonePMsPage() {
               {pms.map((pm) => (
                 <tr key={pm.id}>
                   <td className="px-4 py-3 font-semibold">{pm.name}</td>
-                  <td className="px-4 py-3 text-ajs-muted">{pm.email}</td>
+                  <td className="px-4 py-3">
+                    <a href={`mailto:${pm.email}`} className="text-ajs-primary hover:underline text-sm">
+                      {pm.email}
+                    </a>
+                  </td>
+                  <td className="px-4 py-3">
+                    <PMPhoneCell pmId={pm.id} phone={pm.phone ?? null} />
+                  </td>
                   <td className="px-4 py-3 text-ajs-muted text-xs">
                     {new Date(pm.created_at).toLocaleDateString("en-GB")}
                   </td>
