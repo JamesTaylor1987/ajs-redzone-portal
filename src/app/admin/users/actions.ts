@@ -40,7 +40,7 @@ export async function inviteUserAction(
   });
 
   revalidatePath("/admin/users");
-  return { success: true, link: data.properties.action_link };
+  return { success: true, link: `${APP_URL}/auth/set-password?token_hash=${data.properties.hashed_token}&type=invite` };
 }
 
 export async function generateResetLinkAction(
@@ -54,11 +54,11 @@ export async function generateResetLinkAction(
   const { data, error } = await supabase.auth.admin.generateLink({
     type: "recovery",
     email,
-    options: { redirectTo: `${APP_URL}/admin` },
+    options: { redirectTo: `${APP_URL}/auth/set-password` },
   });
 
   if (error) return { error: error.message };
-  return { success: true, link: data.properties.action_link };
+  return { success: true, link: `${APP_URL}/auth/set-password?token_hash=${data.properties.hashed_token}&type=recovery` };
 }
 
 export async function updateRoleAction(

@@ -55,7 +55,7 @@ export async function invitePMAction(
   }
 
   revalidatePath("/admin/redzone-pms");
-  return { success: true, link: inviteData.properties.action_link };
+  return { success: true, link: `${APP_URL}/auth/set-password?token_hash=${inviteData.properties.hashed_token}&type=invite` };
 }
 
 export async function generateRZResetLinkAction(
@@ -69,11 +69,11 @@ export async function generateRZResetLinkAction(
   const { data, error } = await supabase.auth.admin.generateLink({
     type: "recovery",
     email,
-    options: { redirectTo: `${APP_URL}/redzone/login` },
+    options: { redirectTo: `${APP_URL}/auth/set-password` },
   });
 
   if (error) return { error: error.message };
-  return { success: true, link: data.properties.action_link };
+  return { success: true, link: `${APP_URL}/auth/set-password?token_hash=${data.properties.hashed_token}&type=recovery` };
 }
 
 export async function removePMAction(
