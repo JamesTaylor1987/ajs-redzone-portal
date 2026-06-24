@@ -40,7 +40,7 @@ export default async function RedzoneQuoteDetailPage({ params }: PageProps) {
   const role = (session.user.app_metadata?.role as string) ?? "";
   const isRZAdmin = role === "rz_admin";
 
-  let quoteQuery = serviceClient.from("quotes").select("*").eq("id", params.id);
+  let quoteQuery = serviceClient.from("quotes").select("*, invoiced, payment_received").eq("id", params.id);
 
   if (!isRZAdmin) {
     const { data: pm } = await serviceClient
@@ -77,6 +77,24 @@ export default async function RedzoneQuoteDetailPage({ params }: PageProps) {
           {STATUS_LABEL[quote.status] ?? quote.status}
         </span>
       </div>
+
+      {/* Finance status */}
+      {(quote.invoiced || quote.payment_received) && (
+        <div className="flex gap-2">
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${quote.invoiced ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400"}`}>
+            {quote.invoiced ? (
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" /></svg>
+            ) : null}
+            Invoice sent
+          </span>
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${quote.payment_received ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400"}`}>
+            {quote.payment_received ? (
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" /></svg>
+            ) : null}
+            Payment received
+          </span>
+        </div>
+      )}
 
       {/* Tracking info (if shipped) */}
       {quote.tracking_ref && (

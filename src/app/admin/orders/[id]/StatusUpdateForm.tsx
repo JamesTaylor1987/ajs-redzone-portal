@@ -8,8 +8,6 @@ const STATUSES = [
   { value: "quote_submitted",  label: "Quote submitted" },
   { value: "order_confirmed",  label: "Order confirmed" },
   { value: "in_build",         label: "In build" },
-  { value: "invoiced",         label: "Invoiced" },
-  { value: "payment_received", label: "Payment received" },
   { value: "ready_to_ship",    label: "Ready to ship" },
   { value: "shipped",          label: "Shipped" },
   { value: "complete",         label: "Complete" },

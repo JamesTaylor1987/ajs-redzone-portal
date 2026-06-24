@@ -25,9 +25,10 @@ function SubmitButton() {
 interface Props {
   quoteId: string;
   currentStatus: string;
+  paymentReceived: boolean;
 }
 
-export function StatusUpdateForm({ quoteId, currentStatus }: Props) {
+export function StatusUpdateForm({ quoteId, currentStatus, paymentReceived }: Props) {
   const [state, action] = useFormState<StatusUpdateState, FormData>(
     manufacturingUpdateStatusAction,
     {},
@@ -60,9 +61,16 @@ export function StatusUpdateForm({ quoteId, currentStatus }: Props) {
               className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40"
             >
               {MFG_STATUSES.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
+                <option key={s.value} value={s.value} disabled={s.value === "shipped" && !paymentReceived}>
+                  {s.label}{s.value === "shipped" && !paymentReceived ? " (awaiting payment)" : ""}
+                </option>
               ))}
             </select>
+            {!paymentReceived && (
+              <p className="mt-1 text-xs text-amber-600 font-medium">
+                Cannot ship — payment not yet confirmed by AJS admin.
+              </p>
+            )}
           </div>
 
           <div>

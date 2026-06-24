@@ -25,6 +25,18 @@ export async function manufacturingUpdateStatusAction(
   }
 
   const supabase = getServiceClient();
+
+  if (status === "shipped") {
+    const { data: fin } = await supabase
+      .from("quotes")
+      .select("payment_received")
+      .eq("id", id)
+      .single();
+    if (!fin?.payment_received) {
+      return { error: "Payment has not been confirmed — ask the AJS admin team to mark payment received before shipping." };
+    }
+  }
+
   const now = new Date().toISOString();
 
   const { error } = await supabase

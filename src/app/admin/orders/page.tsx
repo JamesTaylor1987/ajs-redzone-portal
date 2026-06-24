@@ -9,8 +9,6 @@ const STATUS_LABEL: Record<string, string> = {
   quote_submitted:  "Quote submitted",
   order_confirmed:  "Order confirmed",
   in_build:         "In build",
-  invoiced:         "Invoiced",
-  payment_received: "Payment received",
   ready_to_ship:    "Ready to ship",
   shipped:          "Shipped",
   complete:         "Complete",
@@ -23,8 +21,6 @@ const STATUS_COLOUR: Record<string, string> = {
   quote_submitted:  "bg-amber-100 text-amber-700",
   order_confirmed:  "bg-blue-100 text-blue-700",
   in_build:         "bg-purple-100 text-purple-700",
-  invoiced:         "bg-yellow-100 text-yellow-700",
-  payment_received: "bg-emerald-100 text-emerald-700",
   ready_to_ship:    "bg-teal-100 text-teal-700",
   shipped:          "bg-green-100 text-green-700",
   complete:         "bg-slate-100 text-slate-600",
@@ -43,7 +39,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
   let query = supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_company, contact_email, subtotal_gbp_pence, shipping_gbp_pence, created_at, original_quote_ref, win_probability, win_probability_set_at",
+      "id, ref, status, contact_name, contact_company, contact_email, subtotal_gbp_pence, shipping_gbp_pence, created_at, original_quote_ref, win_probability, win_probability_set_at, invoiced, payment_received",
     )
     .order("created_at", { ascending: false });
 
@@ -78,6 +74,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                 <Th>Customer</Th>
                 <Th>Status</Th>
                 <Th>Win %</Th>
+                <Th>Finance</Th>
                 <Th>Total</Th>
                 <Th>Submitted</Th>
                 <Th></Th>
@@ -122,6 +119,12 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                       <span className="text-ajs-light text-sm">—</span>
                     )}
                   </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <FinancePill label="Inv" active={o.invoiced} />
+                      <FinancePill label="Paid" active={o.payment_received} />
+                    </div>
+                  </td>
                   <td className="px-4 py-3 font-semibold">
                     {gbp(Number(o.subtotal_gbp_pence ?? 0) + Number(o.shipping_gbp_pence ?? 0))}
                   </td>
@@ -148,6 +151,23 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
         )}
       </div>
     </div>
+  );
+}
+
+function FinancePill({ label, active }: { label: string; active: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-semibold ${
+        active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400"
+      }`}
+    >
+      {active && (
+        <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 10 10" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M1.5 5l2.5 2.5 4.5-4.5" />
+        </svg>
+      )}
+      {label}
+    </span>
   );
 }
 

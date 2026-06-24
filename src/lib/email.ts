@@ -536,8 +536,6 @@ export async function sendAccountsLinkEmail(
 const STATUS_SUBJECT_KEY: Partial<Record<string, MessageKey>> = {
   order_confirmed:  "emailStatusSubjectOrderConfirmed",
   in_build:         "emailStatusSubjectInBuild",
-  invoiced:         "emailStatusSubjectInvoiced",
-  payment_received: "emailStatusSubjectPaymentReceived",
   ready_to_ship:    "emailStatusSubjectReadyToShip",
   shipped:          "emailStatusSubjectShipped",
   complete:         "emailStatusSubjectComplete",
@@ -547,8 +545,6 @@ const STATUS_SUBJECT_KEY: Partial<Record<string, MessageKey>> = {
 const STATUS_COLOUR: Partial<Record<string, { bg: string; border: string; text: string }>> = {
   order_confirmed:  { bg: "#eff6ff", border: "#bfdbfe", text: "#1e40af" },
   in_build:         { bg: "#f5f3ff", border: "#ddd6fe", text: "#5b21b6" },
-  invoiced:         { bg: "#fefce8", border: "#fde68a", text: "#92400e" },
-  payment_received: { bg: "#f0fdf4", border: "#bbf7d0", text: "#166534" },
   ready_to_ship:    { bg: "#f0fdfa", border: "#99f6e4", text: "#0f766e" },
   shipped:          { bg: "#f0fdf4", border: "#bbf7d0", text: "#166534" },
   complete:         { bg: "#f8fafc", border: "#e2e8f0", text: "#334155" },
@@ -568,10 +564,6 @@ function statusBody(
       return t("emailStatusBodyOrderConfirmed", { ref });
     case "in_build":
       return t("emailStatusBodyInBuild", { ref });
-    case "invoiced":
-      return t("emailStatusBodyInvoiced", { ref });
-    case "payment_received":
-      return t("emailStatusBodyPaymentReceived", { ref });
     case "ready_to_ship":
       return t("emailStatusBodyReadyToShip", { ref });
     case "shipped": {
@@ -671,8 +663,6 @@ export async function sendStatusUpdateEmail(
 const STATUS_LABEL_INTERNAL: Partial<Record<string, string>> = {
   order_confirmed:  "Order confirmed",
   in_build:         "In build / production",
-  invoiced:         "Invoiced",
-  payment_received: "Payment received",
   ready_to_ship:    "Ready to ship",
   shipped:          "Shipped",
   complete:         "Complete",

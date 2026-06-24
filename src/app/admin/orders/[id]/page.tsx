@@ -6,6 +6,7 @@ import { AssignPMForm } from "./AssignPMForm";
 import { WinProbabilityForm } from "./WinProbabilityForm";
 import { AdminNotesForm } from "./AdminNotesForm";
 import { EditQuoteItemsForm } from "./EditQuoteItemsForm";
+import { FinanceForm } from "./FinanceForm";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +64,13 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
       {quote.status === "quote_submitted" && (
         <WinProbabilityForm quoteId={quote.id} currentProbability={quote.win_probability ?? null} />
       )}
+
+      {/* Finance — invoiced + payment received */}
+      <FinanceForm
+        quoteId={quote.id}
+        invoiced={quote.invoiced ?? false}
+        paymentReceived={quote.payment_received ?? false}
+      />
 
       {/* Redzone PM assignment */}
       <AssignPMForm

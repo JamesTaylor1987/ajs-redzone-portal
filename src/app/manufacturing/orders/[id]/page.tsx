@@ -30,7 +30,7 @@ export default async function ManufacturingOrderDetailPage({ params }: PageProps
 
   const { data: quote } = await supabase
     .from("quotes")
-    .select("id, ref, status, contact_name, contact_company, contact_phone, required_date, install_requested, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country")
+    .select("id, ref, status, contact_name, contact_company, contact_phone, required_date, install_requested, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, payment_received")
     .eq("id", params.id)
     .single();
 
@@ -136,7 +136,7 @@ export default async function ManufacturingOrderDetailPage({ params }: PageProps
         </div>
       </div>
 
-      <StatusUpdateForm quoteId={quote.id} currentStatus={quote.status} />
+      <StatusUpdateForm quoteId={quote.id} currentStatus={quote.status} paymentReceived={quote.payment_received ?? false} />
     </div>
   );
 }

@@ -9,8 +9,6 @@ const VALID_STATUSES = [
   "quote_submitted",
   "order_confirmed",
   "in_build",
-  "invoiced",
-  "payment_received",
   "ready_to_ship",
   "shipped",
   "complete",
@@ -211,5 +209,37 @@ export async function updateWinProbabilityAction(
   }
 
   revalidatePath(`/admin/orders/${id}`);
+  return { success: true };
+}
+
+export interface FinanceState {
+  success?: boolean;
+  error?: string;
+}
+
+export async function updateFinanceAction(
+  _prev: FinanceState,
+  formData: FormData,
+): Promise<FinanceState> {
+  const id = (formData.get("id") as string) ?? "";
+  if (!id) return { error: "Missing order id" };
+
+  const invoiced = formData.get("invoiced") === "on";
+  const paymentReceived = formData.get("payment_received") === "on";
+
+  if (paymentReceived && !invoiced) {
+    return { error: "Cannot mark as paid before invoice is sent" };
+  }
+
+  const supabase = getServiceClient();
+  const { error } = await supabase
+    .from("quotes")
+    .update({ invoiced, payment_received: paymentReceived })
+    .eq("id", id);
+
+  if (error) return { error: "Failed to save — please try again" };
+
+  revalidatePath(`/admin/orders/${id}`);
+  revalidatePath("/admin/orders");
   return { success: true };
 }
