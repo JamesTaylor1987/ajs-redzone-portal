@@ -101,14 +101,29 @@ export function RoleSelect({ userId, currentRole }: { userId: string; currentRol
 
 export function ResetLinkButton({ email }: { email: string }) {
   const [state, action] = useFormState<UserActionState, FormData>(generateResetLinkAction, {});
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (state.link) {
+      navigator.clipboard.writeText(state.link).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 4000);
+      }).catch(() => {});
+    }
+  }, [state.link]);
+
   return (
-    <div>
+    <div className="flex items-center gap-2 flex-wrap">
       <form action={action} className="inline">
         <input type="hidden" name="email" value={email} />
         <SubmitButton label="Get reset link" pending="Generating…" />
       </form>
-      {state.error && <span className="text-xs text-rose-600 ml-2">{state.error}</span>}
-      {state.link && <CopyableLinkBox link={state.link} />}
+      {state.error && <span className="text-xs text-rose-600">{state.error}</span>}
+      {state.link && (
+        <span className="text-xs font-semibold text-emerald-600">
+          {copied ? "Copied to clipboard!" : "Link ready — paste to send"}
+        </span>
+      )}
     </div>
   );
 }
