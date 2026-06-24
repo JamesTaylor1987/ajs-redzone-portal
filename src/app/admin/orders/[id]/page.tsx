@@ -5,6 +5,7 @@ import { StatusUpdateForm } from "./StatusUpdateForm";
 import { AssignPMForm } from "./AssignPMForm";
 import { WinProbabilityForm } from "./WinProbabilityForm";
 import { AdminNotesForm } from "./AdminNotesForm";
+import { EditQuoteItemsForm } from "./EditQuoteItemsForm";
 
 export const dynamic = "force-dynamic";
 
@@ -110,59 +111,35 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
         <Row label="Project description" value={quote.project_description} />
       </Card>
 
-      {/* Items */}
+      {/* Items — editable */}
+      <EditQuoteItemsForm
+        quoteId={quote.id}
+        initialItems={(items ?? []).map((i) => ({
+          sku: i.sku,
+          name: i.name,
+          qty: i.qty,
+          unit_price_gbp_pence: Number(i.unit_price_gbp_pence),
+        }))}
+      />
+
+      {/* Shipping + total (read-only summary) */}
       <div className="bg-white rounded-xl border border-ajs-light overflow-hidden">
-        <div className="px-5 py-3 border-b border-ajs-light">
-          <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">
-            Items
-          </h2>
-        </div>
-        <div className="overflow-x-auto">
-        <table className="w-full text-sm min-w-[480px]">
-          <thead className="bg-slate-50 border-b border-ajs-light text-ajs-dark">
+        <table className="w-full text-sm">
+          <tbody>
             <tr>
-              <Th>SKU</Th>
-              <Th>Product</Th>
-              <Th>Qty</Th>
-              <Th>Unit</Th>
-              <Th>Line total</Th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-ajs-light">
-            {(items ?? []).map((i) => (
-              <tr key={i.id}>
-                <td className="px-4 py-2.5 font-mono text-xs font-bold text-ajs-dark">
-                  {i.sku}
-                </td>
-                <td className="px-4 py-2.5">{i.name}</td>
-                <td className="px-4 py-2.5 font-semibold">{i.qty}</td>
-                <td className="px-4 py-2.5">{gbp(i.unit_price_gbp_pence)}</td>
-                <td className="px-4 py-2.5 font-semibold">
-                  {gbp(i.line_total_gbp_pence)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot className="border-t-2 border-ajs-light bg-slate-50 text-sm">
-            <tr>
-              <td colSpan={4} className="px-4 py-2 text-right text-ajs-muted">Subtotal (ex-VAT)</td>
-              <td className="px-4 py-2 font-semibold">{gbp(subtotalPence)}</td>
-            </tr>
-            <tr>
-              <td colSpan={4} className="px-4 py-2 text-right text-ajs-muted">
+              <td className="px-4 py-2 text-right text-ajs-muted">
                 Shipping{quote.shipping_pallets ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})` : ""}
               </td>
-              <td className="px-4 py-2 font-semibold">
+              <td className="px-4 py-2 font-semibold w-32">
                 {shippingPence !== null ? gbp(shippingPence) : <span className="text-amber-600">EXW</span>}
               </td>
             </tr>
             <tr className="border-t border-ajs-light">
-              <td colSpan={4} className="px-4 py-2.5 font-bold text-right">Total (ex-VAT)</td>
+              <td className="px-4 py-2.5 font-bold text-right">Total (ex-VAT)</td>
               <td className="px-4 py-2.5 font-extrabold text-ajs-primary">{gbp(grandTotalPence)}</td>
             </tr>
-          </tfoot>
+          </tbody>
         </table>
-        </div>
       </div>
 
       {/* Account info (if accepted) */}
