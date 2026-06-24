@@ -16,23 +16,24 @@ interface PageProps {
 export default async function AdminOrderDetailPage({ params }: PageProps) {
   const supabase = getServiceClient();
 
-  const [{ data: quote }, { data: pms }] = await Promise.all([
+  const [{ data: quote }, { data: pms }, { data: products }] = await Promise.all([
     supabase.from("quotes").select("*").eq("id", params.id).single(),
     supabase.from("rz_pms").select("id, name, email").order("name"),
+    supabase.from("products").select("id, sku, name, price_gbp_pence").eq("active", true).order("sku"),
   ]);
 
   if (!quote) notFound();
 
   const { data: items } = await supabase
     .from("quote_items")
-    .select("id, sku, name, qty, unit_price_gbp_pence, line_total_gbp_pence")
+    .select("id, sku, name, qty, unit_price_gbp_pence, line_total_gbp_pence, discount_pct")
     .eq("quote_id", quote.id);
 
-  const subtotalPence = (items ?? []).reduce(
-    (s, i) => s + Number(i.line_total_gbp_pence),
-    0,
-  );
-  const shippingPence = quote.shipping_gbp_pence ? Number(quote.shipping_gbp_pence) : null;
+  const effectiveShippingPence = quote.shipping_override_pence != null
+    ? Number(quote.shipping_override_pence)
+    : (quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : null);
+  const subtotalPence = (items ?? []).reduce((s, i) => s + Number(i.line_total_gbp_pence), 0);
+  const shippingPence = effectiveShippingPence;
   const grandTotalPence = subtotalPence + (shippingPence ?? 0);
 
   const ai = quote.account_info as Record<string, unknown> | null;
@@ -119,28 +120,18 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
           name: i.name,
           qty: i.qty,
           unit_price_gbp_pence: Number(i.unit_price_gbp_pence),
+          discount_pct: Number(i.discount_pct ?? 0),
         }))}
+        products={(products ?? []).map((p) => ({
+          id: p.id,
+          sku: p.sku,
+          name: p.name,
+          price_gbp_pence: Number(p.price_gbp_pence),
+        }))}
+        currentShippingPence={effectiveShippingPence}
+        currentShippingLabel={(quote.shipping_label as string | null) ?? null}
+        currentOverallDiscountPct={quote.overall_discount_pct != null ? Number(quote.overall_discount_pct) : null}
       />
-
-      {/* Shipping + total (read-only summary) */}
-      <div className="bg-white rounded-xl border border-ajs-light overflow-hidden">
-        <table className="w-full text-sm">
-          <tbody>
-            <tr>
-              <td className="px-4 py-2 text-right text-ajs-muted">
-                Shipping{quote.shipping_pallets ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})` : ""}
-              </td>
-              <td className="px-4 py-2 font-semibold w-32">
-                {shippingPence !== null ? gbp(shippingPence) : <span className="text-amber-600">EXW</span>}
-              </td>
-            </tr>
-            <tr className="border-t border-ajs-light">
-              <td className="px-4 py-2.5 font-bold text-right">Total (ex-VAT)</td>
-              <td className="px-4 py-2.5 font-extrabold text-ajs-primary">{gbp(grandTotalPence)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
 
       {/* Account info (if accepted) */}
       {ai && (

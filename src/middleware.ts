@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
   const isAdminLoginPage = path === "/admin/login";
@@ -35,8 +35,8 @@ export async function middleware(request: NextRequest) {
   const isRZPage = path.startsWith("/redzone") && !isRZLoginPage;
 
   // Not logged in — send to appropriate login
-  if (!session) {
-    if (isAdminPage && !isAdminLoginPage || isMfgPage || isPortalPage) {
+  if (!user) {
+    if ((isAdminPage && !isAdminLoginPage) || isMfgPage || isPortalPage) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
     if (isRZPage) {
@@ -45,8 +45,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // Already logged in — skip login pages
-  if (session) {
-    const role = (session.user.app_metadata?.role as string) ?? "standard";
+  if (user) {
+    const role = (user.app_metadata?.role as string) ?? "standard";
     const isElevated = role === "admin" || role === "manager";
     const isRZPM = role === "rz_pm";
     const isRZAdmin = role === "rz_admin";
