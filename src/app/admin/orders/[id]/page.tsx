@@ -18,7 +18,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
 
   const [{ data: quote }, { data: pms }, { data: products }] = await Promise.all([
     supabase.from("quotes").select("*").eq("id", params.id).single(),
-    supabase.from("rz_pms").select("id, name, email").order("name"),
+    supabase.from("rz_pms").select("id, name, email, type").order("name"),
     supabase.from("products").select("id, sku, name, price_gbp_pence").eq("active", true).order("sku"),
   ]);
 

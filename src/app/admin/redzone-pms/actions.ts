@@ -25,11 +25,12 @@ export async function invitePMAction(
 
   const supabase = getServiceClient();
 
-  if (type === "pm") {
-    const { data: existing } = await supabase.from("rz_pms").select("id").eq("email", email).maybeSingle();
-    if (existing) return { error: "A PM with this email already exists" };
-  }
+  const { data: existingInTable } = await supabase.from("rz_pms").select("id").eq("email", email).maybeSingle();
+  if (existingInTable) return { error: "A user with this email already exists in Redzone" };
 
+  const role = type === "admin" ? "rz_admin" : "rz_pm";
+
+  // generateLink works for both new and existing auth users
   const { data: inviteData, error: inviteError } = await supabase.auth.admin.generateLink({
     type: "invite",
     email,
@@ -40,19 +41,15 @@ export async function invitePMAction(
   });
   if (inviteError) return { error: inviteError.message };
 
-  const role = type === "admin" ? "rz_admin" : "rz_pm";
-  await supabase.auth.admin.updateUserById(inviteData.user.id, {
-    app_metadata: { role },
-  });
+  await supabase.auth.admin.updateUserById(inviteData.user.id, { app_metadata: { role } });
 
-  if (type === "pm") {
-    const { error: insertError } = await supabase.from("rz_pms").insert({
-      name,
-      email,
-      auth_user_id: inviteData.user.id,
-    });
-    if (insertError) return { error: insertError.message };
-  }
+  const { error: insertError } = await supabase.from("rz_pms").insert({
+    name,
+    email,
+    auth_user_id: inviteData.user.id,
+    type,
+  });
+  if (insertError) return { error: insertError.message };
 
   revalidatePath("/admin/redzone-pms");
   return { success: true, link: `${APP_URL}/auth/set-password?token_hash=${inviteData.properties.hashed_token}&type=invite` };
@@ -106,6 +103,8 @@ export async function removeAdminAction(
   if (!userId) return { error: "Missing user id" };
 
   const supabase = getServiceClient();
+  // Remove from rz_pms (if present) and auth
+  await supabase.from("rz_pms").delete().eq("auth_user_id", userId);
   const { error } = await supabase.auth.admin.deleteUser(userId);
   if (error) return { error: error.message };
 

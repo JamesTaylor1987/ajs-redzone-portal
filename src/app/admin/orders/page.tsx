@@ -57,7 +57,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
 
   const [{ data: orders }, { data: pms }] = await Promise.all([
     query,
-    supabase.from("rz_pms").select("id, name").order("name"),
+    supabase.from("rz_pms").select("id, name, type").order("name"),
   ]);
 
   return (

@@ -16,7 +16,7 @@ function SaveButton() {
   );
 }
 
-interface PM { id: string; name: string; }
+interface PM { id: string; name: string; type?: string | null; }
 
 interface Props {
   quoteId: string;
@@ -37,7 +37,9 @@ export function InlinePMForm({ quoteId, currentPMId, pms }: Props) {
         >
           <option value="">— None —</option>
           {pms.map((pm) => (
-            <option key={pm.id} value={pm.id}>{pm.name}</option>
+            <option key={pm.id} value={pm.id}>
+              {pm.name}{pm.type === "admin" ? " (Mgr)" : ""}
+            </option>
           ))}
         </select>
         <SaveButton />

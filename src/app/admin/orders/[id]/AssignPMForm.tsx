@@ -20,6 +20,7 @@ interface PM {
   id: string;
   name: string;
   email: string;
+  type?: string | null;
 }
 
 interface Props {
@@ -57,7 +58,9 @@ export function AssignPMForm({ quoteId, currentPMId, pms }: Props) {
           >
             <option value="">— Unassigned —</option>
             {pms.map((pm) => (
-              <option key={pm.id} value={pm.id}>{pm.name} ({pm.email})</option>
+              <option key={pm.id} value={pm.id}>
+                {pm.name}{pm.type === "admin" ? " (Manager)" : ""} — {pm.email}
+              </option>
             ))}
           </select>
         </div>
