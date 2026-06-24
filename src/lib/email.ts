@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import { renderQuoteRequestPDF, renderOrderConfirmationPDF, renderWorkOrderPDF, renderInstallationQuotePDF } from "./quote-pdf";
-import type { InstallPDFItem } from "./quote-pdf";
+import type { PDFItem, InstallPDFItem } from "./quote-pdf";
 import { getLocale, getT } from "./i18n";
 import type { MessageKey } from "./i18n";
 
@@ -671,6 +671,219 @@ export async function sendStatusUpdateEmail(
   } catch (err) {
     console.error("[email] status update unexpected error:", err);
   }
+}
+
+// ─── Amended / revised quote email ───────────────────────────────────────────
+
+export interface EmailAmendedItem {
+  sku: string;
+  name: string;
+  qty: number;
+  unit_price_gbp_pence: number;
+  line_total_gbp_pence: number;
+  discount_pct: number;
+}
+
+function amendedCustomerHtml(
+  quote: EmailQuoteRow & {
+    overall_discount_pct: number | null;
+    shipping_override_pence: number | null;
+    shipping_label: string | null;
+    revision: number;
+  },
+  items: EmailAmendedItem[],
+  magicUrl: string,
+): string {
+  const first = quote.contact_name.trim().split(" ")[0] ?? "there";
+  const ccy = quote.currency ?? "GBP";
+  const fx = quote.fx_rate_used ?? null;
+  const hasLineDiscount = items.some((i) => i.discount_pct > 0);
+  const overallDiscPct = Number(quote.overall_discount_pct ?? 0);
+
+  const unitHeader = hasLineDiscount
+    ? `<th style="padding:6px 10px;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;text-align:right">Unit</th>`
+    : "";
+  const discHeader = hasLineDiscount
+    ? `<th style="padding:6px 10px;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;text-align:center">Disc.</th>`
+    : "";
+
+  const itemRows = items.map((i) => {
+    const unitCell = hasLineDiscount
+      ? `<td style="padding:8px 10px;border-bottom:1px solid #e6ebed;font-size:12px;color:#64748b;text-align:right;white-space:nowrap">${money(i.unit_price_gbp_pence, ccy, fx)}</td>`
+      : "";
+    const discCell = hasLineDiscount
+      ? (i.discount_pct > 0
+        ? `<td style="padding:8px 10px;border-bottom:1px solid #e6ebed;font-size:12px;color:#059669;text-align:center;white-space:nowrap">${i.discount_pct}%&nbsp;off</td>`
+        : `<td style="padding:8px 10px;border-bottom:1px solid #e6ebed"></td>`)
+      : "";
+    return `<tr>
+      <td style="padding:8px 0;font-size:13px;color:#475569;border-bottom:1px solid #e6ebed">
+        <span style="font-family:monospace;font-size:11px;color:#94a3b8">${i.sku}</span><br>${i.name}
+      </td>
+      <td style="padding:8px 10px;border-bottom:1px solid #e6ebed;font-size:13px;color:#64748b;text-align:center;white-space:nowrap">&times;&nbsp;${i.qty}</td>
+      ${unitCell}${discCell}
+      <td style="padding:8px 0;border-bottom:1px solid #e6ebed;font-size:13px;font-weight:bold;color:#1e293b;text-align:right;white-space:nowrap">${money(i.line_total_gbp_pence, ccy, fx)}</td>
+    </tr>`;
+  }).join("");
+
+  const colspan = hasLineDiscount ? 4 : 2;
+  const subtotal = items.reduce((s, i) => s + Number(i.line_total_gbp_pence), 0);
+  const discountAmt = Math.round(subtotal * overallDiscPct / 100);
+  const discountedSubtotal = subtotal - discountAmt;
+  const shippingPence = quote.shipping_override_pence != null
+    ? Number(quote.shipping_override_pence)
+    : (quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : null);
+  const shippingLabel = quote.shipping_label || "Shipping";
+  const grandTotal = discountedSubtotal + (shippingPence ?? 0);
+
+  const overallDiscRow = overallDiscPct > 0 ? `
+    <tr>
+      <td colspan="${colspan}" style="padding:4px 0;font-size:13px;color:#059669;text-align:right">Overall discount (${overallDiscPct}%)</td>
+      <td style="padding:4px 0;font-size:13px;font-weight:bold;color:#059669;text-align:right;white-space:nowrap">−${money(discountAmt, ccy, fx)}</td>
+    </tr>` : "";
+
+  const shippingRow = shippingPence !== null
+    ? `<tr>
+        <td colspan="${colspan}" style="padding:4px 0;font-size:13px;color:#475569;text-align:right">${shippingLabel}</td>
+        <td style="padding:4px 0;font-size:13px;font-weight:bold;color:#1e293b;text-align:right;white-space:nowrap">${money(shippingPence, ccy, fx)}</td>
+      </tr>`
+    : `<tr>
+        <td colspan="${colspan}" style="padding:4px 0;font-size:13px;color:#475569;text-align:right">${shippingLabel}</td>
+        <td style="padding:4px 0;font-size:13px;font-weight:bold;color:#d97706;text-align:right">EXW</td>
+      </tr>`;
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
+<div style="max-width:600px;margin:0 auto;padding:24px 16px">
+
+  ${emailHeader(`Revised Quote — Rev. ${quote.revision}`, quote.ref)}
+
+  <div style="background:#fff;border-radius:0 0 12px 12px;padding:32px;border:1px solid #e6ebed;border-top:none">
+    <p style="color:#1e293b;font-size:15px;margin:0 0 12px">Hi ${first},</p>
+    <p style="color:#475569;font-size:14px;margin:0 0 24px;line-height:1.6">
+      We've updated your quote — please see the revised breakdown below.
+    </p>
+
+    <h2 style="color:#03415f;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px">Revised items</h2>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:24px">
+      <thead>
+        <tr>
+          <th style="padding:6px 0;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;text-align:left">Item</th>
+          <th style="padding:6px 10px;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;text-align:center">Qty</th>
+          ${unitHeader}${discHeader}
+          <th style="padding:6px 0;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;text-align:right">Total</th>
+        </tr>
+      </thead>
+      <tbody>${itemRows}</tbody>
+      <tfoot>
+        <tr style="border-top:2px solid #e6ebed">
+          <td colspan="${colspan}" style="padding:8px 0;font-size:13px;color:#475569;text-align:right">Subtotal (ex-VAT)</td>
+          <td style="padding:8px 0;font-size:13px;font-weight:bold;color:#1e293b;text-align:right;white-space:nowrap">${money(subtotal, ccy, fx)}</td>
+        </tr>
+        ${overallDiscRow}
+        ${shippingRow}
+        <tr style="border-top:2px solid #e6ebed">
+          <td colspan="${colspan}" style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px;text-align:right">Total (ex-VAT)</td>
+          <td style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px;text-align:right;white-space:nowrap">${money(grandTotal, ccy, fx)}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px 24px;margin-bottom:24px;text-align:center">
+      <p style="color:#475569;font-size:13px;margin:0 0 16px;line-height:1.5">
+        View and manage your quote online — accept, request changes, or ask a question.
+      </p>
+      <a href="${magicUrl}" style="display:inline-block;background:#1886a1;color:#fff;font-weight:bold;text-decoration:none;padding:13px 28px;border-radius:8px;font-size:14px">
+        View &amp; manage your quote &rarr;
+      </a>
+      <p style="color:#94a3b8;font-size:11px;margin:12px 0 0">This link is personal to you — please don't share it.</p>
+    </div>
+
+    <p style="color:#64748b;font-size:13px;margin:0;line-height:1.8">
+      Any questions? Get in touch:<br>
+      <a href="mailto:rz@ajsspalding.co.uk" style="color:#1886a1;text-decoration:none">rz@ajsspalding.co.uk</a>
+      &nbsp;&middot;&nbsp; 01406&nbsp;424954
+    </p>
+  </div>
+
+  <p style="color:#94a3b8;font-size:11px;text-align:center;margin:16px 0 0;line-height:1.6">
+    AJS Spalding Ltd &nbsp;&middot;&nbsp; Redzone Hardware Portal
+  </p>
+</div>
+</body></html>`;
+}
+
+export async function sendAmendedQuoteEmail(
+  quote: {
+    ref: string;
+    contact_name: string;
+    contact_email: string;
+    contact_company: string | null;
+    shipping_gbp_pence: number | null;
+    shipping_override_pence: number | null;
+    shipping_label: string | null;
+    shipping_pallets: number | null;
+    overall_discount_pct: number | null;
+    currency: string | null;
+    fx_rate_used: number | null;
+    locale: string | null;
+    revision: number;
+  },
+  items: EmailAmendedItem[],
+  magicUrl: string,
+): Promise<{ error?: string }> {
+  if (!process.env.RESEND_API_KEY) return { error: "Email not configured" };
+
+  const overallDiscPct = Number(quote.overall_discount_pct ?? 0);
+  const shippingPence = quote.shipping_override_pence != null
+    ? Number(quote.shipping_override_pence)
+    : (quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : null);
+
+  const pdfItems: PDFItem[] = items.map((i) => ({
+    sku: i.sku,
+    name: i.name,
+    qty: i.qty,
+    line_total_gbp_pence: overallDiscPct > 0
+      ? Math.round(Number(i.line_total_gbp_pence) * (1 - overallDiscPct / 100))
+      : Number(i.line_total_gbp_pence),
+  }));
+
+  const pdfBuf = await tryGeneratePDF("revised-quote", () =>
+    renderQuoteRequestPDF(
+      {
+        ref: `${quote.ref} — Rev. ${quote.revision}`,
+        contact_name: quote.contact_name,
+        contact_email: quote.contact_email,
+        contact_company: quote.contact_company,
+        subtotal_gbp_pence: pdfItems.reduce((s, i) => s + Number(i.line_total_gbp_pence), 0),
+        shipping_gbp_pence: shippingPence,
+        shipping_pallets: quote.shipping_pallets,
+        currency: quote.currency,
+        fx_rate_used: quote.fx_rate_used,
+        locale: quote.locale,
+      },
+      pdfItems,
+    ),
+  );
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to: recipients(quote.contact_email),
+    subject: `Revised quote: ${quote.ref} — Rev. ${quote.revision}`,
+    html: amendedCustomerHtml(
+      { ...quote, subtotal_gbp_pence: 0 },
+      items,
+      magicUrl,
+    ),
+    attachments: pdfBuf
+      ? [{ filename: `Revised-Quote-${quote.ref}-Rev${quote.revision}.pdf`, content: pdfBuf }]
+      : undefined,
+  });
+
+  if (error) return { error: error.message };
+  return {};
 }
 
 // ─── Installation budget email ────────────────────────────────────────────────

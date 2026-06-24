@@ -176,6 +176,9 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
         <Row label="Order confirmed" value={quote.confirmed_at ? new Date(quote.confirmed_at).toLocaleString("en-GB") : null} />
         <Row label="Shipped"       value={quote.shipped_at    ? new Date(quote.shipped_at).toLocaleString("en-GB")    : null} />
         <Row label="Completed"     value={quote.completed_at  ? new Date(quote.completed_at).toLocaleString("en-GB")  : null} />
+        {quote.amended_at && (
+          <Row label="Last revised" value={`${new Date(quote.amended_at).toLocaleString("en-GB")}${quote.revision ? ` (Rev. ${quote.revision})` : ""}`} />
+        )}
       </Card>
     </div>
   );
