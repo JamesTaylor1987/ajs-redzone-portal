@@ -1,7 +1,14 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
-import { updateRoleAction, removeUserAction, inviteUserAction, type UserActionState } from "./actions";
+import { useEffect, useRef, useState } from "react";
+import {
+  updateRoleAction,
+  removeUserAction,
+  inviteUserAction,
+  generateResetLinkAction,
+  type UserActionState,
+} from "./actions";
 
 const ROLES = [
   { value: "admin",    label: "Admin" },
@@ -13,11 +20,9 @@ const ROLE_COLOUR: Record<string, string> = {
   admin:    "bg-red-100 text-red-700",
   manager:  "bg-purple-100 text-purple-700",
   standard: "bg-slate-100 text-slate-600",
-  rz_admin: "bg-orange-100 text-orange-700",
-  rz_pm:    "bg-yellow-100 text-yellow-700",
 };
 
-function SaveButton({ label = "Save" }: { label?: string }) {
+function SubmitButton({ label, pending: pendingLabel }: { label: string; pending?: string }) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -25,8 +30,50 @@ function SaveButton({ label = "Save" }: { label?: string }) {
       disabled={pending}
       className="px-3 py-1.5 rounded-md text-xs font-bold text-white bg-ajs-primary hover:bg-ajs-dark transition-colors disabled:opacity-50"
     >
-      {pending ? "…" : label}
+      {pending ? (pendingLabel ?? "…") : label}
     </button>
+  );
+}
+
+function CopyableLinkBox({ link }: { link: string }) {
+  const [copied, setCopied] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    }).catch(() => {});
+  }, [link]);
+
+  return (
+    <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+      <p className="text-xs font-semibold text-emerald-700 mb-1.5">
+        {copied ? "Link copied to clipboard!" : "Copy this link and send it to the user:"}
+      </p>
+      <div className="flex gap-2">
+        <input
+          ref={inputRef}
+          readOnly
+          value={link}
+          onClick={() => inputRef.current?.select()}
+          className="flex-1 text-xs font-mono bg-white border border-emerald-200 rounded px-2 py-1.5 text-ajs-text truncate focus:outline-none focus:ring-1 focus:ring-emerald-400"
+        />
+        <button
+          type="button"
+          onClick={() => {
+            navigator.clipboard.writeText(link).then(() => {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 3000);
+            });
+          }}
+          className="px-2.5 py-1 text-xs font-bold rounded bg-emerald-600 text-white hover:bg-emerald-700 transition-colors whitespace-nowrap"
+        >
+          {copied ? "Copied!" : "Copy"}
+        </button>
+      </div>
+      <p className="text-[11px] text-emerald-600 mt-1.5">One-time link — expires in 24 hours.</p>
+    </div>
   );
 }
 
@@ -45,10 +92,24 @@ export function RoleSelect({ userId, currentRole }: { userId: string; currentRol
       >
         {ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
       </select>
-      <SaveButton />
+      <SubmitButton label="Save" />
       {state.error && <span className="text-xs text-rose-600">{state.error}</span>}
       {state.success && <span className="text-xs text-emerald-600">Saved</span>}
     </form>
+  );
+}
+
+export function ResetLinkButton({ email }: { email: string }) {
+  const [state, action] = useFormState<UserActionState, FormData>(generateResetLinkAction, {});
+  return (
+    <div>
+      <form action={action} className="inline">
+        <input type="hidden" name="email" value={email} />
+        <SubmitButton label="Get reset link" pending="Generating…" />
+      </form>
+      {state.error && <span className="text-xs text-rose-600 ml-2">{state.error}</span>}
+      {state.link && <CopyableLinkBox link={state.link} />}
+    </div>
   );
 }
 
@@ -74,11 +135,6 @@ export function InviteForm() {
     <div className="bg-white rounded-xl border border-ajs-light p-5">
       <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark mb-4">Invite a new user</h2>
 
-      {state.success && (
-        <div className="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-lg px-4 py-2.5 font-semibold">
-          Invite sent — they will receive an email to set their password.
-        </div>
-      )}
       {state.error && (
         <div className="mb-4 bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-lg px-4 py-2.5">
           {state.error}
@@ -115,8 +171,10 @@ export function InviteForm() {
             {ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
           </select>
         </div>
-        <SaveButton label="Send invite" />
+        <SubmitButton label="Create invite link" pending="Generating…" />
       </form>
+
+      {state.link && <CopyableLinkBox link={state.link} />}
 
       <div className="mt-4 text-xs text-ajs-muted space-y-0.5">
         <p><strong>Admin / Manager</strong> — full access to admin and manufacturing</p>

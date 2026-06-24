@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache";
 import { getServiceClient } from "@/lib/supabase-server";
 
 const VALID_ROLES = ["admin", "manager", "standard"] as const;
+const APP_URL = "https://redzone.ajsspalding.co.uk";
 
 export interface UserActionState {
   success?: boolean;
   error?: string;
+  link?: string;
 }
 
 export async function inviteUserAction(
@@ -22,23 +24,41 @@ export async function inviteUserAction(
   if (!VALID_ROLES.includes(role as (typeof VALID_ROLES)[number])) return { error: "Invalid role" };
 
   const supabase = getServiceClient();
-  const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
-    data: { full_name: name },
+  const { data, error } = await supabase.auth.admin.generateLink({
+    type: "invite",
+    email,
+    options: {
+      data: { full_name: name },
+      redirectTo: `${APP_URL}/admin`,
+    },
   });
 
   if (error) return { error: error.message };
 
-  // Set role in app_metadata after invite
-  const { data: users } = await supabase.auth.admin.listUsers();
-  const user = users?.users.find((u) => u.email === email);
-  if (user) {
-    await supabase.auth.admin.updateUserById(user.id, {
-      app_metadata: { role },
-    });
-  }
+  await supabase.auth.admin.updateUserById(data.user.id, {
+    app_metadata: { role },
+  });
 
   revalidatePath("/admin/users");
-  return { success: true };
+  return { success: true, link: data.properties.action_link };
+}
+
+export async function generateResetLinkAction(
+  _prev: UserActionState,
+  formData: FormData,
+): Promise<UserActionState> {
+  const email = (formData.get("email") as string) ?? "";
+  if (!email) return { error: "Missing email" };
+
+  const supabase = getServiceClient();
+  const { data, error } = await supabase.auth.admin.generateLink({
+    type: "recovery",
+    email,
+    options: { redirectTo: `${APP_URL}/admin` },
+  });
+
+  if (error) return { error: error.message };
+  return { success: true, link: data.properties.action_link };
 }
 
 export async function updateRoleAction(

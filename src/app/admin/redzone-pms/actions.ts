@@ -3,9 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { getServiceClient } from "@/lib/supabase-server";
 
+const APP_URL = "https://redzone.ajsspalding.co.uk";
+
 export interface PMActionState {
   success?: boolean;
   error?: string;
+  link?: string;
 }
 
 export async function invitePMAction(
@@ -27,30 +30,50 @@ export async function invitePMAction(
     if (existing) return { error: "A PM with this email already exists" };
   }
 
-  const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-    data: { full_name: name },
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/redzone/login`,
+  const { data: inviteData, error: inviteError } = await supabase.auth.admin.generateLink({
+    type: "invite",
+    email,
+    options: {
+      data: { full_name: name },
+      redirectTo: `${APP_URL}/redzone/login`,
+    },
   });
   if (inviteError) return { error: inviteError.message };
 
-  if (inviteData?.user) {
-    const role = type === "admin" ? "rz_admin" : "rz_pm";
-    await supabase.auth.admin.updateUserById(inviteData.user.id, {
-      app_metadata: { role },
-    });
+  const role = type === "admin" ? "rz_admin" : "rz_pm";
+  await supabase.auth.admin.updateUserById(inviteData.user.id, {
+    app_metadata: { role },
+  });
 
-    if (type === "pm") {
-      const { error: insertError } = await supabase.from("rz_pms").insert({
-        name,
-        email,
-        auth_user_id: inviteData.user.id,
-      });
-      if (insertError) return { error: insertError.message };
-    }
+  if (type === "pm") {
+    const { error: insertError } = await supabase.from("rz_pms").insert({
+      name,
+      email,
+      auth_user_id: inviteData.user.id,
+    });
+    if (insertError) return { error: insertError.message };
   }
 
   revalidatePath("/admin/redzone-pms");
-  return { success: true };
+  return { success: true, link: inviteData.properties.action_link };
+}
+
+export async function generateRZResetLinkAction(
+  _prev: PMActionState,
+  formData: FormData,
+): Promise<PMActionState> {
+  const email = (formData.get("email") as string) ?? "";
+  if (!email) return { error: "Missing email" };
+
+  const supabase = getServiceClient();
+  const { data, error } = await supabase.auth.admin.generateLink({
+    type: "recovery",
+    email,
+    options: { redirectTo: `${APP_URL}/redzone/login` },
+  });
+
+  if (error) return { error: error.message };
+  return { success: true, link: data.properties.action_link };
 }
 
 export async function removePMAction(

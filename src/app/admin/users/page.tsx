@@ -1,5 +1,5 @@
 import { getServiceClient } from "@/lib/supabase-server";
-import { InviteForm, RoleSelect, RemoveButton } from "./UserControls";
+import { InviteForm, RoleSelect, ResetLinkButton, RemoveButton } from "./UserControls";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +34,7 @@ export default async function AdminUsersPage() {
                 <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Name / Email</th>
                 <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Role</th>
                 <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Status</th>
+                <th className="px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-ajs-dark">Reset</th>
                 <th className="px-4 py-2.5"></th>
               </tr>
             </thead>
@@ -43,7 +44,7 @@ export default async function AdminUsersPage() {
                 const name = (u.user_metadata?.full_name as string) ?? "";
                 const confirmed = !!u.email_confirmed_at;
                 return (
-                  <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={u.id} className="hover:bg-slate-50 transition-colors align-top">
                     <td className="px-4 py-3">
                       {name && <div className="font-semibold text-ajs-dark">{name}</div>}
                       <div className="text-ajs-muted text-xs">{u.email}</div>
@@ -55,6 +56,9 @@ export default async function AdminUsersPage() {
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${confirmed ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                         {confirmed ? "Active" : "Invite pending"}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <ResetLinkButton email={u.email ?? ""} />
                     </td>
                     <td className="px-4 py-3 text-right">
                       <RemoveButton userId={u.id} />
