@@ -642,7 +642,7 @@ export async function sendStatusUpdateEmail(
   status: string,
   trackingRef?: string,
   trackingUrl?: string,
-  rzPmEmail?: string,
+  _rzPmEmail?: string,
   cancellationReason?: string,
   locale?: string | null,
 ): Promise<void> {
@@ -653,21 +653,95 @@ export async function sendStatusUpdateEmail(
   const subjectKey = STATUS_SUBJECT_KEY[status]!;
   const resend = new Resend(process.env.RESEND_API_KEY);
   const subject = `${t(subjectKey)}: ${ref} — AJS Redzone`;
-  const override = process.env.RESEND_TEST_TO?.trim();
-  const cc = !override && rzPmEmail ? [rzPmEmail] : undefined;
 
   try {
     const { error } = await resend.emails.send({
       from: FROM,
       to: recipients(contactEmail),
-      cc,
       subject,
       html: statusUpdateHtml(contactName, ref, status, locale ?? "en", trackingRef, trackingUrl, cancellationReason),
     });
     if (error) console.error("[email] status update failed:", error);
-    else console.log(`[email] status update sent: ${status} → ${contactEmail}${rzPmEmail ? ` (CC: ${rzPmEmail})` : ""}`);
+    else console.log(`[email] status update sent: ${status} → ${contactEmail}`);
   } catch (err) {
     console.error("[email] status update unexpected error:", err);
+  }
+}
+
+const STATUS_LABEL_INTERNAL: Partial<Record<string, string>> = {
+  order_confirmed:  "Order confirmed",
+  in_build:         "In build / production",
+  invoiced:         "Invoiced",
+  payment_received: "Payment received",
+  ready_to_ship:    "Ready to ship",
+  shipped:          "Shipped",
+  complete:         "Complete",
+  cancelled:        "Cancelled",
+};
+
+export async function sendPMNotificationEmail(
+  pmEmail: string,
+  ref: string,
+  status: string,
+  contactName: string,
+  contactCompany: string | null,
+  siteName: string | null,
+  trackingRef?: string,
+  trackingUrl?: string,
+): Promise<void> {
+  if (!process.env.RESEND_API_KEY) return;
+  if (!STATUS_LABEL_INTERNAL[status]) return;
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const statusLabel = STATUS_LABEL_INTERNAL[status]!;
+  const customer = contactCompany || contactName;
+  const site = siteName || contactName;
+  const subject = `[${ref}] Status update: ${statusLabel}`;
+
+  let trackingBlock = "";
+  if (status === "shipped" && (trackingRef || trackingUrl)) {
+    trackingBlock = `
+    <div style="margin-top:16px;padding:12px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px">
+      <p style="margin:0;font-size:13px;color:#166534;font-weight:bold">Tracking</p>
+      ${trackingRef ? `<p style="margin:4px 0 0;font-size:13px;color:#1e293b">${trackingRef}</p>` : ""}
+      ${trackingUrl ? `<p style="margin:6px 0 0"><a href="${trackingUrl}" style="color:#1886a1;font-size:13px">Track shipment →</a></p>` : ""}
+    </div>`;
+  }
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif">
+<div style="max-width:540px;margin:0 auto;padding:24px 16px">
+  <div style="background:#1886a1;border-radius:12px 12px 0 0;padding:20px 28px">
+    <p style="color:#fff;opacity:.8;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin:0 0 4px">AJS Redzone — Internal notification</p>
+    <p style="color:#fff;font-size:20px;font-weight:800;margin:0">${ref}</p>
+  </div>
+  <div style="background:#fff;border-radius:0 0 12px 12px;padding:28px;border:1px solid #e6ebed;border-top:none">
+    <p style="color:#1e293b;font-size:14px;margin:0 0 20px;line-height:1.6">
+      The project you are involved in for <strong>${customer}</strong> at site <strong>${site}</strong>
+      with ref <strong>${ref}</strong> has moved to status:
+    </p>
+    <div style="display:inline-block;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 16px;margin-bottom:20px">
+      <span style="color:#1e40af;font-size:14px;font-weight:700">${statusLabel}</span>
+    </div>
+    ${trackingBlock}
+    <p style="color:#94a3b8;font-size:11px;margin:20px 0 0">AJS Spalding Ltd · Redzone Hardware Portal</p>
+  </div>
+</div>
+</body></html>`;
+
+  const override = process.env.RESEND_TEST_TO?.trim();
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to: override ? [override] : [pmEmail],
+      subject,
+      html,
+    });
+    if (error) console.error("[email] PM notification failed:", error);
+    else console.log(`[email] PM notification sent: ${status} → ${pmEmail}`);
+  } catch (err) {
+    console.error("[email] PM notification unexpected error:", err);
   }
 }
 

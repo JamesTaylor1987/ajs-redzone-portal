@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getServiceClient } from "@/lib/supabase-server";
-import { sendStatusUpdateEmail } from "@/lib/email";
+import { sendStatusUpdateEmail, sendPMNotificationEmail } from "@/lib/email";
 import { updateDataverseOpportunity, updateDataverseProbability } from "@/lib/dataverse";
 
 const VALID_STATUSES = [
@@ -70,22 +70,12 @@ export async function updateStatusAction(
   // Fetch quote + assigned PM for notifications
   const { data: quote } = await supabase
     .from("quotes")
-    .select("ref, contact_name, contact_email, rz_pm_id, dataverse_opportunity_id, locale")
+    .select("ref, contact_name, contact_email, contact_company, site_name, rz_pm_id, dataverse_opportunity_id, locale")
     .eq("id", id)
     .single();
 
   if (quote) {
-    let rzPmEmail: string | undefined;
-    if (quote.rz_pm_id) {
-      const { data: pm } = await supabase
-        .from("rz_pms")
-        .select("email")
-        .eq("id", quote.rz_pm_id)
-        .single();
-      rzPmEmail = pm?.email ?? undefined;
-    }
-
-    await Promise.all([
+    const promises: Promise<unknown>[] = [
       sendStatusUpdateEmail(
         quote.contact_name,
         quote.contact_email,
@@ -93,12 +83,34 @@ export async function updateStatusAction(
         status,
         trackingRef ?? undefined,
         trackingUrl ?? undefined,
-        rzPmEmail,
+        undefined,
         cancellationReason ?? undefined,
         quote.locale,
       ),
       updateDataverseOpportunity(quote.dataverse_opportunity_id ?? "", status),
-    ]);
+    ];
+
+    if (quote.rz_pm_id) {
+      const { data: pm } = await supabase
+        .from("rz_pms")
+        .select("email")
+        .eq("id", quote.rz_pm_id)
+        .single();
+      if (pm?.email) {
+        promises.push(sendPMNotificationEmail(
+          pm.email,
+          quote.ref,
+          status,
+          quote.contact_name,
+          quote.contact_company ?? null,
+          quote.site_name ?? null,
+          trackingRef ?? undefined,
+          trackingUrl ?? undefined,
+        ));
+      }
+    }
+
+    await Promise.all(promises);
   }
 
   revalidatePath(`/admin/orders/${id}`);
