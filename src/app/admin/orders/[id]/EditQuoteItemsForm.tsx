@@ -177,14 +177,14 @@ export function EditQuoteItemsForm({
 
       {/* Items table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-sm min-w-[640px]">
+        <table className="w-full text-sm min-w-[700px]">
           <thead className="bg-slate-50 border-b border-ajs-light text-ajs-dark">
             <tr>
               <th className="px-3 py-2 text-left text-xs font-bold uppercase tracking-wide w-24">SKU</th>
               <th className="px-3 py-2 text-left text-xs font-bold uppercase tracking-wide">Product</th>
-              <th className="px-3 py-2 text-left text-xs font-bold uppercase tracking-wide w-14">Qty</th>
+              <th className="px-3 py-2 text-center text-xs font-bold uppercase tracking-wide w-20">Qty</th>
               <th className="px-3 py-2 text-left text-xs font-bold uppercase tracking-wide w-28">Unit (£)</th>
-              <th className="px-3 py-2 text-left text-xs font-bold uppercase tracking-wide w-20">Disc %</th>
+              <th className="px-3 py-2 text-left text-xs font-bold uppercase tracking-wide w-28">Disc %</th>
               <th className="px-3 py-2 text-right text-xs font-bold uppercase tracking-wide w-28">Line total</th>
               <th className="px-3 py-2 w-7" />
             </tr>
@@ -210,7 +210,7 @@ export function EditQuoteItemsForm({
                   <input
                     type="number" min={1} value={row.qty}
                     onChange={(e) => updateRow(row._key, "qty", e.target.value)}
-                    className="w-full border border-ajs-light rounded px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-ajs-primary/40"
+                    className="w-full border border-ajs-light rounded px-2 py-1.5 text-sm text-center font-semibold focus:outline-none focus:ring-1 focus:ring-ajs-primary/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </td>
                 <td className="px-3 py-1.5">
@@ -220,20 +220,20 @@ export function EditQuoteItemsForm({
                       type="number" min={0} step={0.01}
                       value={penceToStr(row.unit_price_pence)}
                       onChange={(e) => updateRow(row._key, "unit_price_pence", e.target.value)}
-                      className="w-full px-2 py-1 text-xs focus:outline-none"
+                      className="w-full px-2 py-1 text-xs focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                 </td>
                 <td className="px-3 py-1.5">
                   <div className="flex items-center border border-ajs-light rounded overflow-hidden focus-within:ring-1 focus-within:ring-ajs-primary/40">
                     <input
-                      type="number" min={0} max={100} step={0.5}
+                      type="number" min={0} max={100} step={1}
                       value={row.discount_pct || ""}
                       placeholder="0"
                       onChange={(e) => updateRow(row._key, "discount_pct", e.target.value)}
-                      className="w-full px-2 py-1 text-xs focus:outline-none text-emerald-700"
+                      className="w-full px-2 py-1.5 text-sm font-semibold focus:outline-none text-emerald-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
-                    <span className="px-1.5 text-xs text-ajs-muted bg-slate-50 border-l border-ajs-light select-none">%</span>
+                    <span className="px-2 text-sm text-ajs-muted bg-slate-50 border-l border-ajs-light select-none">%</span>
                   </div>
                 </td>
                 <td className="px-3 py-1.5 text-right font-semibold text-sm">
