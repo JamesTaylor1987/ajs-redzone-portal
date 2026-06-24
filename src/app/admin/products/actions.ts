@@ -235,3 +235,13 @@ export async function deleteProductAction(formData: FormData) {
   revalidatePath("/");
   redirect("/admin/products");
 }
+
+export async function setProductActiveAction(formData: FormData) {
+  const id = (formData.get("id") as string) ?? "";
+  const active = formData.get("active") === "true";
+  const supabase = getServiceClient();
+  await supabase.from("products").update({ active }).eq("id", id);
+  revalidatePath("/admin/products");
+  revalidatePath("/");
+  redirect("/admin/products");
+}

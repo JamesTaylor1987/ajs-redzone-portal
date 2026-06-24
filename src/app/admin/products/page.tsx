@@ -111,7 +111,7 @@ export default async function AdminProductsPage() {
                           >
                             Edit
                           </Link>
-                          <DeactivateButton id={p.id} name={p.name} />
+                          <DeactivateButton id={p.id} name={p.name} active={p.active} />
                         </div>
                       </td>
                     </tr>
