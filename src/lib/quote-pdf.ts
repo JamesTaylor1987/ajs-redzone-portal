@@ -265,10 +265,6 @@ function buildItemsTable(quote: PDFQuote, items: PDFItem[], t: ReturnType<typeof
     } as any,
   ];
 
-  if (ccy === "EUR") {
-    sections.push({ text: t("pdfIndicativeEur"), color: "#94a3b8", fontSize: 8, alignment: "right", margin: [0, 4, 0, 0] } as any);
-  }
-
   return { stack: sections } as any;
 }
 

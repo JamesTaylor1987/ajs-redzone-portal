@@ -179,7 +179,7 @@ export const messages = {
   emailItemsRequested: "Items Requested",
   emailSubtotalExVat: "Subtotal (ex-VAT)",
   emailTotalExVat: "Total (ex-VAT)",
-  emailIndicativeEur: "Indicative EUR rate — invoice issued in GBP.",
+  emailIndicativeEur: "",
   emailViewManageBody: "Use the button below to return to your quote at any time — to amend it or accept and place your order.",
   emailViewManageBtn: "View &amp; Manage Your Quote &rarr;",
   emailLinkPersonal: "This link is personal to you and expires after 90 days.",
@@ -191,7 +191,7 @@ export const messages = {
   emailOrderConfirmedLabel: "Order confirmed",
   emailOrderConfirmedBody: "Thank you &mdash; your order <strong>{{ref}}</strong> has been confirmed. An invoice will be issued within 24 hours, payable 100% prior to shipment. Delivery is on DAP terms.",
   emailItemsOrdered: "Items Ordered",
-  emailWhatHappensNextBody: "<strong>What happens next:</strong> You will receive an invoice within 24 hours. Once payment is received, your order will move into production. You will receive automated updates at each stage.",
+  emailWhatHappensNextBody: "<strong>What happens next:</strong> You will receive an invoice within 24 hours. Your order is now in production — we will produce, collate and pack your hardware ready for despatch. Shipment will be arranged once payment is received.",
 
   // Customer-facing email — status updates
   emailStatusSubjectOrderConfirmed: "Order confirmed",
@@ -200,7 +200,7 @@ export const messages = {
   emailStatusSubjectShipped: "Your order has been shipped",
   emailStatusSubjectComplete: "Your order is complete",
   emailStatusSubjectCancelled: "Order update",
-  emailStatusBodyOrderConfirmed: "Your order <strong>{{ref}}</strong> has been confirmed by the AJS Redzone team. An invoice will be issued within 24 hours, payable 100% prior to shipment. Once payment is received your order moves into production and you will receive further updates at each stage.",
+  emailStatusBodyOrderConfirmed: "Your order <strong>{{ref}}</strong> has been confirmed by the AJS Redzone team. An invoice will be issued within 24 hours. We are now in production — your order will be produced, collated and packed ready to despatch. Shipment will be arranged once payment is received.",
   emailStatusBodyInBuild: "Your order <strong>{{ref}}</strong> is now in production. Our manufacturing team are building your hardware. We&rsquo;ll be in touch again when it&rsquo;s ready to despatch.",
   emailStatusBodyReadyToShip: "Great news &mdash; your order <strong>{{ref}}</strong> has been built and is ready to despatch. Our team will be in touch shortly to arrange delivery. If you have not yet completed payment, please do so now to avoid any delays.",
   emailStatusBodyShipped: "Your order <strong>{{ref}}</strong> is on its way.{{trackingInfo}} Delivery is on DAP terms. Please contact us if you have any questions.",
@@ -249,11 +249,11 @@ export const messages = {
   pdfShippingPallet: "Shipping ({{count}} pallet)",
   pdfShippingPallets: "Shipping ({{count}} pallets)",
   pdfTotalExVat: "Total (ex-VAT)",
-  pdfIndicativeEur: "Indicative EUR rate — invoice issued in GBP",
+  pdfIndicativeEur: "",
   pdfTermsText: "All prices ex-VAT. VAT applied on invoice based on registration status.\nHardware invoiced 100% prior to shipment. DAP delivery terms.",
   pdfQuoteNoticeText: "This confirms receipt of your quote request. Prices are indicative and subject to confirmation by the AJS Redzone team.",
   pdfOrderNoticeHeading: "What happens next",
-  pdfOrderNoticeText: "An invoice will be issued within 24 hours, payable 100% prior to shipment. Once payment is received your order moves into production. You will receive automated updates at each stage.",
+  pdfOrderNoticeText: "An invoice will be issued within 24 hours. Your order is now in production — we will produce, collate and pack your hardware ready for despatch. Shipment will be arranged once payment is received. You will receive automated updates at each stage.",
   pdfOrderConfirmedBadge: "ORDER CONFIRMED",
 
   // PDF labels — install quote

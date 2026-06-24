@@ -162,7 +162,7 @@ export const messages: typeof en = {
   emailItemsRequested: "Articles demandés",
   emailSubtotalExVat: "Sous-total (HT)",
   emailTotalExVat: "Total (HT)",
-  emailIndicativeEur: "Taux EUR indicatif — facture émise en GBP.",
+  emailIndicativeEur: "",
   emailViewManageBody: "Utilisez le bouton ci-dessous pour revenir à votre devis à tout moment — pour le modifier ou l'accepter et passer commande.",
   emailViewManageBtn: "Consulter et gérer votre devis &rarr;",
   emailLinkPersonal: "Ce lien vous est personnel et expire après 90 jours.",
@@ -174,7 +174,7 @@ export const messages: typeof en = {
   emailOrderConfirmedLabel: "Commande confirmée",
   emailOrderConfirmedBody: "Merci &mdash; votre commande <strong>{{ref}}</strong> a été confirmée. Une facture sera émise dans les 24 heures, payable à 100 % avant l'expédition. Conditions de livraison DAP.",
   emailItemsOrdered: "Articles commandés",
-  emailWhatHappensNextBody: "<strong>Prochaines étapes :</strong> Vous recevrez une facture dans les 24 heures. Une fois le paiement reçu, votre commande passera en production. Vous recevrez des mises à jour automatiques à chaque étape.",
+  emailWhatHappensNextBody: "<strong>Prochaines étapes :</strong> Vous recevrez une facture dans les 24 heures. Votre commande est maintenant en production — nous allons produire, regrouper et emballer votre matériel prêt à être expédié. L'expédition sera organisée dès réception du paiement.",
 
   // Customer-facing email — status updates
   emailStatusSubjectOrderConfirmed: "Commande confirmée",
@@ -183,7 +183,7 @@ export const messages: typeof en = {
   emailStatusSubjectShipped: "Votre commande a été expédiée",
   emailStatusSubjectComplete: "Votre commande est terminée",
   emailStatusSubjectCancelled: "Mise à jour de commande",
-  emailStatusBodyOrderConfirmed: "Votre commande <strong>{{ref}}</strong> a été confirmée par l'équipe AJS Redzone. Une facture sera émise dans les 24 heures, payable à 100 % avant l'expédition. Une fois le paiement reçu, votre commande passera en production et vous recevrez des mises à jour supplémentaires à chaque étape.",
+  emailStatusBodyOrderConfirmed: "Votre commande <strong>{{ref}}</strong> a été confirmée par l'équipe AJS Redzone. Une facture sera émise dans les 24 heures. Nous sommes maintenant en production — votre commande sera produite, regroupée et emballée prête à être expédiée. L'expédition sera organisée dès réception du paiement.",
   emailStatusBodyInBuild: "Votre commande <strong>{{ref}}</strong> est maintenant en production. Notre équipe de fabrication assemble votre matériel. Nous vous recontacterons dès qu'elle sera prête à être expédiée.",
   emailStatusBodyReadyToShip: "Bonne nouvelle &mdash; votre commande <strong>{{ref}}</strong> a été assemblée et est prête à être expédiée. Notre équipe vous contactera sous peu pour organiser la livraison. Si vous n'avez pas encore effectué le paiement, veuillez le faire maintenant afin d'éviter tout retard.",
   emailStatusBodyShipped: "Votre commande <strong>{{ref}}</strong> est en route.{{trackingInfo}} Conditions de livraison DAP. Veuillez nous contacter si vous avez des questions.",
@@ -232,11 +232,11 @@ export const messages: typeof en = {
   pdfShippingPallet: "Livraison ({{count}} palette)",
   pdfShippingPallets: "Livraison ({{count}} palettes)",
   pdfTotalExVat: "Total (HT)",
-  pdfIndicativeEur: "Taux EUR indicatif — facture émise en GBP",
+  pdfIndicativeEur: "",
   pdfTermsText: "Tous les prix sont HT. La TVA est appliquée sur la facture selon le statut d'enregistrement.\nMatériel facturé à 100 % avant expédition. Conditions de livraison DAP.",
   pdfQuoteNoticeText: "Ceci confirme la réception de votre demande de devis. Les prix sont indicatifs et doivent être confirmés par l'équipe AJS Redzone.",
   pdfOrderNoticeHeading: "Prochaines étapes",
-  pdfOrderNoticeText: "Une facture sera émise dans les 24 heures, payable à 100 % avant l'expédition. Une fois le paiement reçu, votre commande passera en production. Vous recevrez des mises à jour automatiques à chaque étape.",
+  pdfOrderNoticeText: "Une facture sera émise dans les 24 heures. Votre commande est maintenant en production — nous allons produire, regrouper et emballer votre matériel prêt à être expédié. L'expédition sera organisée dès réception du paiement. Vous recevrez des mises à jour automatiques à chaque étape.",
   pdfOrderConfirmedBadge: "COMMANDE CONFIRMÉE",
 
   // PDF labels — install quote

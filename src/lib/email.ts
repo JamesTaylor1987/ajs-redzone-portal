@@ -146,7 +146,6 @@ function customerHtml(quote: EmailQuoteRow, items: EmailItemRow[], magicUrl: str
         <td style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px;text-align:right;white-space:nowrap">${money(grandTotalPence, ccy, fx)}</td>
       </tr>
     </table>
-    ${ccy === "EUR" ? `<p style="color:#94a3b8;font-size:11px;margin:-16px 0 24px">${t("emailIndicativeEur")}</p>` : ""}
 
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px 24px;margin-bottom:24px;text-align:center">
       <p style="color:#475569;font-size:13px;margin:0 0 16px;line-height:1.5">
@@ -316,7 +315,6 @@ function orderConfirmationHtml(quote: OrderQuoteRow, items: EmailItemRow[]): str
         <td style="padding:10px 0;font-weight:bold;color:#1e293b;font-size:14px;text-align:right;white-space:nowrap">${money(grandTotalPence, ccy, fx)}</td>
       </tr>
     </table>
-    ${ccy === "EUR" ? `<p style="color:#94a3b8;font-size:11px;margin:-16px 0 24px">${t("emailIndicativeEur")}</p>` : ""}
 
     <p style="color:#64748b;font-size:13px;margin:0;line-height:1.8">
       ${t("emailQuestions")}<br>
