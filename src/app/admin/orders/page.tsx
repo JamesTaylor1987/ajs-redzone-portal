@@ -2,7 +2,6 @@ import Link from "next/link";
 import { getServiceClient } from "@/lib/supabase-server";
 import { StatusFilter } from "./StatusFilter";
 import { InlineProbabilityForm } from "./InlineProbabilityForm";
-import { InlinePMForm } from "./InlinePMForm";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +43,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
   let query = supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_company, contact_email, subtotal_gbp_pence, shipping_gbp_pence, created_at, original_quote_ref, win_probability, win_probability_set_at, rz_pm_id",
+      "id, ref, status, contact_name, contact_company, contact_email, subtotal_gbp_pence, shipping_gbp_pence, created_at, original_quote_ref, win_probability, win_probability_set_at",
     )
     .order("created_at", { ascending: false });
 
@@ -55,10 +54,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
     query = query.neq("status", "revised");
   }
 
-  const [{ data: orders }, { data: pms }] = await Promise.all([
-    query,
-    supabase.from("rz_pms").select("id, name, type").order("name"),
-  ]);
+  const { data: orders } = await query;
 
   return (
     <div className="space-y-5">
@@ -75,13 +71,12 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[800px]">
+          <table className="w-full text-sm min-w-[640px]">
             <thead className="border-b border-ajs-light bg-slate-50 text-ajs-dark">
               <tr>
                 <Th>Ref</Th>
                 <Th>Customer</Th>
                 <Th>Status</Th>
-                <Th>PM</Th>
                 <Th>Win %</Th>
                 <Th>Total</Th>
                 <Th>Submitted</Th>
@@ -113,13 +108,6 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                     >
                       {STATUS_LABEL[o.status] ?? o.status}
                     </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <InlinePMForm
-                      quoteId={o.id}
-                      currentPMId={o.rz_pm_id ?? null}
-                      pms={pms ?? []}
-                    />
                   </td>
                   <td className="px-4 py-3">
                     {o.status === "quote_submitted" ? (
