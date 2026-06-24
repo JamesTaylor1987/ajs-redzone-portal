@@ -46,8 +46,15 @@ export default async function QuoteConfirmationPage({ params }: PageProps) {
     (s, i) => s + Number(i.line_total_gbp_pence ?? 0),
     0
   );
-  const shippingPence = quote.shipping_gbp_pence ? Number(quote.shipping_gbp_pence) : null;
-  const grandTotalPence = subtotalPence + (shippingPence ?? 0);
+  const overallDiscPct = Number(quote.overall_discount_pct ?? 0);
+  const overallDiscAmt = Math.round(subtotalPence * overallDiscPct / 100);
+  const discountedSubtotal = subtotalPence - overallDiscAmt;
+  const shippingPence = quote.shipping_override_pence != null
+    ? Number(quote.shipping_override_pence)
+    : (quote.shipping_gbp_pence != null ? Number(quote.shipping_gbp_pence) : null);
+  const shippingLabel = (quote.shipping_label as string | null) || t("shippingLabel");
+  const grandTotalPence = discountedSubtotal + (shippingPence ?? 0);
+  const revision = Number(quote.revision ?? 0);
   const ccy = quote.currency ?? "GBP";
   const fx = quote.fx_rate_used ?? null;
   const fmt = (p: number) => formatMoneyAtRate(p, ccy, fx);
@@ -60,7 +67,7 @@ export default async function QuoteConfirmationPage({ params }: PageProps) {
         <div className="bg-white rounded-2xl shadow-md border border-ajs-light overflow-hidden">
           <div className="brand-gradient text-white p-6">
             <div className="text-sm uppercase tracking-wide text-white/80">
-              {t("confirmationBadge")}
+              {revision > 0 ? `Revised Quote — Rev. ${revision}` : t("confirmationBadge")}
             </div>
             <div className="text-3xl font-extrabold mt-1">{quote.ref}</div>
           </div>
@@ -84,26 +91,38 @@ export default async function QuoteConfirmationPage({ params }: PageProps) {
                 {t("itemsLabel")}
               </h2>
               <ul className="divide-y divide-ajs-light text-sm">
-                {(items ?? []).map((i) => (
-                  <li key={i.id} className="py-2 flex justify-between gap-2">
-                    <span>
-                      <span className="font-mono text-xs font-bold text-ajs-dark">{i.sku}</span>{" "}
-                      {i.name} × {i.qty}
-                    </span>
-                    <span className="font-semibold">
-                      {fmt(Number(i.line_total_gbp_pence))}
-                    </span>
-                  </li>
-                ))}
+                {(items ?? []).map((i) => {
+                  const disc = Number(i.discount_pct ?? 0);
+                  return (
+                    <li key={i.id} className="py-2 flex justify-between gap-2">
+                      <span>
+                        <span className="font-mono text-xs font-bold text-ajs-dark">{i.sku}</span>{" "}
+                        {i.name} × {i.qty}
+                        {disc > 0 && (
+                          <span className="ml-1.5 text-xs text-emerald-600 font-semibold">{disc}% off</span>
+                        )}
+                      </span>
+                      <span className="font-semibold">
+                        {fmt(Number(i.line_total_gbp_pence))}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
               <div className="flex justify-between text-sm pt-3 mt-2 border-t border-ajs-light text-ajs-muted">
                 <span>{t("subtotalLabel")}</span>
                 <span className="font-semibold text-ajs-dark">{fmt(subtotalPence)}</span>
               </div>
+              {overallDiscPct > 0 && (
+                <div className="flex justify-between text-sm pt-1 text-emerald-600">
+                  <span>Overall discount ({overallDiscPct}%)</span>
+                  <span className="font-semibold">−{fmt(overallDiscAmt)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm pt-1 text-ajs-muted">
                 <span>
-                  {t("shippingLabel")}
-                  {quote.shipping_pallets
+                  {shippingLabel}
+                  {quote.shipping_pallets && !quote.shipping_label
                     ? ` (${quote.shipping_pallets} pallet${quote.shipping_pallets !== 1 ? "s" : ""})`
                     : ""}
                 </span>
