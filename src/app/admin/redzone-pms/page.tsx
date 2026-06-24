@@ -8,13 +8,14 @@ export const dynamic = "force-dynamic";
 export default async function RedzonePMsPage() {
   const supabase = getServiceClient();
 
-  const { data: allRzUsers } = await supabase
-    .from("rz_pms")
-    .select("id, name, email, auth_user_id, type, created_at")
-    .order("created_at", { ascending: true });
+  const [{ data: pms }, { data: { users: allUsers } }] = await Promise.all([
+    supabase.from("rz_pms").select("id, name, email, created_at").order("created_at", { ascending: true }),
+    supabase.auth.admin.listUsers({ perPage: 500 }),
+  ]);
 
-  const pms = (allRzUsers ?? []).filter((u) => u.type === "pm" || !u.type);
-  const admins = (allRzUsers ?? []).filter((u) => u.type === "admin");
+  const admins = (allUsers ?? []).filter(
+    (u) => (u.app_metadata?.role as string) === "rz_admin",
+  );
 
   return (
     <div className="space-y-5 max-w-2xl">
@@ -81,13 +82,15 @@ export default async function RedzonePMsPage() {
             <tbody className="divide-y divide-ajs-light">
               {admins.map((u) => (
                 <tr key={u.id} className="align-top">
-                  <td className="px-4 py-3 font-semibold">{u.name}</td>
+                  <td className="px-4 py-3 font-semibold">
+                    {(u.user_metadata?.full_name as string) || "—"}
+                  </td>
                   <td className="px-4 py-3 text-ajs-muted">{u.email}</td>
                   <td className="px-4 py-3">
-                    <ResetLinkButton email={u.email} />
+                    <ResetLinkButton email={u.email ?? ""} />
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <RemoveAdminButton userId={u.auth_user_id} />
+                    <RemoveAdminButton userId={u.id} />
                   </td>
                 </tr>
               ))}
