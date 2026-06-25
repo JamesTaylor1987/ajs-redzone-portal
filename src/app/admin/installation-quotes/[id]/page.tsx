@@ -5,6 +5,8 @@ import { getServiceClient } from "@/lib/supabase-server";
 import { sendInstallQuoteAction } from "./actions";
 import { AssessmentForm } from "./AssessmentForm";
 import type { AssessmentInputs } from "@/lib/installation-quote/calculate";
+import { INSTALL_CONFIG } from "@/lib/installation-quote/config";
+import { INSTALL_RATE_KEYS } from "@/lib/installation-quote/settings-keys";
 import { DEFAULT_INSTALL_EXCLUSIONS } from "@/lib/quote-pdf";
 
 export const dynamic = "force-dynamic";
@@ -30,14 +32,32 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
 
   if (!iq) notFound();
 
-  // Fetch hardware quote items + auto-count sensors
-  const { data: items } = iq.hardware_quote_id
-    ? await supabase.from("quote_items").select("sku, name, qty, product_id").eq("quote_id", iq.hardware_quote_id)
-    : { data: [] };
+  // Fetch hardware quote items, auto-count sensors, and current install rates in parallel
+  const [itemsFetch, ratesFetch] = await Promise.all([
+    iq.hardware_quote_id
+      ? supabase.from("quote_items").select("sku, name, qty, product_id").eq("quote_id", iq.hardware_quote_id)
+      : Promise.resolve({ data: [] }),
+    supabase.from("settings").select("key, value").in("key", [...INSTALL_RATE_KEYS]),
+  ]);
+  const items = itemsFetch.data;
+  const rateMap = Object.fromEntries((ratesFetch.data ?? []).map((row: { key: string; value: string }) => [row.key, row.value]));
+  const rn = (k: string, def: number) => { const v = parseInt(rateMap[k]); return isNaN(v) ? def : v; };
+  const rates = {
+    pair_day_rate_pence:          rn("install_pair_day_rate",         INSTALL_CONFIG.pair_day_rate_pence),
+    hotel_rate_pence:             rn("install_hotel_rate",            INSTALL_CONFIG.hotel_rate_pence),
+    mileage_rate_pence_per_mile:  rn("install_mileage_rate",          INSTALL_CONFIG.mileage_rate_pence_per_mile),
+    sensors_per_pair_per_day:     rn("install_sensors_per_day",       INSTALL_CONFIG.sensors_per_pair_per_day),
+    displays_per_pair_per_day:    rn("install_displays_per_day",      INSTALL_CONFIG.displays_per_pair_per_day),
+    eurotunnel_pence:             rn("install_eurotunnel",            INSTALL_CONFIG.eurotunnel_pence),
+    flight_estimate_europe_pence: rn("install_flight_europe",         INSTALL_CONFIG.flight_estimate_europe_pence),
+    contingency_low:              rn("install_contingency_low",       Math.round(INSTALL_CONFIG.contingency_low  * 100)) / 100,
+    contingency_high:             rn("install_contingency_high",      Math.round(INSTALL_CONFIG.contingency_high * 100)) / 100,
+    out_of_hours_multiplier:      rn("install_out_of_hours_multiplier", Math.round(INSTALL_CONFIG.out_of_hours_multiplier * 100)) / 100,
+  };
 
   let autoSensorCount = 0;
-  if (items && items.length > 0) {
-    const productIds = items.map((i: { product_id: string }) => i.product_id).filter(Boolean);
+  if (items && (items as any[]).length > 0) {
+    const productIds = (items as any[]).map((i: { product_id: string }) => i.product_id).filter(Boolean);
     if (productIds.length > 0) {
       const { data: productRows } = await supabase
         .from("products")
@@ -134,6 +154,9 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
         autoSensorCount={autoSensorCount}
         containmentNotes={iq.containment_notes ?? null}
       />
+
+      {/* Calculation workings */}
+      {hasCalc && a && <CalcWorkings iq={iq} a={a} rates={rates} />}
 
       {/* Calculation results + send */}
       {hasCalc && (
@@ -237,6 +260,158 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
             </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function CalcWorkings({
+  iq,
+  a,
+  rates,
+}: {
+  iq: Record<string, any>;
+  a: AssessmentInputs;
+  rates: {
+    pair_day_rate_pence: number;
+    hotel_rate_pence: number;
+    mileage_rate_pence_per_mile: number;
+    sensors_per_pair_per_day: number;
+    displays_per_pair_per_day: number;
+    eurotunnel_pence: number;
+    flight_estimate_europe_pence: number;
+    contingency_low: number;
+    contingency_high: number;
+    out_of_hours_multiplier: number;
+  };
+}) {
+  const sensor_days = a.sensor_count > 0 ? Math.ceil(a.sensor_count / rates.sensors_per_pair_per_day) : 0;
+  const vf_days = a.include_vf && a.vf_item_count > 0 ? Math.ceil(a.vf_item_count / rates.displays_per_pair_per_day) : 0;
+  const install_days = Math.max(1, sensor_days + vf_days);
+  const travel_days_total = a.travel_days_one_way * 2;
+  const total_days = travel_days_total + install_days;
+  const staying_away = a.staying_away !== false;
+  const hotel_nights = staying_away ? Math.max(0, total_days - 1) : 0;
+  const subtotal = Number(iq.calc_subtotal_pence ?? 0);
+
+  return (
+    <div className="bg-white rounded-xl border border-ajs-light p-5 space-y-5">
+      <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">How this was calculated</h2>
+
+      {/* Days */}
+      <WorkSection title="Days on site">
+        {a.sensor_count > 0 && (
+          <WorkRow label="Sensor/unit install days" expr={`${a.sensor_count} units ÷ ${rates.sensors_per_pair_per_day}/day`} result={`${sensor_days} day${sensor_days !== 1 ? "s" : ""}`} />
+        )}
+        {a.include_vf && a.vf_item_count > 0 && (
+          <WorkRow label="Visual Factory days" expr={`${a.vf_item_count} streamers ÷ ${rates.displays_per_pair_per_day}/day`} result={`${vf_days} day${vf_days !== 1 ? "s" : ""}`} />
+        )}
+        <WorkRow label="Install days" expr={sensor_days + vf_days < 1 ? "Minimum 1 day applied" : undefined} result={`${install_days} day${install_days !== 1 ? "s" : ""}`} bold />
+        {a.travel_days_one_way > 0 && (
+          <WorkRow label="Travel days" expr={`${a.travel_days_one_way} day each way × 2`} result={`${travel_days_total} days`} />
+        )}
+        <WorkRow label="Total days" result={`${total_days} day${total_days !== 1 ? "s" : ""}`} bold />
+      </WorkSection>
+
+      {/* Labour */}
+      <WorkSection title="Labour">
+        {a.working_hours === "standard" && (
+          <WorkRow label="Pair day rate" expr={`${total_days} days × ${gbp(rates.pair_day_rate_pence)}/day`} result={gbp(Number(iq.calc_labour_pence))} bold />
+        )}
+        {a.working_hours === "out_of_hours" && (
+          <>
+            <WorkRow label="Pair day rate" result={gbp(rates.pair_day_rate_pence) + "/day"} />
+            <WorkRow label="Out-of-hours multiplier" result={`×${rates.out_of_hours_multiplier}`} />
+            <WorkRow label="Total labour" expr={`${total_days} days × ${gbp(rates.pair_day_rate_pence)} × ${rates.out_of_hours_multiplier}`} result={gbp(Number(iq.calc_labour_pence))} bold />
+          </>
+        )}
+        {a.working_hours === "mixed" && (
+          <>
+            <WorkRow label="Travel days (standard rate)" expr={`${travel_days_total} days × ${gbp(rates.pair_day_rate_pence)}/day`} result={gbp(travel_days_total * rates.pair_day_rate_pence)} />
+            <WorkRow label="Install days (OOH rate)" expr={`${install_days} days × ${gbp(rates.pair_day_rate_pence)} × ${rates.out_of_hours_multiplier}`} result={gbp(Math.round(install_days * rates.pair_day_rate_pence * rates.out_of_hours_multiplier))} />
+            <WorkRow label="Total labour" result={gbp(Number(iq.calc_labour_pence))} bold />
+          </>
+        )}
+      </WorkSection>
+
+      {/* Travel */}
+      {Number(iq.calc_travel_pence) > 0 && (
+        <WorkSection title="Travel">
+          {a.travel_method === "drive" && (
+            <WorkRow label="Mileage (return)" expr={`${a.drive_miles} miles × 2 × ${rates.mileage_rate_pence_per_mile}p/mile`} result={gbp(Number(iq.calc_travel_pence))} bold />
+          )}
+          {a.travel_method === "eurotunnel" && (
+            <>
+              {a.drive_miles > 0 && <WorkRow label="Mileage to tunnel" expr={`${a.drive_miles} miles × 2 × ${rates.mileage_rate_pence_per_mile}p/mile`} result={gbp(Math.round(a.drive_miles * 2 * rates.mileage_rate_pence_per_mile))} />}
+              <WorkRow label="Eurotunnel crossings" expr={`${gbp(rates.eurotunnel_pence)} × 2 (return)`} result={gbp(rates.eurotunnel_pence * 2)} />
+              <WorkRow label="Total travel" result={gbp(Number(iq.calc_travel_pence))} bold />
+            </>
+          )}
+          {a.travel_method === "fly" && (
+            <WorkRow label="Flights" expr={`2 engineers × ${gbp(rates.flight_estimate_europe_pence)} estimate`} result={gbp(Number(iq.calc_travel_pence))} bold />
+          )}
+        </WorkSection>
+      )}
+
+      {/* Hotels */}
+      {staying_away && hotel_nights > 0 && (
+        <WorkSection title="Accommodation">
+          <WorkRow label="Hotel nights" expr={`${total_days} total days − 1`} result={`${hotel_nights} night${hotel_nights !== 1 ? "s" : ""}`} />
+          <WorkRow label="Hotel cost" expr={`${hotel_nights} nights × 2 engineers × ${gbp(rates.hotel_rate_pence)}/night`} result={gbp(Number(iq.calc_hotels_pence))} bold />
+        </WorkSection>
+      )}
+      {!staying_away && (
+        <WorkSection title="Accommodation">
+          <WorkRow label="Not staying away" result="£0 — engineers returning each day" />
+        </WorkSection>
+      )}
+
+      {/* Infrastructure */}
+      {Number(iq.calc_infra_uplift_pence) > 0 && (
+        <WorkSection title="Infrastructure uplift">
+          <WorkRow
+            label={a.site_infrastructure === "partial" ? "Partial infrastructure" : "No infrastructure"}
+            result={gbp(Number(iq.calc_infra_uplift_pence))}
+            bold
+          />
+        </WorkSection>
+      )}
+
+      {/* Budget range */}
+      <WorkSection title="Budget range">
+        <WorkRow label="Subtotal" result={gbp(subtotal)} bold />
+        <WorkRow
+          label={`Low end (×${rates.contingency_low})`}
+          expr={`${gbp(subtotal)} × ${rates.contingency_low} — allows for scope being efficient`}
+          result={gbp(Number(iq.calc_low_pence))}
+        />
+        <WorkRow
+          label={`High end (×${rates.contingency_high})`}
+          expr={`${gbp(subtotal)} × ${rates.contingency_high} — allows for complications`}
+          result={gbp(Number(iq.calc_high_pence))}
+          bold
+        />
+      </WorkSection>
+    </div>
+  );
+}
+
+function WorkSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-widest text-ajs-muted mb-2">{title}</p>
+      <div className="space-y-1.5">{children}</div>
+    </div>
+  );
+}
+
+function WorkRow({ label, expr, result, bold }: { label: string; expr?: string; result: string; bold?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 text-sm">
+      <div className="min-w-0">
+        <span className={bold ? "font-semibold text-ajs-dark" : "text-ajs-text"}>{label}</span>
+        {expr && <span className="text-xs text-ajs-muted ml-2">{expr}</span>}
+      </div>
+      <span className={`shrink-0 font-mono text-xs ${bold ? "font-bold text-ajs-dark" : "text-ajs-muted"}`}>{result}</span>
     </div>
   );
 }
