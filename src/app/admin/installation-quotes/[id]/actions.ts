@@ -46,12 +46,9 @@ export async function saveAssessmentAction(formData: FormData) {
     no_infra_uplift_pence:       rn("install_no_infra_uplift",        INSTALL_CONFIG.no_infra_uplift_pence),
   };
 
-  const containment_notes = (formData.get("containment_notes") as string ?? "").trim() || null;
-
   const calc = calculateInstallationQuote(assessment, config);
   await supabase.from("installation_quotes").update({
     assessment,
-    containment_notes,
     calc_install_days:       calc.install_days,
     calc_total_days:         calc.total_days,
     calc_labour_pence:       calc.labour_pence,
@@ -77,9 +74,10 @@ export async function sendInstallQuoteAction(formData: FormData) {
   const budgetFrom = Math.round(parseFloat(g("budget_from") || "0") * 100);
   const budgetToVal = parseFloat(g("budget_to") || "0");
   const budgetTo = budgetToVal > 0 ? Math.round(budgetToVal * 100) : budgetFrom;
-  const notes         = g("notes") || null;
-  const payment_terms = g("payment_terms") || null;
-  const exclusions    = g("exclusions") || null;
+  const containment_notes = g("containment_notes") || null;
+  const notes             = g("notes") || null;
+  const payment_terms     = g("payment_terms") || null;
+  const exclusions        = g("exclusions") || null;
 
   const supabase = getServiceClient();
   const { data: iq } = await supabase
@@ -119,7 +117,7 @@ export async function sendInstallQuoteAction(formData: FormData) {
     budgetFromPence: budgetFrom,
     budgetToPence: budgetTo,
     notes,
-    containmentNotes: iq.containment_notes ?? null,
+    containmentNotes: containment_notes,
     paymentTerms: payment_terms,
     exclusions,
     locale: hw?.locale ?? null,
@@ -137,6 +135,7 @@ export async function sendInstallQuoteAction(formData: FormData) {
     supabase.from("installation_quotes").update({
       budget_from_pence: budgetFrom,
       budget_to_pence:   budgetTo,
+      containment_notes,
       ajs_notes:         notes,
       payment_terms,
       exclusions,

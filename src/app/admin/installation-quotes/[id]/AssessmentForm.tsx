@@ -9,10 +9,9 @@ interface Props {
   hasCalc: boolean;
   assessment: AssessmentInputs | null;
   autoSensorCount: number;
-  containmentNotes: string | null;
 }
 
-export function AssessmentForm({ id, hasCalc, assessment: a, autoSensorCount, containmentNotes }: Props) {
+export function AssessmentForm({ id, hasCalc, assessment: a, autoSensorCount }: Props) {
   const [isIntl, setIsIntl]       = useState(a?.is_international ?? false);
   const [stayingAway, setStayingAway] = useState(a?.staying_away !== false);
   const [includeVf, setIncludeVf] = useState(a?.include_vf ?? false);
@@ -129,19 +128,6 @@ export function AssessmentForm({ id, hasCalc, assessment: a, autoSensorCount, co
             />
           )}
           {!includeVf && <input type="hidden" name="vf_item_count" value="0" />}
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
-            Containment notes (optional)
-          </label>
-          <textarea
-            name="containment_notes"
-            rows={3}
-            defaultValue={containmentNotes ?? ""}
-            placeholder="e.g. AJS to supply and fit 20m of 50×50 steel trunking along the main conveyor line…"
-            className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40 resize-none"
-          />
         </div>
 
         <button
