@@ -66,14 +66,13 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
         <WinProbabilityForm quoteId={quote.id} currentProbability={quote.win_probability ?? null} />
       )}
 
-      {/* Installation tracker — only if customer requested install */}
-      {quote.install_requested && (
-        <InstallForm
-          quoteId={quote.id}
-          installQuoteSent={quote.install_quote_sent ?? false}
-          installStage={quote.install_stage ?? null}
-        />
-      )}
+      {/* Installation tracker */}
+      <InstallForm
+        quoteId={quote.id}
+        installRequestedByCustomer={quote.install_requested ?? false}
+        installQuoteSent={quote.install_quote_sent ?? false}
+        installStage={quote.install_stage ?? null}
+      />
 
       {/* Finance — invoiced + payment received */}
       <FinanceForm
