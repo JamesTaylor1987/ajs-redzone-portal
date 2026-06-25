@@ -18,10 +18,11 @@ interface PageProps {
 export default async function AdminOrderDetailPage({ params }: PageProps) {
   const supabase = getServiceClient();
 
-  const [{ data: quote }, { data: pms }, { data: products }] = await Promise.all([
+  const [{ data: quote }, { data: pms }, { data: products }, { data: linkedIq }] = await Promise.all([
     supabase.from("quotes").select("*").eq("id", params.id).single(),
     supabase.from("rz_pms").select("id, name, email, type").order("name"),
     supabase.from("products").select("id, sku, name, price_gbp_pence").eq("active", true).order("sku"),
+    supabase.from("installation_quotes").select("id, quote_ref").eq("hardware_quote_id", params.id).maybeSingle(),
   ]);
 
   if (!quote) notFound();
@@ -72,6 +73,8 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
         installRequestedByCustomer={quote.install_requested ?? false}
         installQuoteSent={quote.install_quote_sent ?? false}
         installStage={quote.install_stage ?? null}
+        installQuoteId={linkedIq?.id ?? null}
+        installQuoteRef={linkedIq?.quote_ref ?? null}
       />
 
       {/* Finance — invoiced + payment received */}

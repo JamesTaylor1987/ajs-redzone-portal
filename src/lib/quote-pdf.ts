@@ -335,7 +335,13 @@ export interface InstallPDFQuote {
   ajs_notes?: string | null;
   containment_notes?: string | null;
   payment_terms?: string | null;
+  exclusions?: string | null;
   locale?: string | null;
+  currency?: string | null;
+  fx_rate?: number | null;
+  travel_method?: string | null;
+  include_vf?: boolean;
+  staying_away?: boolean;
 }
 
 export interface InstallPDFItem {
@@ -561,7 +567,11 @@ function buildInstallIntro(): Content {
   } as any;
 }
 
-function buildScopeOfWorks(t: ReturnType<typeof getT>): Content {
+function buildScopeOfWorks(
+  t: ReturnType<typeof getT>,
+  travelMethod?: string | null,
+  stayingAway?: boolean,
+): Content {
   function scopeSection(title: string, bullets: string[]): any {
     return {
       stack: [
@@ -570,6 +580,19 @@ function buildScopeOfWorks(t: ReturnType<typeof getT>): Content {
       ],
     };
   }
+
+  const travelBullets: string[] = ["Engineers’ travel time"];
+  if (travelMethod === "drive") {
+    travelBullets.push("Mileage costs");
+  } else if (travelMethod === "eurotunnel") {
+    travelBullets.push("Mileage to tunnel costs", "Eurotunnel crossing");
+  } else if (travelMethod === "fly") {
+    travelBullets.push("Flight costs");
+  } else {
+    travelBullets.push("Mileage or flight costs", "Ferry and Eurotunnel crossings");
+  }
+  if (stayingAway !== false) travelBullets.push("Hotel and stop out", "Subsistence");
+
   return {
     stack: [
       { text: t("pdfInstallScopeSection"), color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 10] } as any,
@@ -578,13 +601,7 @@ function buildScopeOfWorks(t: ReturnType<typeof getT>): Content {
         "Health & Safety documentation (RAMS)",
         "Project documentation, scheduling and labour planning",
       ]),
-      scopeSection("Travel", [
-        "Engineers’ travel time",
-        "Mileage or flight costs",
-        "Ferry and Eurotunnel crossings",
-        "Hotel and stop out",
-        "Subsistence",
-      ]),
+      scopeSection("Travel", travelBullets),
       scopeSection("Site Works", [
         "Mounting of PLC control panels",
         "Mounting of sensor brackets and fitting sensors",
@@ -602,23 +619,20 @@ function buildScopeOfWorks(t: ReturnType<typeof getT>): Content {
   } as any;
 }
 
-function buildExclusions(t: ReturnType<typeof getT>): Content {
+export const DEFAULT_INSTALL_EXCLUSIONS =
+  "Mains power supply to control panels (230v, 10 amp)\n" +
+  "Network connectivity to control panels\n" +
+  "Supply, installation and fixing of TVs and tablets\n" +
+  "Out of hours working\n" +
+  "Access equipment beyond standard step ladders";
+
+function buildExclusions(exclusionsText: string, t: ReturnType<typeof getT>): Content {
+  const lines = exclusionsText.split("\n").map((l) => l.trim()).filter(Boolean);
   return {
     stack: [
       { text: t("pdfInstallExclusionsSection"), color: MUTED, bold: true, fontSize: 8, margin: [0, 0, 0, 6] },
       { text: "Unless otherwise stated, the following are excluded from this quotation:", fontSize: 9, color: MUTED, margin: [0, 0, 0, 6] },
-      {
-        ul: [
-          "Mains power supply to control panels (230v, 10 amp)",
-          "Network connectivity to control panels",
-          "Supply, installation and fixing of TVs and iPads",
-          "Out of hours working",
-          "Access equipment beyond standard step ladders",
-        ],
-        fontSize: 9,
-        color: "#475569",
-        lineHeight: 1.4,
-      },
+      { ul: lines, fontSize: 9, color: "#475569", lineHeight: 1.4 },
     ],
     margin: [0, 14, 0, 0],
   } as any;
@@ -643,8 +657,11 @@ export async function renderInstallationQuotePDF(
   const logoSrc = await fetchLogoBase64();
   const images = logoSrc ? { logo: logoSrc } : undefined;
 
-  const gbpRound = (p: number) =>
-    "£" + (p / 100).toLocaleString("en-GB", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const isEur = quote.currency === "EUR" && quote.fx_rate && quote.fx_rate > 1;
+  const fmtBudget = (p: number) => isEur
+    ? "€" + (p * (quote.fx_rate ?? 1) / 100).toLocaleString("en-GB", { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+    : "£" + (p / 100).toLocaleString("en-GB", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const gbpRound = fmtBudget;
 
   const addrStr = [
     quote.site_address_line1, quote.site_address_line2,
@@ -732,7 +749,7 @@ export async function renderInstallationQuotePDF(
             } as any,
             buildDivider(),
           ] : []),
-          buildScopeOfWorks(t),
+          buildScopeOfWorks(t, quote.travel_method, quote.staying_away),
           buildDivider(),
           {
             table: {
@@ -740,7 +757,7 @@ export async function renderInstallationQuotePDF(
               body: [[{
                 stack: [
                   { text: quote.budget_from_pence >= quote.budget_to_pence ? t("pdfInstallFixedPriceBox") : t("pdfInstallBudgetBox"), bold: true, color: HEADER_MUTED, fontSize: 8, margin: [0, 0, 0, 8] },
-                  { text: quote.budget_from_pence >= quote.budget_to_pence ? gbpRound(quote.budget_from_pence) : `${gbpRound(quote.budget_from_pence)} – ${gbpRound(quote.budget_to_pence)}`, bold: true, color: "#ffffff", fontSize: 28 },
+                  { text: quote.budget_from_pence >= quote.budget_to_pence ? fmtBudget(quote.budget_from_pence) : `${fmtBudget(quote.budget_from_pence)} – ${fmtBudget(quote.budget_to_pence)}`, bold: true, color: "#ffffff", fontSize: 28 },
                 ],
               }]],
             },
@@ -755,7 +772,7 @@ export async function renderInstallationQuotePDF(
           } as any,
           ...(quote.containment_notes ? [buildNoticeBox(quote.containment_notes, "#f0fdf4", "#166534", "CONTAINMENT")] : []),
           ...(quote.ajs_notes ? [buildNoticeBox(quote.ajs_notes, FAINT, "#1e293b", "NOTES FROM AJS REDZONE")] : []),
-          buildExclusions(t),
+          buildExclusions(quote.exclusions ?? DEFAULT_INSTALL_EXCLUSIONS, t),
           buildPaymentTerms(paymentTerms, t),
           {
             text: `${t("pdfInstallFooterText")}\nAJS Control and Automation Ltd  ·  rz@ajsspalding.co.uk  ·  01406 424954`,

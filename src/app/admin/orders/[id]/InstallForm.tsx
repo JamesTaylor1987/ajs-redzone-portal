@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { updateInstallAction, type InstallState } from "./actions";
+import { updateInstallAction, createInstallQuoteAction, type InstallState } from "./actions";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -29,9 +29,11 @@ interface Props {
   installRequestedByCustomer: boolean;
   installQuoteSent: boolean;
   installStage: string | null;
+  installQuoteId: string | null;
+  installQuoteRef: string | null;
 }
 
-export function InstallForm({ quoteId, installRequestedByCustomer, installQuoteSent, installStage }: Props) {
+export function InstallForm({ quoteId, installRequestedByCustomer, installQuoteSent, installStage, installQuoteId, installQuoteRef }: Props) {
   const [state, action] = useFormState<InstallState, FormData>(updateInstallAction, {});
   const [quoteSent, setQuoteSent] = useState(installQuoteSent);
 
@@ -108,6 +110,28 @@ export function InstallForm({ quoteId, installRequestedByCustomer, installQuoteS
 
         <SubmitButton />
       </form>
+
+      {/* Install quote link / create */}
+      <div className="mt-4 pt-4 border-t border-ajs-light">
+        {installQuoteId ? (
+          <a
+            href={`/admin/installation-quotes/${installQuoteId}`}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-ajs-primary hover:underline"
+          >
+            View install quote {installQuoteRef} →
+          </a>
+        ) : (
+          <form action={createInstallQuoteAction}>
+            <input type="hidden" name="quote_id" value={quoteId} />
+            <button
+              type="submit"
+              className="text-sm font-semibold text-ajs-muted hover:text-ajs-primary transition-colors"
+            >
+              + Create install quote
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   );
 }

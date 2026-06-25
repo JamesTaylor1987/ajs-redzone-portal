@@ -9,10 +9,12 @@ interface Props {
   hasCalc: boolean;
   assessment: AssessmentInputs | null;
   autoSensorCount: number;
+  containmentNotes: string | null;
 }
 
-export function AssessmentForm({ id, hasCalc, assessment: a, autoSensorCount }: Props) {
-  const [isIntl, setIsIntl]     = useState(a?.is_international ?? false);
+export function AssessmentForm({ id, hasCalc, assessment: a, autoSensorCount, containmentNotes }: Props) {
+  const [isIntl, setIsIntl]       = useState(a?.is_international ?? false);
+  const [stayingAway, setStayingAway] = useState(a?.staying_away !== false);
   const [includeVf, setIncludeVf] = useState(a?.include_vf ?? false);
 
   return (
@@ -67,6 +69,18 @@ export function AssessmentForm({ id, hasCalc, assessment: a, autoSensorCount }: 
             <option value="2">2 days travel</option>
           </SelectField>
 
+          {/* Staying away */}
+          <label className="sm:col-span-2 flex items-center gap-2 text-sm text-ajs-text cursor-pointer">
+            <input
+              type="checkbox"
+              name="staying_away"
+              checked={stayingAway}
+              onChange={(e) => setStayingAway(e.target.checked)}
+              className="accent-ajs-primary"
+            />
+            <span>Engineers staying away (hotel costs included)</span>
+          </label>
+
           <NumberField
             name="sensor_count"
             label="Sensor / unit count"
@@ -108,10 +122,10 @@ export function AssessmentForm({ id, hasCalc, assessment: a, autoSensorCount }: 
           {includeVf && (
             <NumberField
               name="vf_item_count"
-              label="VF displays / streamers"
+              label="Qty of streamers"
               defaultValue={a?.vf_item_count ?? 0}
               min={0}
-              hint="Number of screens + streamers to mount and commission"
+              hint="Each streamer = one display point to mount and commission"
             />
           )}
           {!includeVf && <input type="hidden" name="vf_item_count" value="0" />}
@@ -124,7 +138,7 @@ export function AssessmentForm({ id, hasCalc, assessment: a, autoSensorCount }: 
           <textarea
             name="containment_notes"
             rows={3}
-            defaultValue=""
+            defaultValue={containmentNotes ?? ""}
             placeholder="e.g. AJS to supply and fit 20m of 50×50 steel trunking along the main conveyor line…"
             className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40 resize-none"
           />

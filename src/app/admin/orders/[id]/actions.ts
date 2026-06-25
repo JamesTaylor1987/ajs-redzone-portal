@@ -240,6 +240,53 @@ export async function updateInstallAction(
   return { success: true };
 }
 
+export async function createInstallQuoteAction(formData: FormData): Promise<void> {
+  const quoteId = formData.get("quote_id") as string;
+  if (!quoteId) return;
+
+  const supabase = getServiceClient();
+
+  const { data: existing } = await supabase
+    .from("installation_quotes")
+    .select("id")
+    .eq("hardware_quote_id", quoteId)
+    .maybeSingle();
+  if (existing) return;
+
+  const { data: q } = await supabase
+    .from("quotes")
+    .select("ref, contact_name, contact_email, contact_company, site_name, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, required_date, project_description")
+    .eq("id", quoteId)
+    .single();
+  if (!q) return;
+
+  const { data: iqRef } = await supabase.rpc("allocate_installation_quote_ref");
+  if (!iqRef) return;
+
+  await Promise.all([
+    supabase.from("installation_quotes").insert({
+      quote_ref: String(iqRef),
+      hardware_quote_id: quoteId,
+      hardware_quote_ref: q.ref,
+      customer_email: q.contact_email,
+      customer_name: q.contact_name,
+      company_name: q.contact_company || null,
+      site_name: q.site_name || null,
+      site_address_line1: q.site_address_line1 || null,
+      site_address_line2: q.site_address_line2 || null,
+      site_address_city: q.site_address_city || null,
+      site_address_postcode: q.site_address_postcode || null,
+      site_country: q.site_country || null,
+      required_date: q.required_date || null,
+      project_description: q.project_description || null,
+    }),
+    supabase.from("quotes").update({ install_requested: true }).eq("id", quoteId),
+  ]);
+
+  revalidatePath(`/admin/orders/${quoteId}`);
+  revalidatePath("/admin/installation-quotes");
+}
+
 export interface FinanceState {
   success?: boolean;
   error?: string;

@@ -16,6 +16,7 @@ export async function saveAssessmentAction(formData: FormData) {
     drive_miles: parseInt(g("drive_miles") || "0", 10),
     travel_days_one_way: parseInt(g("travel_days_one_way") || "0", 10) as 0 | 1 | 2,
     is_international: formData.get("is_international") === "on",
+    staying_away: formData.get("staying_away") === "on",
     sensor_count: parseInt(g("sensor_count") || "0", 10),
     include_vf: formData.get("include_vf") === "on",
     vf_item_count: parseInt(g("vf_item_count") || "0", 10),
@@ -78,26 +79,29 @@ export async function sendInstallQuoteAction(formData: FormData) {
   const budgetTo = budgetToVal > 0 ? Math.round(budgetToVal * 100) : budgetFrom;
   const notes         = g("notes") || null;
   const payment_terms = g("payment_terms") || null;
+  const exclusions    = g("exclusions") || null;
 
   const supabase = getServiceClient();
   const { data: iq } = await supabase
     .from("installation_quotes")
-    .select("quote_ref, customer_email, customer_name, company_name, hardware_quote_id, hardware_quote_ref, site_name, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, required_date, containment_notes")
+    .select("quote_ref, customer_email, customer_name, company_name, hardware_quote_id, hardware_quote_ref, site_name, site_address_line1, site_address_line2, site_address_city, site_address_postcode, site_country, required_date, containment_notes, assessment")
     .eq("id", id)
     .single();
 
   if (!iq) return;
 
-  const [itemsResult, localeResult] = await Promise.all([
+  const a = iq.assessment as import("@/lib/installation-quote/calculate").AssessmentInputs | null;
+
+  const [itemsResult, hwResult] = await Promise.all([
     iq.hardware_quote_id
       ? supabase.from("quote_items").select("sku, name, qty").eq("quote_id", iq.hardware_quote_id)
       : Promise.resolve({ data: [] }),
     iq.hardware_quote_id
-      ? supabase.from("quotes").select("locale").eq("id", iq.hardware_quote_id).single()
+      ? supabase.from("quotes").select("locale, currency, fx_rate_used").eq("id", iq.hardware_quote_id).single()
       : Promise.resolve({ data: null }),
   ]);
   const itemRows = itemsResult.data;
-  const hardwareLocale = (localeResult.data as { locale?: string | null } | null)?.locale ?? null;
+  const hw = hwResult.data as { locale?: string | null; currency?: string | null; fx_rate_used?: number | null } | null;
 
   await sendInstallationBudgetEmail({
     quoteRef: iq.quote_ref,
@@ -117,7 +121,13 @@ export async function sendInstallQuoteAction(formData: FormData) {
     notes,
     containmentNotes: iq.containment_notes ?? null,
     paymentTerms: payment_terms,
-    locale: hardwareLocale,
+    exclusions,
+    locale: hw?.locale ?? null,
+    currency: hw?.currency ?? null,
+    fxRate: hw?.fx_rate_used ?? null,
+    travelMethod: a?.travel_method ?? null,
+    includeVf: a?.include_vf ?? false,
+    stayingAway: a?.staying_away !== false,
     items: (itemRows ?? []).map((i: { sku: string; name: string; qty: number }) => ({
       sku: i.sku, name: i.name, qty: i.qty,
     })),
@@ -129,6 +139,7 @@ export async function sendInstallQuoteAction(formData: FormData) {
       budget_to_pence:   budgetTo,
       ajs_notes:         notes,
       payment_terms,
+      exclusions,
       status:            "quoted",
       quoted_at:         new Date().toISOString(),
       email_sent_at:     new Date().toISOString(),

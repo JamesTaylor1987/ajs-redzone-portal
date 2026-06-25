@@ -22,6 +22,7 @@ export interface AssessmentInputs {
   drive_miles: number;
   travel_days_one_way: 0 | 1 | 2;
   is_international: boolean;
+  staying_away?: boolean;
   sensor_count: number;
   include_vf: boolean;
   vf_item_count: number;
@@ -82,8 +83,9 @@ export function calculateInstallationQuote(
     travel_pence = C.flight_estimate_europe_pence * TEAM_SIZE;
   }
 
-  // Hotels: every night away (total trip days minus the day they arrive back)
-  const hotel_nights = Math.max(0, total_days - 1);
+  // Hotels: only when staying away (default true for back-compat with existing assessments)
+  const staying_away = a.staying_away !== false;
+  const hotel_nights = staying_away ? Math.max(0, total_days - 1) : 0;
   const hotels_pence = hotel_nights * TEAM_SIZE * C.hotel_rate_pence;
 
   // Infrastructure uplift — excluded for international jobs

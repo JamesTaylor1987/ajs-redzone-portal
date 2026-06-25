@@ -5,6 +5,7 @@ import { getServiceClient } from "@/lib/supabase-server";
 import { sendInstallQuoteAction } from "./actions";
 import { AssessmentForm } from "./AssessmentForm";
 import type { AssessmentInputs } from "@/lib/installation-quote/calculate";
+import { DEFAULT_INSTALL_EXCLUSIONS } from "@/lib/quote-pdf";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,14 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
   const a = iq.assessment as AssessmentInputs | null;
   const hasCalc = iq.calc_subtotal_pence != null;
   const isQuoted = iq.status === "quoted";
+
+  const defaultExclusions = (() => {
+    if (iq.exclusions) return iq.exclusions;
+    let lines = DEFAULT_INSTALL_EXCLUSIONS.split("\n");
+    if (a?.include_vf) lines = lines.filter((l) => !l.includes("TVs and tablets"));
+    if (a?.working_hours === "out_of_hours") lines = lines.filter((l) => !l.includes("Out of hours working"));
+    return lines.join("\n");
+  })();
 
   return (
     <div className="space-y-5 max-w-3xl">
@@ -123,11 +132,12 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
         hasCalc={hasCalc}
         assessment={a}
         autoSensorCount={autoSensorCount}
+        containmentNotes={iq.containment_notes ?? null}
       />
 
       {/* Calculation results + send */}
       {hasCalc && (
-        <div className="bg-white rounded-xl border border-ajs-light p-5 space-y-5">
+        <div key={`${iq.budget_from_pence ?? 0}-${iq.budget_to_pence ?? 0}`} className="bg-white rounded-xl border border-ajs-light p-5 space-y-5">
           <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">Budget calculation</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
             <Stat label="Install days"  value={String(iq.calc_install_days ?? "—")} />
@@ -203,6 +213,18 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
                         className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40 resize-none font-mono"
                       />
                       <p className="text-xs text-ajs-muted mt-1">One term per line — each becomes a bullet point on the PDF</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold uppercase tracking-wide text-ajs-dark mb-1">
+                        Exclusions
+                      </label>
+                      <textarea
+                        name="exclusions"
+                        rows={5}
+                        defaultValue={defaultExclusions}
+                        className="w-full border border-ajs-light rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/40 resize-none font-mono"
+                      />
+                      <p className="text-xs text-ajs-muted mt-1">One exclusion per line — each becomes a bullet point on the PDF</p>
                     </div>
                   </div>
                   <button

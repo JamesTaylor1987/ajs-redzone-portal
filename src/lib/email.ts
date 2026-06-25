@@ -968,15 +968,23 @@ interface InstallBudgetEmailParams {
   notes: string | null;
   containmentNotes: string | null;
   paymentTerms: string | null;
+  exclusions: string | null;
   items: InstallPDFItem[];
   locale?: string | null;
+  currency?: string | null;
+  fxRate?: number | null;
+  travelMethod?: string | null;
+  includeVf?: boolean;
+  stayingAway?: boolean;
 }
 
 function installBudgetHtml(p: InstallBudgetEmailParams): string {
   const t = getT(getLocale(p.locale));
   const first = p.customerName.trim().split(" ")[0] ?? "there";
-  const fmt = (pence: number) =>
-    "£" + (pence / 100).toLocaleString("en-GB", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const isEur = p.currency === "EUR" && p.fxRate && p.fxRate > 1;
+  const fmt = (pence: number) => isEur
+    ? "€" + (pence * (p.fxRate ?? 1) / 100).toLocaleString("en-GB", { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+    : "£" + (pence / 100).toLocaleString("en-GB", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   const introKey: MessageKey = p.hardwareRef ? "emailInstallBudgetIntroHardware" : "emailInstallBudgetIntro";
 
   return `<!DOCTYPE html>
@@ -1064,7 +1072,13 @@ export async function sendInstallationBudgetEmail(p: InstallBudgetEmailParams): 
           ajs_notes: p.notes,
           containment_notes: p.containmentNotes,
           payment_terms: p.paymentTerms,
+          exclusions: p.exclusions,
           locale: p.locale,
+          currency: p.currency,
+          fx_rate: p.fxRate,
+          travel_method: p.travelMethod,
+          include_vf: p.includeVf,
+          staying_away: p.stayingAway,
         },
         p.items,
       ),
