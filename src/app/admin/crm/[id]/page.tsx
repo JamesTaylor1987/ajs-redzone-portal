@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase-server";
 import { updateLeadStatusAction, deleteLeadAction } from "../actions";
 import { LeadForm } from "./LeadForm";
+import { FollowupsSection } from "./FollowupsSection";
 
 export const dynamic = "force-dynamic";
 
@@ -45,10 +46,10 @@ export default async function LeadDetailPage({ params }: Props) {
 
   if (!lead) notFound();
 
-  const { data: contacts } = await supabase
-    .from("crm_rz_contacts")
-    .select("id, name, region")
-    .order("name", { ascending: true });
+  const [{ data: contacts }, { data: followups }] = await Promise.all([
+    supabase.from("crm_rz_contacts").select("id, name, region").order("name", { ascending: true }),
+    supabase.from("lead_followups").select("id, note, created_at").eq("lead_id", params.id).order("created_at", { ascending: false }),
+  ]);
 
   const contact = lead.rz_contact_id
     ? (contacts ?? []).find((c: { id: string }) => c.id === lead.rz_contact_id) ?? null
@@ -109,6 +110,14 @@ export default async function LeadDetailPage({ params }: Props) {
               </button>
             </form>
           ))}
+        </div>
+      </div>
+
+      {/* Follow-up log */}
+      <div className="bg-white rounded-xl border border-ajs-light overflow-hidden">
+        <SectionHeader>Follow-up log</SectionHeader>
+        <div className="px-4 py-4">
+          <FollowupsSection leadId={lead.id} followups={followups ?? []} />
         </div>
       </div>
 

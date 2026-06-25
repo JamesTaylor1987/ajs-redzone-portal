@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 const STATUSES = [
   { value: "", label: "All" },
+  { value: "all_live", label: "All live" },
   { value: "quote_submitted", label: "Quote submitted" },
   { value: "order_confirmed", label: "Order confirmed" },
   { value: "in_build", label: "In build" },

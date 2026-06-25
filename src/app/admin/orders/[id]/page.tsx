@@ -7,6 +7,7 @@ import { WinProbabilityForm } from "./WinProbabilityForm";
 import { AdminNotesForm } from "./AdminNotesForm";
 import { EditQuoteItemsForm } from "./EditQuoteItemsForm";
 import { FinanceForm } from "./FinanceForm";
+import { InstallForm } from "./InstallForm";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +64,15 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
       {/* Win probability — only for open quotes */}
       {quote.status === "quote_submitted" && (
         <WinProbabilityForm quoteId={quote.id} currentProbability={quote.win_probability ?? null} />
+      )}
+
+      {/* Installation tracker — only if customer requested install */}
+      {quote.install_requested && (
+        <InstallForm
+          quoteId={quote.id}
+          installQuoteSent={quote.install_quote_sent ?? false}
+          installStage={quote.install_stage ?? null}
+        />
       )}
 
       {/* Finance — invoiced + payment received */}

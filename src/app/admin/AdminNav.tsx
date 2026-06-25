@@ -25,6 +25,7 @@ const NAV: NavItem[] = [
   },
   { href: "/admin/crm", label: "CRM" },
   { href: "/admin/products", label: "Products" },
+  { href: "/admin/compliance", label: "Compliance" },
   {
     label: "Users",
     children: [

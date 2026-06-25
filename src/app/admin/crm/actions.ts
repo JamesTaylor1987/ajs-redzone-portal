@@ -106,9 +106,13 @@ export async function createLeadAction(formData: FormData) {
     .from("crm_leads")
     .insert({
       company_name:   g("company_name"),
-      rz_contact_id:  g("rz_contact_id") || null,
-      notes:          g("notes")         || null,
+      site_name:      g("site_name")      || null,
+      rz_contact_id:  g("rz_contact_id")  || null,
+      notes:          g("notes")          || null,
       follow_up_date: g("follow_up_date") || null,
+      end_user_name:  g("end_user_name")  || null,
+      end_user_phone: g("end_user_phone") || null,
+      end_user_email: g("end_user_email") || null,
       status:         "new",
     })
     .select("id")
@@ -125,11 +129,15 @@ export async function updateLeadAction(_prevState: unknown, formData: FormData) 
 
   await supabase.from("crm_leads").update({
     company_name:       g("company_name"),
+    site_name:          g("site_name")          || null,
     rz_contact_id:      g("rz_contact_id")      || null,
     notes:              g("notes")               || null,
     follow_up_date:     g("follow_up_date")      || null,
     hardware_quote_ref: g("hardware_quote_ref")  || null,
     lost_reason:        g("lost_reason")         || null,
+    end_user_name:      g("end_user_name")       || null,
+    end_user_phone:     g("end_user_phone")      || null,
+    end_user_email:     g("end_user_email")      || null,
     updated_at:         new Date().toISOString(),
   }).eq("id", id);
 
@@ -149,6 +157,23 @@ export async function updateLeadStatusAction(formData: FormData) {
 
   revalidatePath(`/admin/crm/${id}`);
   revalidatePath("/admin/crm");
+}
+
+export async function addFollowupAction(formData: FormData) {
+  const leadId = formData.get("lead_id") as string;
+  const note = ((formData.get("note") as string) ?? "").trim();
+  if (!leadId || !note) return;
+  const supabase = getServiceClient();
+  await supabase.from("lead_followups").insert({ lead_id: leadId, note });
+  revalidatePath(`/admin/crm/${leadId}`);
+}
+
+export async function deleteFollowupAction(formData: FormData) {
+  const id = formData.get("id") as string;
+  const leadId = formData.get("lead_id") as string;
+  const supabase = getServiceClient();
+  await supabase.from("lead_followups").delete().eq("id", id);
+  revalidatePath(`/admin/crm/${leadId}`);
 }
 
 export async function deleteLeadAction(formData: FormData) {

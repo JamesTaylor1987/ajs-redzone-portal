@@ -26,12 +26,16 @@ interface Props {
   lead: {
     id: string;
     company_name: string;
+    site_name: string | null;
     rz_contact_id: string | null;
     notes: string | null;
     follow_up_date: string | null;
     hardware_quote_ref: string | null;
     lost_reason: string | null;
     status: string;
+    end_user_name: string | null;
+    end_user_phone: string | null;
+    end_user_email: string | null;
   };
   contacts: { id: string; name: string; region: string | null }[];
 }
@@ -49,14 +53,25 @@ export function LeadForm({ lead, contacts }: Props) {
         </div>
       )}
 
-      <div>
-        <label className="block text-xs font-semibold text-ajs-dark mb-1">Company name</label>
-        <input
-          name="company_name"
-          defaultValue={lead.company_name}
-          required
-          className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-        />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-ajs-dark mb-1">Company name</label>
+          <input
+            name="company_name"
+            defaultValue={lead.company_name}
+            required
+            className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-ajs-dark mb-1">Site name</label>
+          <input
+            name="site_name"
+            defaultValue={lead.site_name ?? ""}
+            className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+            placeholder="e.g. Swindon factory"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -120,6 +135,24 @@ export function LeadForm({ lead, contacts }: Props) {
           className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
           placeholder="e.g. Q26-RZ0042"
         />
+      </div>
+
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wide text-ajs-dark mb-2">Site end-user contact</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-semibold text-ajs-dark mb-1">Name</label>
+            <input name="end_user_name" defaultValue={lead.end_user_name ?? ""} className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary" placeholder="Contact name" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-ajs-dark mb-1">Phone</label>
+            <input name="end_user_phone" type="tel" defaultValue={lead.end_user_phone ?? ""} className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary" placeholder="07700 000000" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-ajs-dark mb-1">Email</label>
+            <input name="end_user_email" type="email" defaultValue={lead.end_user_email ?? ""} className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary" placeholder="contact@company.com" />
+          </div>
+        </div>
       </div>
 
       <SubmitButton />

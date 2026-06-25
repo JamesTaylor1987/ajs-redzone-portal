@@ -39,14 +39,16 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
   let query = supabase
     .from("quotes")
     .select(
-      "id, ref, status, contact_name, contact_company, contact_email, subtotal_gbp_pence, shipping_gbp_pence, created_at, original_quote_ref, win_probability, win_probability_set_at, invoiced, payment_received",
+      "id, ref, status, contact_name, contact_company, contact_email, subtotal_gbp_pence, shipping_gbp_pence, created_at, original_quote_ref, win_probability, win_probability_set_at, invoiced, payment_received, install_requested, install_quote_sent, install_stage",
     )
     .order("created_at", { ascending: false });
 
-  if (searchParams.status) {
+  if (searchParams.status === "all_live") {
+    query = query.not("status", "in", '("quote_submitted","revised")');
+  } else if (searchParams.status) {
     query = query.eq("status", searchParams.status);
   } else {
-    // Hide superseded quotes from the default view — they're replaced by a revision
+    // Hide superseded quotes from the default view
     query = query.neq("status", "revised");
   }
 
@@ -75,6 +77,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                 <Th>Status</Th>
                 <Th>Win %</Th>
                 <Th>Finance</Th>
+                <Th>Install</Th>
                 <Th>Total</Th>
                 <Th>Submitted</Th>
                 <Th></Th>
@@ -125,6 +128,13 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                       <FinancePill label="Paid" active={o.payment_received} />
                     </div>
                   </td>
+                  <td className="px-4 py-3">
+                    <InstallPill
+                      requested={o.install_requested}
+                      quoteSent={o.install_quote_sent}
+                      stage={o.install_stage}
+                    />
+                  </td>
                   <td className="px-4 py-3 font-semibold">
                     {gbp(Number(o.subtotal_gbp_pence ?? 0) + Number(o.shipping_gbp_pence ?? 0))}
                   </td>
@@ -151,6 +161,21 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
         )}
       </div>
     </div>
+  );
+}
+
+function InstallPill({ requested, quoteSent, stage }: { requested: boolean; quoteSent: boolean; stage: string | null }) {
+  if (!requested) return <span className="text-ajs-light text-sm">—</span>;
+  const { label, cls } =
+    stage === "complete"   ? { label: "Complete",   cls: "bg-emerald-100 text-emerald-700" } :
+    stage === "installing" ? { label: "Installing", cls: "bg-purple-100 text-purple-700" } :
+    stage === "accepted"   ? { label: "Accepted",   cls: "bg-teal-100 text-teal-700" } :
+    quoteSent              ? { label: "Quote sent", cls: "bg-blue-100 text-blue-700" } :
+                             { label: "Requested",  cls: "bg-amber-100 text-amber-700" };
+  return (
+    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${cls}`}>
+      {label}
+    </span>
   );
 }
 

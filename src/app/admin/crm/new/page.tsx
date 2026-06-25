@@ -27,17 +27,27 @@ export default async function NewLeadPage() {
             <h2 className="text-xs font-bold uppercase tracking-wide text-ajs-dark">The opportunity</h2>
           </div>
           <div className="p-4 space-y-3">
-            <div>
-              <label className="block text-xs font-semibold text-ajs-dark mb-1">
-                Company name <span className="text-rose-500">*</span>
-              </label>
-              <input
-                name="company_name"
-                required
-                autoFocus
-                className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
-                placeholder="e.g. Valeo Foods"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-ajs-dark mb-1">
+                  Company name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  name="company_name"
+                  required
+                  autoFocus
+                  className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+                  placeholder="e.g. Valeo Foods"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-ajs-dark mb-1">Site name</label>
+                <input
+                  name="site_name"
+                  className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary"
+                  placeholder="e.g. Swindon factory"
+                />
+              </div>
             </div>
 
             <div>
@@ -73,6 +83,24 @@ export default async function NewLeadPage() {
                 className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary resize-none"
                 placeholder="What did they say? What's the opportunity?"
               />
+            </div>
+
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-ajs-dark mb-2">Site end-user contact</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-ajs-dark mb-1">Name</label>
+                  <input name="end_user_name" className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary" placeholder="Contact name" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-ajs-dark mb-1">Phone</label>
+                  <input name="end_user_phone" type="tel" className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary" placeholder="07700 000000" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-ajs-dark mb-1">Email</label>
+                  <input name="end_user_email" type="email" className="w-full border border-ajs-light rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ajs-primary/30 focus:border-ajs-primary" placeholder="contact@company.com" />
+                </div>
+              </div>
             </div>
           </div>
         </div>

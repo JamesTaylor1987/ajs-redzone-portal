@@ -212,6 +212,34 @@ export async function updateWinProbabilityAction(
   return { success: true };
 }
 
+export interface InstallState {
+  success?: boolean;
+  error?: string;
+}
+
+export async function updateInstallAction(
+  _prev: InstallState,
+  formData: FormData,
+): Promise<InstallState> {
+  const id = (formData.get("id") as string) ?? "";
+  if (!id) return { error: "Missing order id" };
+
+  const installQuoteSent = formData.get("install_quote_sent") === "on";
+  const installStage = ((formData.get("install_stage") as string) ?? "").trim() || null;
+
+  const supabase = getServiceClient();
+  const { error } = await supabase
+    .from("quotes")
+    .update({ install_quote_sent: installQuoteSent, install_stage: installStage })
+    .eq("id", id);
+
+  if (error) return { error: "Failed to save — please try again" };
+
+  revalidatePath(`/admin/orders/${id}`);
+  revalidatePath("/admin/orders");
+  return { success: true };
+}
+
 export interface FinanceState {
   success?: boolean;
   error?: string;
