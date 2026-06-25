@@ -33,6 +33,9 @@ interface PageProps {
   searchParams: { status?: string };
 }
 
+const SHOWS_WIN_PCT = (status: string | undefined) =>
+  !status || status === "quote_submitted";
+
 export default async function AdminOrdersPage({ searchParams }: PageProps) {
   const supabase = getServiceClient();
 
@@ -53,6 +56,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
   }
 
   const { data: orders } = await query;
+  const showWinPct = SHOWS_WIN_PCT(searchParams.status);
 
   return (
     <div className="space-y-5">
@@ -75,7 +79,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                 <Th>Ref</Th>
                 <Th>Customer</Th>
                 <Th>Status</Th>
-                <Th>Win %</Th>
+                {showWinPct && <Th>Win %</Th>}
                 <Th>Finance</Th>
                 <Th>Install</Th>
                 <Th>Total</Th>
@@ -109,19 +113,21 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                       {STATUS_LABEL[o.status] ?? o.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
-                    {o.status === "quote_submitted" ? (
-                      <InlineProbabilityForm
-                        quoteId={o.id}
-                        currentProbability={o.win_probability ?? null}
-                        updatedAt={o.win_probability_set_at ?? null}
-                      />
-                    ) : o.win_probability !== null ? (
-                      <span className="text-sm font-semibold text-ajs-dark">{o.win_probability}%</span>
-                    ) : (
-                      <span className="text-ajs-light text-sm">—</span>
-                    )}
-                  </td>
+                  {showWinPct && (
+                    <td className="px-4 py-3">
+                      {o.status === "quote_submitted" ? (
+                        <InlineProbabilityForm
+                          quoteId={o.id}
+                          currentProbability={o.win_probability ?? null}
+                          updatedAt={o.win_probability_set_at ?? null}
+                        />
+                      ) : o.win_probability !== null ? (
+                        <span className="text-sm font-semibold text-ajs-dark">{o.win_probability}%</span>
+                      ) : (
+                        <span className="text-ajs-light text-sm">—</span>
+                      )}
+                    </td>
+                  )}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
                       <FinancePill label="Inv" active={o.invoiced} />
