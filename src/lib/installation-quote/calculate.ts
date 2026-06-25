@@ -5,6 +5,7 @@ const TEAM_SIZE = 2; // always a 2-engineer team
 export interface InstallConfig {
   pair_day_rate_pence: number;
   hotel_rate_pence: number;
+  hotel_rate_abroad_pence: number;
   mileage_rate_pence_per_mile: number;
   sensors_per_pair_per_day: number;
   displays_per_pair_per_day: number;
@@ -86,7 +87,8 @@ export function calculateInstallationQuote(
   // Hotels: only when staying away (default true for back-compat with existing assessments)
   const staying_away = a.staying_away !== false;
   const hotel_nights = staying_away ? Math.max(0, total_days - 1) : 0;
-  const hotels_pence = hotel_nights * TEAM_SIZE * C.hotel_rate_pence;
+  const hotel_rate = a.is_international ? C.hotel_rate_abroad_pence : C.hotel_rate_pence;
+  const hotels_pence = hotel_nights * TEAM_SIZE * hotel_rate;
 
   // Infrastructure uplift — excluded for international jobs
   let infra_uplift_pence = 0;

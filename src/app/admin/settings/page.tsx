@@ -32,6 +32,7 @@ export default async function AdminSettingsPage() {
   const installRates: InstallRates = {
     pair_day_rate:           p("install_pair_day_rate",           INSTALL_CONFIG.pair_day_rate_pence)          / 100,
     hotel_rate:              p("install_hotel_rate",              INSTALL_CONFIG.hotel_rate_pence)             / 100,
+    hotel_rate_abroad:       p("install_hotel_rate_abroad",       INSTALL_CONFIG.hotel_rate_abroad_pence)      / 100,
     mileage_rate:            p("install_mileage_rate",            INSTALL_CONFIG.mileage_rate_pence_per_mile),
     sensors_per_day:         p("install_sensors_per_day",         INSTALL_CONFIG.sensors_per_pair_per_day),
     displays_per_day:        p("install_displays_per_day",        INSTALL_CONFIG.displays_per_pair_per_day),

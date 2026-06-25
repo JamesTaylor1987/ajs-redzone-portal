@@ -45,6 +45,7 @@ export async function saveInstallRatesAction(
   const { error } = await supabase.from("settings").upsert([
     { key: "install_pair_day_rate",           value: String(Math.round(n("pair_day_rate") * 100)) },
     { key: "install_hotel_rate",              value: String(Math.round(n("hotel_rate") * 100)) },
+    { key: "install_hotel_rate_abroad",       value: String(Math.round(n("hotel_rate_abroad") * 100)) },
     { key: "install_mileage_rate",            value: String(Math.round(n("mileage_rate"))) },
     { key: "install_sensors_per_day",         value: String(Math.round(n("sensors_per_day"))) },
     { key: "install_displays_per_day",        value: String(Math.round(n("displays_per_day"))) },

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getAuthClient } from "@/lib/supabase-auth";
 import { getServiceClient } from "@/lib/supabase-server";
-import { sendInstallQuoteAction } from "./actions";
+import { sendInstallQuoteAction, declineInstallQuoteAction } from "./actions";
 import { AssessmentForm } from "./AssessmentForm";
 import type { AssessmentInputs } from "@/lib/installation-quote/calculate";
 import { INSTALL_CONFIG } from "@/lib/installation-quote/config";
@@ -45,6 +45,7 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
   const rates = {
     pair_day_rate_pence:          rn("install_pair_day_rate",         INSTALL_CONFIG.pair_day_rate_pence),
     hotel_rate_pence:             rn("install_hotel_rate",            INSTALL_CONFIG.hotel_rate_pence),
+    hotel_rate_abroad_pence:      rn("install_hotel_rate_abroad",     INSTALL_CONFIG.hotel_rate_abroad_pence),
     mileage_rate_pence_per_mile:  rn("install_mileage_rate",          INSTALL_CONFIG.mileage_rate_pence_per_mile),
     sensors_per_pair_per_day:     rn("install_sensors_per_day",       INSTALL_CONFIG.sensors_per_pair_per_day),
     displays_per_pair_per_day:    rn("install_displays_per_day",      INSTALL_CONFIG.displays_per_pair_per_day),
@@ -84,13 +85,26 @@ export default async function InstallationQuoteDetailPage({ params }: PageProps)
 
   return (
     <div className="space-y-5 max-w-3xl">
-      <div className="flex items-center gap-3 flex-wrap">
-        <Link href="/admin/installation-quotes" className="text-ajs-muted text-sm hover:underline">
-          ← Installation Quotes
-        </Link>
-        <span className="text-ajs-light">/</span>
-        <span className="font-mono font-bold text-ajs-dark">{iq.quote_ref}</span>
-        <StatusBadge status={iq.status} />
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link href="/admin/installation-quotes" className="text-ajs-muted text-sm hover:underline">
+            ← Installation Quotes
+          </Link>
+          <span className="text-ajs-light">/</span>
+          <span className="font-mono font-bold text-ajs-dark">{iq.quote_ref}</span>
+          <StatusBadge status={iq.status} />
+        </div>
+        {iq.status !== "declined" && (
+          <form action={declineInstallQuoteAction}>
+            <input type="hidden" name="id" value={iq.id} />
+            <button
+              type="submit"
+              className="text-xs font-semibold text-rose-500 hover:text-rose-700 border border-rose-200 hover:border-rose-400 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Mark as declined
+            </button>
+          </form>
+        )}
       </div>
 
       {isQuoted && (
@@ -285,6 +299,7 @@ function CalcWorkings({
   rates: {
     pair_day_rate_pence: number;
     hotel_rate_pence: number;
+    hotel_rate_abroad_pence: number;
     mileage_rate_pence_per_mile: number;
     sensors_per_pair_per_day: number;
     displays_per_pair_per_day: number;
@@ -367,7 +382,12 @@ function CalcWorkings({
       {staying_away && hotel_nights > 0 && (
         <WorkSection title="Accommodation">
           <WorkRow label="Hotel nights" expr={`${total_days} total days − 1`} result={`${hotel_nights} night${hotel_nights !== 1 ? "s" : ""}`} />
-          <WorkRow label="Hotel cost" expr={`${hotel_nights} nights × 2 engineers × ${gbp(rates.hotel_rate_pence)}/night`} result={gbp(Number(iq.calc_hotels_pence))} bold />
+          <WorkRow
+            label={a.is_international ? "Hotel cost (abroad rate)" : "Hotel cost (UK rate)"}
+            expr={`${hotel_nights} nights × 2 engineers × ${gbp(a.is_international ? rates.hotel_rate_abroad_pence : rates.hotel_rate_pence)}/night`}
+            result={gbp(Number(iq.calc_hotels_pence))}
+            bold
+          />
         </WorkSection>
       )}
       {!staying_away && (

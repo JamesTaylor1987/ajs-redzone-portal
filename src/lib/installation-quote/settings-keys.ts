@@ -1,6 +1,7 @@
 export const INSTALL_RATE_KEYS = [
   "install_pair_day_rate",
   "install_hotel_rate",
+  "install_hotel_rate_abroad",
   "install_mileage_rate",
   "install_sensors_per_day",
   "install_displays_per_day",

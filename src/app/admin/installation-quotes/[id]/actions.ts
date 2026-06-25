@@ -34,6 +34,7 @@ export async function saveAssessmentAction(formData: FormData) {
   const config: InstallConfig = {
     pair_day_rate_pence:         rn("install_pair_day_rate",          INSTALL_CONFIG.pair_day_rate_pence),
     hotel_rate_pence:            rn("install_hotel_rate",             INSTALL_CONFIG.hotel_rate_pence),
+    hotel_rate_abroad_pence:     rn("install_hotel_rate_abroad",      INSTALL_CONFIG.hotel_rate_abroad_pence),
     mileage_rate_pence_per_mile: rn("install_mileage_rate",           INSTALL_CONFIG.mileage_rate_pence_per_mile),
     sensors_per_pair_per_day:    rn("install_sensors_per_day",        INSTALL_CONFIG.sensors_per_pair_per_day),
     displays_per_pair_per_day:   rn("install_displays_per_day",       INSTALL_CONFIG.displays_per_pair_per_day),
@@ -65,6 +66,15 @@ export async function saveAssessmentAction(formData: FormData) {
   }).eq("id", id);
 
   revalidatePath(`/admin/installation-quotes/${id}`);
+}
+
+export async function declineInstallQuoteAction(formData: FormData) {
+  const id = formData.get("id") as string;
+  if (!id) return;
+  const supabase = getServiceClient();
+  await supabase.from("installation_quotes").update({ status: "declined" }).eq("id", id);
+  revalidatePath(`/admin/installation-quotes/${id}`);
+  revalidatePath("/admin/installation-quotes");
 }
 
 export async function sendInstallQuoteAction(formData: FormData) {

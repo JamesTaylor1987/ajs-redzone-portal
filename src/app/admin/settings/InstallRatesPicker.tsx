@@ -19,6 +19,7 @@ function SaveButton() {
 export interface InstallRates {
   pair_day_rate: number;
   hotel_rate: number;
+  hotel_rate_abroad: number;
   mileage_rate: number;
   sensors_per_day: number;
   displays_per_day: number;
@@ -64,7 +65,8 @@ export function InstallRatesPicker({ current }: Props) {
 
         <Section label="Travel & accommodation">
           <RateField name="mileage_rate" label="Mileage rate" unit="p / mile" defaultValue={current.mileage_rate} />
-          <RateField name="hotel_rate" label="Hotel &amp; stop out per engineer per night" unit="£ / night" defaultValue={current.hotel_rate} />
+          <RateField name="hotel_rate" label="Hotel &amp; stop out — UK (per engineer/night)" unit="£ / night" defaultValue={current.hotel_rate} />
+          <RateField name="hotel_rate_abroad" label="Hotel &amp; stop out — Abroad (per engineer/night)" unit="£ / night" defaultValue={current.hotel_rate_abroad} />
           <RateField name="eurotunnel" label="Eurotunnel (per vehicle, one way)" unit="£" defaultValue={current.eurotunnel} />
           <RateField name="flight_europe" label="EU / domestic flight (per engineer)" unit="£" defaultValue={current.flight_europe} />
         </Section>
