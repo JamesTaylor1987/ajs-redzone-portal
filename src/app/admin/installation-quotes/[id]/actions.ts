@@ -123,15 +123,20 @@ export async function sendInstallQuoteAction(formData: FormData) {
     })),
   });
 
-  await supabase.from("installation_quotes").update({
-    budget_from_pence: budgetFrom,
-    budget_to_pence:   budgetTo,
-    ajs_notes:         notes,
-    payment_terms,
-    status:            "quoted",
-    quoted_at:         new Date().toISOString(),
-    email_sent_at:     new Date().toISOString(),
-  }).eq("id", id);
+  await Promise.all([
+    supabase.from("installation_quotes").update({
+      budget_from_pence: budgetFrom,
+      budget_to_pence:   budgetTo,
+      ajs_notes:         notes,
+      payment_terms,
+      status:            "quoted",
+      quoted_at:         new Date().toISOString(),
+      email_sent_at:     new Date().toISOString(),
+    }).eq("id", id),
+    iq.hardware_quote_id
+      ? supabase.from("quotes").update({ install_quote_sent: true }).eq("id", iq.hardware_quote_id)
+      : Promise.resolve(),
+  ]);
 
   revalidatePath(`/admin/installation-quotes/${id}`);
 }
