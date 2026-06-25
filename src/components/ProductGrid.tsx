@@ -140,6 +140,30 @@ export function ProductGrid({ products, productImages, currency, lines, onQtyCha
           </Grid>
         </Section>
       )}
+
+      {/* Compliance — coming soon */}
+      <section className="bg-white rounded-xl border border-ajs-light overflow-hidden shadow-sm">
+        <header className="brand-gradient px-4 py-3">
+          <h2 className="text-white font-bold text-lg">Compliance</h2>
+        </header>
+        <div className="p-6 text-center space-y-3">
+          <p className="text-sm font-semibold text-ajs-dark">Coming Soon</p>
+          <p className="text-sm text-ajs-muted max-w-md mx-auto leading-relaxed">
+            Plug-and-play modules designed and built to connect your checkweigher data directly to Redzone — making it simple to capture, store and report on weight compliance without manual data entry.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-sm mx-auto pt-1">
+            <div className="bg-slate-50 rounded-lg p-3 border border-ajs-light text-left">
+              <p className="text-xs font-bold text-ajs-dark mb-0.5">Checkweigher integration</p>
+              <p className="text-xs text-ajs-muted">Direct data feed from your existing equipment</p>
+            </div>
+            <div className="bg-slate-50 rounded-lg p-3 border border-ajs-light text-left">
+              <p className="text-xs font-bold text-ajs-dark mb-0.5">Redzone connected</p>
+              <p className="text-xs text-ajs-muted">Live data flowing into your Redzone dashboard</p>
+            </div>
+          </div>
+          <p className="text-xs text-ajs-muted pt-1">Contact the AJS team for availability and pricing.</p>
+        </div>
+      </section>
     </div>
   );
 }
